@@ -103,7 +103,7 @@ class LoginView extends StackedView<LoginViewModel> {
                           ),
                         ),
                       ),
-                      verticalSpaceMedium,
+                      verticalSpaceLarge,
                       ElevatedButton(
                         style: ButtonStyle(
                           backgroundColor:
