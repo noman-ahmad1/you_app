@@ -9,7 +9,7 @@ class AppColors {
   static const Color secondaryLight = Color(0xFFA14E67);
   static const Color secondaryVeryLight = Color(0xFFCDBABE);
   static const Color error = Color(0xFFB00020);
-  static const Color background = Color(0xFFCBD2D3);
+  static const Color background = Color(0xFFD9D9D9);
   static const Color darkBackground = Color(0xFF121212);
   static const Color backgroundGradient = Color(0xFFCDBABE);
   static const Color peach = Color(0xFF7C5C69);

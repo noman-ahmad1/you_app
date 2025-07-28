@@ -1,31 +1,62 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:you_app/ui/common/app_colors.dart';
 
-const double _tinySize = 5.0;
-const double _smallSize = 10.0;
-const double _mediumSize = 25.0;
-const double _largeSize = 50.0;
-const double _massiveSize = 120.0;
+class Space {
+  static double _baseunit(BuildContext context) =>
+      MediaQuery.of(context).size.height * 0.35;
 
-const Widget horizontalSpaceTiny = SizedBox(width: _tinySize);
-const Widget horizontalSpaceSmall = SizedBox(width: _smallSize);
-const Widget horizontalSpaceMedium = SizedBox(width: _mediumSize);
-const Widget horizontalSpaceLarge = SizedBox(width: _largeSize);
+  static double vtiny(BuildContext context) => _baseunit(context) * 0.025;
+  static double tiny(BuildContext context) => _baseunit(context) * 0.05;
+  static double small(BuildContext context) => _baseunit(context) * 0.2;
+  static double medium(BuildContext context) => _baseunit(context) * 0.35;
+  static double large(BuildContext context) => _baseunit(context) * 0.6;
+  static double massive(BuildContext context) => _baseunit(context) * 0.8;
 
-const Widget verticalSpaceTiny = SizedBox(height: _tinySize);
-const Widget verticalSpaceSmall = SizedBox(height: _smallSize);
-const Widget verticalSpaceMedium = SizedBox(height: _mediumSize);
-const Widget verticalSpaceLarge = SizedBox(height: _largeSize);
-const Widget verticalSpaceMassive = SizedBox(height: _massiveSize);
+  static Widget horizontalSpaceVTiny(BuildContext context) =>
+      SizedBox(width: vtiny(context));
+  static Widget horizontalSpaceTiny(BuildContext context) =>
+      SizedBox(width: tiny(context));
+  static Widget horizontalSpaceSmall(BuildContext context) =>
+      SizedBox(width: small(context));
+  static Widget horizontalSpaceMedium(BuildContext context) =>
+      SizedBox(width: medium(context));
+  static Widget horizontalSpaceLarge(BuildContext context) =>
+      SizedBox(width: large(context));
 
-Widget spacedDivider = const Column(
-  children: <Widget>[
-    verticalSpaceMedium,
-    Divider(color: Colors.blueGrey, height: 5.0),
-    verticalSpaceMedium,
-  ],
-);
+  static Widget verticalSpaceVTiny(BuildContext context) =>
+      SizedBox(height: vtiny(context));
+  static Widget verticalSpaceTiny(BuildContext context) =>
+      SizedBox(height: tiny(context));
+  static Widget verticalSpaceSmall(BuildContext context) =>
+      SizedBox(height: small(context));
+  static Widget verticalSpaceMedium(BuildContext context) =>
+      SizedBox(height: medium(context));
+  static Widget verticalSpaceLarge(BuildContext context) =>
+      SizedBox(height: large(context));
+  static Widget verticalSpaceMassive(BuildContext context) =>
+      SizedBox(height: massive(context));
+}
+
+Widget spacedDivider(BuildContext context) {
+  const dividerHeight = 1.0;
+  final screenSize = MediaQuery.of(context).size;
+  return Column(
+    children: [
+      SizedBox(height: screenSize.height * 0.025),
+      Container(
+        height: dividerHeight,
+        width: MediaQuery.of(context).size.width,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primary, Colors.white],
+          ),
+        ),
+      ),
+      SizedBox(height: screenSize.height * 0.015),
+    ],
+  );
+}
 
 Widget verticalSpace(double height) => SizedBox(height: height);
 

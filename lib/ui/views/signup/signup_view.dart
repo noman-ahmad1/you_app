@@ -4,15 +4,16 @@ import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
-import 'login_viewmodel.dart';
 
-class LoginView extends StackedView<LoginViewModel> {
-  const LoginView({Key? key}) : super(key: key);
+import 'signup_viewmodel.dart';
+
+class SignupView extends StackedView<SignupViewModel> {
+  const SignupView({Key? key}) : super(key: key);
 
   @override
   Widget builder(
     BuildContext context,
-    LoginViewModel viewModel,
+    SignupViewModel viewModel,
     Widget? child,
   ) {
     final emailController = TextEditingController();
@@ -46,9 +47,10 @@ class LoginView extends StackedView<LoginViewModel> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Space.verticalSpaceMedium(context),
+                    Space.verticalSpaceSmall(context),
+                    Space.verticalSpaceTiny(context),
                     Text(
-                      'We\'re glad to see you',
+                      'Create your account',
                       style: GoogleFonts.crimsonPro(
                           fontSize: 30,
                           fontWeight: FontWeight.w700,
@@ -56,34 +58,14 @@ class LoginView extends StackedView<LoginViewModel> {
                     ),
                     Column(
                       children: [
-                        SizedBox(height: screenSize.height * 0.04),
-                        // TextField(
-                        //   decoration: InputDecoration(
-                        //     fillColor: AppColors.primaryLight,
-                        //     filled: true,
-                        //     labelText: 'Email Address',
-                        //     labelStyle:
-                        //         const TextStyle(color: AppColors.secondaryLight),
-                        //     enabledBorder: OutlineInputBorder(
-                        //       borderRadius: BorderRadius.circular(27),
-                        //       borderSide: const BorderSide(
-                        //         color: AppColors.primaryDark,
-                        //         width: 2.0,
-                        //       ),
-                        //     ),
-                        //     focusedBorder: OutlineInputBorder(
-                        //       borderRadius: BorderRadius.circular(27),
-                        //       borderSide: const BorderSide(
-                        //         color: AppColors.primaryVeryDark,
-                        //         width: 2.0,
-                        //       ),
-                        //     ),
-                        //     border: OutlineInputBorder(
-                        //       // Fallback border
-                        //       borderRadius: BorderRadius.circular(27),
-                        //     ),
-                        //   ),
-                        // ),
+                        Space.verticalSpaceTiny(context),
+                        // SizedBox(height: screenSize.height * 0.04),
+                        CustomTextField(
+                          controller: emailController,
+                          labelText: 'Full Name',
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        Space.verticalSpaceVTiny(context),
                         CustomTextField(
                           controller: emailController,
                           labelText: 'Email Address',
@@ -91,43 +73,31 @@ class LoginView extends StackedView<LoginViewModel> {
                         ),
                         Space.verticalSpaceVTiny(context),
                         CustomTextField(
+                          controller: emailController,
+                          labelText: 'Type a password',
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        Space.verticalSpaceVTiny(context),
+                        CustomTextField(
                           controller: passwordController,
-                          labelText: 'Type your password',
+                          labelText: 'Confirm password',
                           obscureText: true,
                         ),
                         SizedBox(height: screenSize.height * 0.045),
-                        CustomButton(text: '  Login  ', onPressed: () {
-                          viewModel.navigateToHomeView();
-                        }),
-                        // ElevatedButton(
-                        //   style: ButtonStyle(
-                        //     backgroundColor:
-                        //         WidgetStateProperty.all(AppColors.primaryVeryDark),
-                        //     padding: WidgetStateProperty.all(
-                        //         const EdgeInsets.symmetric(
-                        //             vertical: 17, horizontal: 155)),
-                        //     shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                        //       borderRadius: BorderRadius.circular(27),
-                        //     )),
-                        //   ),
-                        //   onPressed: () {},
-                        //   child: const Text(
-                        //     'Login',
-                        //     style: TextStyle(
-                        //         color: AppColors.background,
-                        //         fontWeight: FontWeight.w900,
-                        //         fontSize: 18),
-                        //   ),
-                        // ),
+                        CustomButton(text: 'Sign Up',
+                        onPressed: () {
+                          viewModel.navigateToUserInfoView();
+                        }
+                        ),
                         Space.verticalSpaceTiny(context),
                         InkWell(
                           splashColor: AppColors.peach,
                           onTap: () {
                             viewModel.navigateToResetPasswordView();
                           },
-                          child: Text(
+                          child: const Text(
                             'Forgot the password?',
-                            style: GoogleFonts.crimsonPro(
+                            style: TextStyle(
                                 decoration: TextDecoration.underline,
                                 decorationColor: AppColors.background,
                                 color: AppColors.background,
@@ -138,7 +108,7 @@ class LoginView extends StackedView<LoginViewModel> {
                           height: screenSize.height * 0.09,
                         ),
                         const CenteredDividerWithText(
-                          text: 'Or Login with',
+                          text: 'Or Sign up with',
                           // color: AppColors.background,
                           spacing: 10,
                         ),
@@ -165,16 +135,16 @@ class LoginView extends StackedView<LoginViewModel> {
                         InkWell(
                           splashColor: AppColors.peach,
                           onTap: () {
-                            viewModel.navigateToSignUpView();
+                            viewModel.navigateToLoginView();
                           },
                           child: RichText(
                             text: TextSpan(
                               style: GoogleFonts.crimsonPro(
                                   color: AppColors.background, fontSize: 15),
                               children: <TextSpan>[
-                                TextSpan(text: 'Don\'t have an account?'),
+                                TextSpan(text: 'Already have an account?'),
                                 TextSpan(
-                                  text: ' Sign up',
+                                  text: ' Login',
                                   style: GoogleFonts.crimsonPro(
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.background),
@@ -196,8 +166,8 @@ class LoginView extends StackedView<LoginViewModel> {
   }
 
   @override
-  LoginViewModel viewModelBuilder(
+  SignupViewModel viewModelBuilder(
     BuildContext context,
   ) =>
-      LoginViewModel();
+      SignupViewModel();
 }

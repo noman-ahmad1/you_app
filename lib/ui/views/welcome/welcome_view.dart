@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
-import 'package:you_app/ui/common/app_theme.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'welcome_viewmodel.dart';
 
@@ -38,25 +38,24 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  verticalSpaceLarge,
-                  verticalSpaceLarge,
+                  Space.verticalSpaceSmall(context),
                   Column(
                     children: [
-                      const Text(
+                      Text(
                         'Welcome to YOU',
-                        style: TextStyle(
-                            fontSize: 35,
-                            fontWeight: FontWeight.w900,
+                        style: GoogleFonts.crimsonPro(
+                        fontSize: 30, fontWeight: FontWeight.w700,
                             color: AppColors.secondary),
                       ),
-                      verticalSpaceLarge,
+                      Space.verticalSpaceTiny(context),
+                      Space.verticalSpaceVTiny(context),
                       Image.asset(
                         'assets/images/You.png',
                         height: screenSize.height * 0.25,
                         width: screenSize.width * 0.5,
                         fit: BoxFit.cover,
                       ),
-                      verticalSpaceLarge,
+                      Space.verticalSpaceSmall(context),
                       ElevatedButton(
                         style: ButtonStyle(
                           backgroundColor:
@@ -83,7 +82,7 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                               fontSize: 18),
                         ),
                       ),
-                      verticalSpaceSmall,
+                      Space.verticalSpaceTiny(context),
                       ElevatedButton(
                         style: ButtonStyle(
                           backgroundColor:
@@ -99,7 +98,9 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                             ),
                           )),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          viewModel.navigateToSignUpView();
+                        },
                         child: const Text(
                           'SIGN UP',
                           style: TextStyle(

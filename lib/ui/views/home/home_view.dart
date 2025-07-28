@@ -17,7 +17,7 @@ class HomeView extends StackedView<HomeViewModel> {
   ) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               AppColors.primary,
@@ -38,7 +38,7 @@ class HomeView extends StackedView<HomeViewModel> {
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  verticalSpaceLarge,
+                  Space.verticalSpaceLarge(context),
                   Column(
                     children: [
                       const Text(
@@ -48,7 +48,7 @@ class HomeView extends StackedView<HomeViewModel> {
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      verticalSpaceMedium,
+                      Space.verticalSpaceMedium(context),
                       ElevatedButton(
                         style: AppTheme.largeButton,
                         onPressed: viewModel.incrementCounter,

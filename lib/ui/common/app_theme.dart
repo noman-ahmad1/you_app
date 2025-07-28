@@ -4,6 +4,7 @@ import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData theme = ThemeData(
+    fontFamily: 'CrimsonPro',
     brightness: Brightness.light,
     primaryColor: AppColors.primary,
     scaffoldBackgroundColor: AppColors.background,
@@ -11,13 +12,13 @@ class AppTheme {
       elevation: 0.0,
       backgroundColor: AppColors.background,
       iconTheme: const IconThemeData(color: AppColors.textPrimary),
-      titleTextStyle: GoogleFonts.nunito(
+      titleTextStyle: GoogleFonts.crimsonPro(
         color: AppColors.textPrimary,
         fontSize: 20.0,
         fontWeight: FontWeight.w700,
       ),
     ),
-    textTheme: GoogleFonts.nunitoTextTheme().copyWith(
+    textTheme: GoogleFonts.crimsonProTextTheme().copyWith(
       headlineMedium: const TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.bold,
@@ -48,7 +49,7 @@ class AppTheme {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.primaryVeryDark,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(27),

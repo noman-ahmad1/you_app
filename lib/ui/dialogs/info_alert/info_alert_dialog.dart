@@ -45,7 +45,7 @@ class InfoAlertDialog extends StackedView<InfoAlertDialogModel> {
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w900),
                       ),
-                      verticalSpaceTiny,
+                      Space.verticalSpaceTiny(context),
                       Text(
                         request.description!,
                         style: const TextStyle(
@@ -73,7 +73,7 @@ class InfoAlertDialog extends StackedView<InfoAlertDialogModel> {
                 )
               ],
             ),
-            verticalSpaceMedium,
+            Space.verticalSpaceMedium(context),
             GestureDetector(
               onTap: () => completer(DialogResponse(
                 confirmed: true,
