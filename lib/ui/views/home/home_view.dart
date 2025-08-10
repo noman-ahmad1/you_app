@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:stacked/stacked.dart';
-import 'package:you_app/ui/common/app_colors.dart';
-import 'package:you_app/ui/common/app_theme.dart';
-import 'package:you_app/ui/common/ui_helpers.dart';
-
-import 'home_viewmodel.dart';
+import 'package:you_app/ui/views/home/bottom_bar.dart';
+import 'package:you_app/ui/views/home/home_viewmodel.dart';
+import 'package:you_app/ui/views/home/tabs/communities.dart';
+import 'package:you_app/ui/views/home/tabs/home_screen.dart';
+import 'package:you_app/ui/views/home/tabs/volunteers.dart';
 
 class HomeView extends StackedView<HomeViewModel> {
   const HomeView({Key? key}) : super(key: key);
@@ -16,84 +17,55 @@ class HomeView extends StackedView<HomeViewModel> {
     Widget? child,
   ) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.primary,
-              AppColors.backgroundGradient,
-              AppColors.peach,
-              AppColors.secondary
-            ],
-            stops: [0, 0.33, 0.66, 1.0], // Middle color at 30% (higher up)
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Space.verticalSpaceLarge(context),
-                  Column(
-                    children: [
-                      const Text(
-                        'Hello, STACKED!',
-                        style: TextStyle(
-                          fontSize: 35,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Space.verticalSpaceMedium(context),
-                      ElevatedButton(
-                        style: AppTheme.largeButton,
-                        onPressed: viewModel.incrementCounter,
-                        child: Text(
-                          viewModel.counterLabel,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ElevatedButton(
-                        onPressed: viewModel.showDialog,
-                        child: const Text(
-                          'Show Dialog',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: viewModel.showBottomSheet,
-                        child: const Text(
-                          'Show Bottom Sheet',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                ],
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Screens
+          _buildTabNavigator(0, viewModel),
+          _buildTabNavigator(1, viewModel),
+          _buildTabNavigator(2, viewModel),
+
+          // Floating Bottom Bar
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: FractionallySizedBox(
+                widthFactor: 0.9, // 90% of screen width
+                heightFactor: 0.07,
+                child: BottomBar(
+                  currentIndex: viewModel.currentIndex,
+                  onTap: viewModel.setTab,
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   @override
-  HomeViewModel viewModelBuilder(
-    BuildContext context,
-  ) =>
-      HomeViewModel();
+  HomeViewModel viewModelBuilder(BuildContext context) => HomeViewModel();
+
+  Widget _buildTabNavigator(int index, HomeViewModel viewModel) {
+    return Offstage(
+      offstage: viewModel.currentIndex != index,
+      child: Navigator(
+        key: viewModel.navigatorKeys[index],
+        onGenerateRoute: (settings) {
+          switch (index) {
+            case 0:
+              return MaterialPageRoute(builder: (_) => const CommunitiesScreen());
+            case 1:
+              return MaterialPageRoute(builder: (_) => const HomeScreen());
+            case 2:
+              return MaterialPageRoute(builder: (_) => const VolunteersScreen());
+            default:
+              throw Exception('Invalid tab');
+          }
+        },
+      ),
+    );
+  }
 }
