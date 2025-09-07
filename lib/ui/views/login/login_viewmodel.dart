@@ -6,14 +6,15 @@ import 'package:you_app/app/app.router.dart';
 class LoginViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
 
-  Future navigateToResetPasswordView() async {
+  Future navigateToResetPassword() async {
     _navigationService.navigateToResetPasswordView();
   }
 
-  Future navigateToSignUpView() async {
+  Future navigateToSignUp() async {
     _navigationService.navigateToSignupView();
   }
-  Future navigateToHomeView() async {
+
+  Future navigateToHome() async {
     _navigationService.navigateToHomeView();
   }
 }

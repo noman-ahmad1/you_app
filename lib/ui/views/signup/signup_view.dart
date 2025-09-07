@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 
@@ -26,7 +27,7 @@ class SignupView extends StackedView<SignupViewModel> {
             colors: [
               AppColors.primary,
               AppColors.backgroundGradient,
-              AppColors.peach,
+              AppColors.peachDark,
               AppColors.secondary
             ],
             stops: [0, 0.33, 0.66, 1.0],
@@ -39,9 +40,7 @@ class SignupView extends StackedView<SignupViewModel> {
             padding: const EdgeInsets.symmetric(horizontal: 25.0),
             child: SingleChildScrollView(
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: screenSize.height
-                ),
+                constraints: BoxConstraints(minHeight: screenSize.height),
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -84,14 +83,14 @@ class SignupView extends StackedView<SignupViewModel> {
                           obscureText: true,
                         ),
                         SizedBox(height: screenSize.height * 0.045),
-                        CustomButton(text: 'Sign Up',
-                        onPressed: () {
-                          viewModel.navigateToUserInfoView();
-                        }
-                        ),
+                        CustomButton(
+                            text: 'Sign Up',
+                            onPressed: () {
+                              viewModel.navigateToUserInfoView();
+                            }),
                         Space.verticalSpaceTiny(context),
                         InkWell(
-                          splashColor: AppColors.peach,
+                          splashColor: AppColors.peachDark,
                           onTap: () {
                             viewModel.navigateToResetPasswordView();
                           },
@@ -117,13 +116,13 @@ class SignupView extends StackedView<SignupViewModel> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             PaddedImageContainer(
-                              image: AssetImage('assets/icons/Apple.png'),
+                              image: AssetImage(AppConstants.apple),
                               containerWidth: screenSize.width * 0.28,
                               containerHeight: screenSize.height * 0.07,
                             ),
                             Space.horizontalSpaceVTiny(context),
                             PaddedImageContainer(
-                              image: AssetImage('assets/icons/Google.png'),
+                              image: AssetImage(AppConstants.google),
                               containerWidth: screenSize.width * 0.28,
                               containerHeight: screenSize.height * 0.07,
                             ),
@@ -133,7 +132,7 @@ class SignupView extends StackedView<SignupViewModel> {
                         spacedDivider(context),
                         Space.verticalSpaceSmall(context),
                         InkWell(
-                          splashColor: AppColors.peach,
+                          splashColor: AppColors.peachDark,
                           onTap: () {
                             viewModel.navigateToLoginView();
                           },

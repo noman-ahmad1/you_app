@@ -13,6 +13,7 @@ class SignupViewModel extends BaseViewModel {
   Future navigateToLoginView() async {
     _navigationService.navigateToLoginView();
   }
+
   Future navigateToUserInfoView() async {
     _navigationService.navigateToUserInfoView();
   }

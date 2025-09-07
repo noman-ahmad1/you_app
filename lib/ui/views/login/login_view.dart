@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 import 'login_viewmodel.dart';
@@ -38,9 +39,7 @@ class LoginView extends StackedView<LoginViewModel> {
             padding: const EdgeInsets.symmetric(horizontal: 25.0),
             child: SingleChildScrollView(
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: screenSize.height
-                ),
+                constraints: BoxConstraints(minHeight: screenSize.height),
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -96,9 +95,11 @@ class LoginView extends StackedView<LoginViewModel> {
                           obscureText: true,
                         ),
                         SizedBox(height: screenSize.height * 0.045),
-                        CustomButton(text: '  Login  ', onPressed: () {
-                          viewModel.navigateToHomeView();
-                        }),
+                        CustomButton(
+                            text: '  Login  ',
+                            onPressed: () {
+                              viewModel.navigateToHome();
+                            }),
                         // ElevatedButton(
                         //   style: ButtonStyle(
                         //     backgroundColor:
@@ -123,7 +124,7 @@ class LoginView extends StackedView<LoginViewModel> {
                         InkWell(
                           splashColor: AppColors.peach,
                           onTap: () {
-                            viewModel.navigateToResetPasswordView();
+                            viewModel.navigateToResetPassword();
                           },
                           child: Text(
                             'Forgot the password?',
@@ -147,13 +148,13 @@ class LoginView extends StackedView<LoginViewModel> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             PaddedImageContainer(
-                              image: AssetImage('assets/icons/Apple.png'),
+                              image: AssetImage(AppConstants.apple),
                               containerWidth: screenSize.width * 0.28,
                               containerHeight: screenSize.height * 0.07,
                             ),
                             Space.horizontalSpaceVTiny(context),
                             PaddedImageContainer(
-                              image: AssetImage('assets/icons/Google.png'),
+                              image: AssetImage(AppConstants.google),
                               containerWidth: screenSize.width * 0.28,
                               containerHeight: screenSize.height * 0.07,
                             ),
@@ -165,7 +166,7 @@ class LoginView extends StackedView<LoginViewModel> {
                         InkWell(
                           splashColor: AppColors.peach,
                           onTap: () {
-                            viewModel.navigateToSignUpView();
+                            viewModel.navigateToSignUp();
                           },
                           child: RichText(
                             text: TextSpan(

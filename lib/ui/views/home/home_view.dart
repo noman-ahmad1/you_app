@@ -56,11 +56,13 @@ class HomeView extends StackedView<HomeViewModel> {
         onGenerateRoute: (settings) {
           switch (index) {
             case 0:
-              return MaterialPageRoute(builder: (_) => const CommunitiesScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const CommunitiesScreen());
             case 1:
               return MaterialPageRoute(builder: (_) => const HomeScreen());
             case 2:
-              return MaterialPageRoute(builder: (_) => const VolunteersScreen());
+              return MaterialPageRoute(
+                  builder: (_) => const VolunteersScreen());
             default:
               throw Exception('Invalid tab');
           }

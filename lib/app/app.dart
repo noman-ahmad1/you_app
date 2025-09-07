@@ -9,6 +9,10 @@ import 'package:you_app/ui/views/login/login_view.dart';
 import 'package:you_app/ui/views/signup/signup_view.dart';
 import 'package:you_app/ui/views/reset_password/reset_password_view.dart';
 import 'package:you_app/ui/views/user_info/user_info_view.dart';
+import 'package:you_app/ui/views/journal/journal_view.dart';
+import 'package:you_app/ui/views/mood_tracker/mood_tracker_view.dart';
+import 'package:you_app/ui/views/new_journal_entry/new_journal_entry_view.dart';
+import 'package:you_app/ui/views/chatbot/chatbot_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -20,6 +24,10 @@ import 'package:you_app/ui/views/user_info/user_info_view.dart';
     MaterialRoute(page: SignupView),
     MaterialRoute(page: ResetPasswordView),
     MaterialRoute(page: UserInfoView),
+    MaterialRoute(page: JournalView),
+    MaterialRoute(page: MoodTrackerView),
+    MaterialRoute(page: NewJournalEntryView),
+    MaterialRoute(page: ChatbotView),
 // @stacked-route
   ],
   dependencies: [

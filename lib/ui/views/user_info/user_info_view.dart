@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 
@@ -25,7 +26,7 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
             colors: [
               AppColors.primary,
               AppColors.backgroundGradient,
-              AppColors.peach,
+              AppColors.peachDark,
               AppColors.secondary
             ],
             stops: [0, 0.33, 0.66, 1.0],
@@ -35,9 +36,7 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
         ),
         child: SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-                  minHeight: screenSize.height
-                ),
+            constraints: BoxConstraints(minHeight: screenSize.height),
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -52,30 +51,33 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
                         Space.verticalSpaceSmall(context),
                         Space.verticalSpaceTiny(context),
                         Text(
-                            'Tell us a bit more about you',
-                            style: GoogleFonts.crimsonPro(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryVeryDark),
-                          ),
-                          Text(
-                            'Let\'s personalize your journey',
-                            style: GoogleFonts.crimsonPro(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.secondary),
-                          ),
+                          'Tell us a bit more about you',
+                          style: GoogleFonts.crimsonPro(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryVeryDark),
+                        ),
+                        Text(
+                          'Let\'s personalize your journey',
+                          style: GoogleFonts.crimsonPro(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.secondary),
+                        ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Space.verticalSpaceTiny(context),
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: screenSize.width* 0.05, vertical: screenSize.height * 0.005),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: screenSize.width * 0.05,
+                                  vertical: screenSize.height * 0.005),
                               child: Text(
-                                  'Choose your unique username',
-                                  style: GoogleFonts.crimsonPro(
-                                      color: AppColors.primaryVeryDark, fontSize: 18),
-                                ),
+                                'Choose your unique username',
+                                style: GoogleFonts.crimsonPro(
+                                    color: AppColors.primaryVeryDark,
+                                    fontSize: 18),
+                              ),
                             ),
                             CustomTextField(
                               controller: emailController,
@@ -84,12 +86,15 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
                             ),
                             Space.verticalSpaceVTiny(context),
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: screenSize.width* 0.05, vertical: screenSize.height * 0.005),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: screenSize.width * 0.05,
+                                  vertical: screenSize.height * 0.005),
                               child: Text(
-                                  'When\'s your birthday?',
-                                  style: GoogleFonts.crimsonPro(
-                                      color: AppColors.primaryVeryDark, fontSize: 18),
-                                ),
+                                'When\'s your birthday?',
+                                style: GoogleFonts.crimsonPro(
+                                    color: AppColors.primaryVeryDark,
+                                    fontSize: 18),
+                              ),
                             ),
                             CustomTextField(
                               controller: emailController,
@@ -98,109 +103,111 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
                             ),
                             Space.verticalSpaceVTiny(context),
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: screenSize.width* 0.05, vertical: screenSize.height * 0.005),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: screenSize.width * 0.05,
+                                  vertical: screenSize.height * 0.005),
                               child: Text(
-                                  'How do you identify your gender?',
-                                  style: GoogleFonts.crimsonPro(
-                                      color: AppColors.primaryVeryDark, fontSize: 18),
-                                ),
+                                'How do you identify your gender?',
+                                style: GoogleFonts.crimsonPro(
+                                    color: AppColors.primaryVeryDark,
+                                    fontSize: 18),
+                              ),
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 ElevatedButton(
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all(AppColors.primaryVeryDark),
-                                padding: WidgetStateProperty.all(EdgeInsets.symmetric(
-                                  vertical:
-                                      screenSize.height * 0.022,
-                                  horizontal:
-                                      screenSize.width* 0.08,
-                                )),
-                                shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                                  side: const BorderSide(
-                                    color: AppColors.primary,
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(33),
-                                )),
-                                elevation: WidgetStateProperty.all(0),
-                                ),
-                              onPressed: (){},
-                              child: const Text('  Male  ',
-                              style: TextStyle(
-                                fontSize: 16
-                              ),
-                              )),
-                              Space.horizontalSpaceVTiny(context),
-                              ElevatedButton(
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all(AppColors.primaryVeryDark),
-                                padding: WidgetStateProperty.all(EdgeInsets.symmetric(
-                                  vertical:
-                                      screenSize.height * 0.022,
-                                  horizontal:
-                                      screenSize.width* 0.08,
-                                )),
-                                shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                                  side: const BorderSide(
-                                    color: AppColors.primary,
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(33),
-                                )),
-                                elevation: WidgetStateProperty.all(0),
-                                ),
-                              onPressed: (){},
-                              child: const Text('Female',
-                              style: TextStyle(
-                                fontSize: 16
-                              ),
-                              )),
-                              Space.horizontalSpaceVTiny(context),
-                              ElevatedButton(
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all(AppColors.primaryVeryDark),
-                                padding: WidgetStateProperty.all(EdgeInsets.symmetric(
-                                  vertical:
-                                      screenSize.height * 0.022,
-                                  horizontal:
-                                      screenSize.width* 0.08,
-                                )) ,
-                                shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                                  side: const BorderSide(
-                                    color: AppColors.primary,
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(33),
-                                )),
-                                elevation: WidgetStateProperty.all(0),
-                                ),
-                              onPressed: (){},
-                              child: const Text(' Other ',
-                              style: TextStyle(
-                                fontSize: 16
-                              ),
-                              )),
+                                    style: ButtonStyle(
+                                      backgroundColor: WidgetStateProperty.all(
+                                          AppColors.primaryVeryDark),
+                                      padding: WidgetStateProperty.all(
+                                          EdgeInsets.symmetric(
+                                        vertical: screenSize.height * 0.022,
+                                        horizontal: screenSize.width * 0.08,
+                                      )),
+                                      shape: WidgetStateProperty.all(
+                                          RoundedRectangleBorder(
+                                        side: const BorderSide(
+                                          color: AppColors.primary,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(33),
+                                      )),
+                                      elevation: WidgetStateProperty.all(0),
+                                    ),
+                                    onPressed: () {},
+                                    child: const Text(
+                                      '  Male  ',
+                                      style: TextStyle(fontSize: 16),
+                                    )),
+                                Space.horizontalSpaceVTiny(context),
+                                ElevatedButton(
+                                    style: ButtonStyle(
+                                      backgroundColor: WidgetStateProperty.all(
+                                          AppColors.primaryVeryDark),
+                                      padding: WidgetStateProperty.all(
+                                          EdgeInsets.symmetric(
+                                        vertical: screenSize.height * 0.022,
+                                        horizontal: screenSize.width * 0.08,
+                                      )),
+                                      shape: WidgetStateProperty.all(
+                                          RoundedRectangleBorder(
+                                        side: const BorderSide(
+                                          color: AppColors.primary,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(33),
+                                      )),
+                                      elevation: WidgetStateProperty.all(0),
+                                    ),
+                                    onPressed: () {},
+                                    child: const Text(
+                                      'Female',
+                                      style: TextStyle(fontSize: 16),
+                                    )),
+                                Space.horizontalSpaceVTiny(context),
+                                ElevatedButton(
+                                    style: ButtonStyle(
+                                      backgroundColor: WidgetStateProperty.all(
+                                          AppColors.primaryVeryDark),
+                                      padding: WidgetStateProperty.all(
+                                          EdgeInsets.symmetric(
+                                        vertical: screenSize.height * 0.022,
+                                        horizontal: screenSize.width * 0.08,
+                                      )),
+                                      shape: WidgetStateProperty.all(
+                                          RoundedRectangleBorder(
+                                        side: const BorderSide(
+                                          color: AppColors.primary,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(33),
+                                      )),
+                                      elevation: WidgetStateProperty.all(0),
+                                    ),
+                                    onPressed: () {},
+                                    child: const Text(
+                                      ' Other ',
+                                      style: TextStyle(fontSize: 16),
+                                    )),
                               ],
                             ),
                           ],
                         ),
                         Space.verticalSpaceTiny(context),
                         Space.verticalSpaceTiny(context),
-                              Text(
-                                'This would help us understand your journey better',
-                                style: GoogleFonts.crimsonPro(
-                                    color: AppColors.background,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700
-                                    ),
-                              ),
+                        Text(
+                          'This would help us understand your journey better',
+                          style: GoogleFonts.crimsonPro(
+                              color: AppColors.background,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700),
+                        ),
                       ],
                     ),
                     Container(
-                      height: screenSize.height * 0.33,
-                      child: Image.asset('assets/images/1.png')),
+                        height: screenSize.height * 0.33,
+                        child: Image.asset(AppConstants.register)),
                   ],
                 ),
               ),

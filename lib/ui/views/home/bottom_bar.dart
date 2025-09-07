@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 
 class BottomBar extends StatelessWidget {
   final int currentIndex;
@@ -23,12 +24,12 @@ class BottomBar extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+        filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
         child: Container(
           width: width * 0.9,
           height: height * 0.07,
           decoration: BoxDecoration(
-            color: AppColors.secondaryVeryLight.withAlpha(40),
+            color: AppColors.secondaryVeryLight.withAlpha(102),
             border: Border.all(color: AppColors.secondary, width: 2),
             borderRadius: BorderRadius.circular(35),
             boxShadow: [
@@ -48,9 +49,10 @@ class BottomBar extends StatelessWidget {
                 alignment: _getAlignment(currentIndex),
                 child: Container(
                   width: tabWidth,
-                  margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 3),
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 3, horizontal: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withAlpha(30),
+                    color: AppColors.secondaryVeryLight.withAlpha(70),
                     borderRadius: BorderRadius.circular(35),
                     border: Border.all(color: AppColors.secondary, width: 2),
                   ),
@@ -61,19 +63,19 @@ class BottomBar extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _TabItem(
-                    assetPath: 'assets/icons/community.png',
+                    assetPath: AppConstants.community,
                     label: 'Community',
                     isSelected: currentIndex == 0,
                     onTap: () => onTap(0),
                   ),
                   _TabItem(
-                    assetPath: 'assets/icons/home.png',
+                    assetPath: AppConstants.home,
                     label: 'Home',
                     isSelected: currentIndex == 1,
                     onTap: () => onTap(1),
                   ),
                   _TabItem(
-                    assetPath: 'assets/icons/chat.png',
+                    assetPath: AppConstants.chat,
                     label: 'Chat',
                     isSelected: currentIndex == 2,
                     onTap: () => onTap(2),
@@ -116,6 +118,9 @@ class _TabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final barHeight =
+        MediaQuery.of(context).size.height * 0.06; // match BottomBar height
+    final iconSize = barHeight * 0.6; // 60% of bar height
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -124,8 +129,8 @@ class _TabItem extends StatelessWidget {
           alignment: Alignment.center,
           child: Image.asset(
             assetPath,
-            height: 24,
-            width: 24,
+            height: iconSize,
+            width: iconSize,
             color: isSelected ? AppColors.secondary : AppColors.secondary,
           ),
         ),

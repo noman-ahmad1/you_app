@@ -25,7 +25,7 @@ class ResetPasswordView extends StackedView<ResetPasswordViewModel> {
             colors: [
               AppColors.primary,
               AppColors.backgroundGradient,
-              AppColors.peach,
+              AppColors.peachDark,
               AppColors.secondary
             ],
             stops: [0, 0.33, 0.66, 1.0],
@@ -38,9 +38,7 @@ class ResetPasswordView extends StackedView<ResetPasswordViewModel> {
             padding: const EdgeInsets.symmetric(horizontal: 25.0),
             child: SingleChildScrollView(
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: screenSize.height
-                ),
+                constraints: BoxConstraints(minHeight: screenSize.height),
                 child: viewModel.isVerified == 1
                     ? Column(
                         mainAxisSize: MainAxisSize.max,
@@ -77,7 +75,7 @@ class ResetPasswordView extends StackedView<ResetPasswordViewModel> {
                               Space.verticalSpaceLarge(context),
                               Space.verticalSpaceSmall(context),
                               InkWell(
-                                splashColor: AppColors.peach,
+                                splashColor: AppColors.peachDark,
                                 onTap: () {
                                   viewModel.navigateToLoginView();
                                 },
@@ -146,7 +144,8 @@ class ResetPasswordView extends StackedView<ResetPasswordViewModel> {
                               RichText(
                                 text: TextSpan(
                                   style: GoogleFonts.crimsonPro(
-                                      color: AppColors.background, fontSize: 15),
+                                      color: AppColors.background,
+                                      fontSize: 15),
                                   children: <TextSpan>[
                                     TextSpan(text: 'Try logging in?'),
                                     TextSpan(

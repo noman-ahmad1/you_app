@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'welcome_viewmodel.dart';
 
@@ -22,7 +23,7 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
             colors: [
               AppColors.primary,
               AppColors.backgroundGradient,
-              AppColors.peach,
+              AppColors.peachDark,
               AppColors.secondary
             ],
             stops: [0, 0.33, 0.66, 1.0],
@@ -44,13 +45,14 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                       Text(
                         'Welcome to YOU',
                         style: GoogleFonts.crimsonPro(
-                        fontSize: 30, fontWeight: FontWeight.w700,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.secondary),
                       ),
                       Space.verticalSpaceTiny(context),
                       Space.verticalSpaceVTiny(context),
                       Image.asset(
-                        'assets/images/You.png',
+                        AppConstants.logo,
                         height: screenSize.height * 0.25,
                         width: screenSize.width * 0.5,
                         fit: BoxFit.cover,

@@ -1,3 +1,4 @@
+// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
@@ -5,12 +6,17 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:flutter/material.dart' as _i9;
+import 'package:flutter/material.dart' as _i13;
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart' as _i1;
-import 'package:stacked_services/stacked_services.dart' as _i10;
+import 'package:stacked_services/stacked_services.dart' as _i14;
+import 'package:you_app/ui/views/chatbot/chatbot_view.dart' as _i12;
 import 'package:you_app/ui/views/home/home_view.dart' as _i2;
+import 'package:you_app/ui/views/journal/journal_view.dart' as _i9;
 import 'package:you_app/ui/views/login/login_view.dart' as _i5;
+import 'package:you_app/ui/views/mood_tracker/mood_tracker_view.dart' as _i10;
+import 'package:you_app/ui/views/new_journal_entry/new_journal_entry_view.dart'
+    as _i11;
 import 'package:you_app/ui/views/reset_password/reset_password_view.dart'
     as _i7;
 import 'package:you_app/ui/views/signup/signup_view.dart' as _i6;
@@ -20,6 +26,7 @@ import 'package:you_app/ui/views/welcome/welcome_view.dart' as _i4;
 
 class Routes {
   static const homeView = '/home-view';
+
   static const startupView = '/startup-view';
 
   static const welcomeView = '/welcome-view';
@@ -32,6 +39,14 @@ class Routes {
 
   static const userInfoView = '/user-info-view';
 
+  static const journalView = '/journal-view';
+
+  static const moodTrackerView = '/mood-tracker-view';
+
+  static const newJournalEntryView = '/new-journal-entry-view';
+
+  static const chatbotView = '/chatbot-view';
+
   static const all = <String>{
     homeView,
     startupView,
@@ -40,81 +55,125 @@ class Routes {
     signupView,
     resetPasswordView,
     userInfoView,
+    journalView,
+    moodTrackerView,
+    newJournalEntryView,
+    chatbotView,
   };
 }
 
 class StackedRouter extends _i1.RouterBase {
   final _routes = <_i1.RouteDef>[
-    _i1.RouteDef(
-      Routes.homeView,
-      page: _i2.HomeView,
-    ),
-    _i1.RouteDef(
-      Routes.startupView,
-      page: _i3.StartupView,
-    ),
-    _i1.RouteDef(
-      Routes.welcomeView,
-      page: _i4.WelcomeView,
-    ),
-    _i1.RouteDef(
-      Routes.loginView,
-      page: _i5.LoginView,
-    ),
-    _i1.RouteDef(
-      Routes.signupView,
-      page: _i6.SignupView,
-    ),
-    _i1.RouteDef(
-      Routes.resetPasswordView,
-      page: _i7.ResetPasswordView,
-    ),
-    _i1.RouteDef(
-      Routes.userInfoView,
-      page: _i8.UserInfoView,
-    ),
+    _i1.RouteDef(Routes.homeView, page: _i2.HomeView),
+    _i1.RouteDef(Routes.startupView, page: _i3.StartupView),
+    _i1.RouteDef(Routes.welcomeView, page: _i4.WelcomeView),
+    _i1.RouteDef(Routes.loginView, page: _i5.LoginView),
+    _i1.RouteDef(Routes.signupView, page: _i6.SignupView),
+    _i1.RouteDef(Routes.resetPasswordView, page: _i7.ResetPasswordView),
+    _i1.RouteDef(Routes.userInfoView, page: _i8.UserInfoView),
+    _i1.RouteDef(Routes.journalView, page: _i9.JournalView),
+    _i1.RouteDef(Routes.moodTrackerView, page: _i10.MoodTrackerView),
+    _i1.RouteDef(Routes.newJournalEntryView, page: _i11.NewJournalEntryView),
+    _i1.RouteDef(Routes.chatbotView, page: _i12.ChatbotView),
   ];
 
   final _pagesMap = <Type, _i1.StackedRouteFactory>{
     _i2.HomeView: (data) {
-      return _i9.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i2.HomeView(),
+      final args = data.getArgs<HomeViewArguments>(
+        orElse: () => const HomeViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i2.HomeView(key: args.key),
         settings: data,
       );
     },
     _i3.StartupView: (data) {
-      return _i9.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i3.StartupView(),
+      final args = data.getArgs<StartupViewArguments>(
+        orElse: () => const StartupViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i3.StartupView(key: args.key),
         settings: data,
       );
     },
     _i4.WelcomeView: (data) {
-      return _i9.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i4.WelcomeView(),
+      final args = data.getArgs<WelcomeViewArguments>(
+        orElse: () => const WelcomeViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i4.WelcomeView(key: args.key),
         settings: data,
       );
     },
     _i5.LoginView: (data) {
-      return _i9.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i5.LoginView(),
+      final args = data.getArgs<LoginViewArguments>(
+        orElse: () => const LoginViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i5.LoginView(key: args.key),
         settings: data,
       );
     },
     _i6.SignupView: (data) {
-      return _i9.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i6.SignupView(),
+      final args = data.getArgs<SignupViewArguments>(
+        orElse: () => const SignupViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i6.SignupView(key: args.key),
         settings: data,
       );
     },
     _i7.ResetPasswordView: (data) {
-      return _i9.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i7.ResetPasswordView(),
+      final args = data.getArgs<ResetPasswordViewArguments>(
+        orElse: () => const ResetPasswordViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i7.ResetPasswordView(key: args.key),
         settings: data,
       );
     },
     _i8.UserInfoView: (data) {
-      return _i9.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i8.UserInfoView(),
+      final args = data.getArgs<UserInfoViewArguments>(
+        orElse: () => const UserInfoViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i8.UserInfoView(key: args.key),
+        settings: data,
+      );
+    },
+    _i9.JournalView: (data) {
+      final args = data.getArgs<JournalViewArguments>(
+        orElse: () => const JournalViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i9.JournalView(key: args.key),
+        settings: data,
+      );
+    },
+    _i10.MoodTrackerView: (data) {
+      final args = data.getArgs<MoodTrackerViewArguments>(
+        orElse: () => const MoodTrackerViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i10.MoodTrackerView(key: args.key),
+        settings: data,
+      );
+    },
+    _i11.NewJournalEntryView: (data) {
+      final args = data.getArgs<NewJournalEntryViewArguments>(
+        orElse: () => const NewJournalEntryViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i11.NewJournalEntryView(key: args.key),
+        settings: data,
+      );
+    },
+    _i12.ChatbotView: (data) {
+      final args = data.getArgs<ChatbotViewArguments>(
+        orElse: () => const ChatbotViewArguments(),
+      );
+      return _i13.MaterialPageRoute<dynamic>(
+        builder: (context) => _i12.ChatbotView(key: args.key),
         settings: data,
       );
     },
@@ -127,200 +186,642 @@ class StackedRouter extends _i1.RouterBase {
   Map<Type, _i1.StackedRouteFactory> get pagesMap => _pagesMap;
 }
 
-extension NavigatorStateExtension on _i10.NavigationService {
-  Future<dynamic> navigateToHomeView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return navigateTo<dynamic>(Routes.homeView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+class HomeViewArguments {
+  const HomeViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
   }
 
-  Future<dynamic> navigateToStartupView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return navigateTo<dynamic>(Routes.startupView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  bool operator ==(covariant HomeViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
   }
 
-  Future<dynamic> navigateToWelcomeView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return navigateTo<dynamic>(Routes.welcomeView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class StartupViewArguments {
+  const StartupViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
   }
 
-  Future<dynamic> navigateToLoginView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return navigateTo<dynamic>(Routes.loginView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  bool operator ==(covariant StartupViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
   }
 
-  Future<dynamic> navigateToSignupView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return navigateTo<dynamic>(Routes.signupView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class WelcomeViewArguments {
+  const WelcomeViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
   }
 
-  Future<dynamic> navigateToResetPasswordView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return navigateTo<dynamic>(Routes.resetPasswordView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  bool operator ==(covariant WelcomeViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
   }
 
-  Future<dynamic> navigateToUserInfoView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return navigateTo<dynamic>(Routes.userInfoView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class LoginViewArguments {
+  const LoginViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
   }
 
-  Future<dynamic> replaceWithHomeView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return replaceWith<dynamic>(Routes.homeView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  bool operator ==(covariant LoginViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
   }
 
-  Future<dynamic> replaceWithStartupView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return replaceWith<dynamic>(Routes.startupView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class SignupViewArguments {
+  const SignupViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
   }
 
-  Future<dynamic> replaceWithWelcomeView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return replaceWith<dynamic>(Routes.welcomeView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  bool operator ==(covariant SignupViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
   }
 
-  Future<dynamic> replaceWithLoginView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return replaceWith<dynamic>(Routes.loginView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class ResetPasswordViewArguments {
+  const ResetPasswordViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
   }
 
-  Future<dynamic> replaceWithSignupView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return replaceWith<dynamic>(Routes.signupView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  bool operator ==(covariant ResetPasswordViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
   }
 
-  Future<dynamic> replaceWithResetPasswordView([
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  ]) async {
-    return replaceWith<dynamic>(Routes.resetPasswordView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class UserInfoViewArguments {
+  const UserInfoViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
   }
 
-  Future<dynamic> replaceWithUserInfoView([
+  @override
+  bool operator ==(covariant UserInfoViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class JournalViewArguments {
+  const JournalViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
+  }
+
+  @override
+  bool operator ==(covariant JournalViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class MoodTrackerViewArguments {
+  const MoodTrackerViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
+  }
+
+  @override
+  bool operator ==(covariant MoodTrackerViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class NewJournalEntryViewArguments {
+  const NewJournalEntryViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
+  }
+
+  @override
+  bool operator ==(covariant NewJournalEntryViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+class ChatbotViewArguments {
+  const ChatbotViewArguments({this.key});
+
+  final _i13.Key? key;
+
+  @override
+  String toString() {
+    return '{"key": "$key"}';
+  }
+
+  @override
+  bool operator ==(covariant ChatbotViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode;
+  }
+}
+
+extension NavigatorStateExtension on _i14.NavigationService {
+  Future<dynamic> navigateToHomeView({
+    _i13.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
-  ]) async {
-    return replaceWith<dynamic>(Routes.userInfoView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.homeView,
+      arguments: HomeViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToStartupView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.startupView,
+      arguments: StartupViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToWelcomeView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.welcomeView,
+      arguments: WelcomeViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToLoginView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.loginView,
+      arguments: LoginViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToSignupView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.signupView,
+      arguments: SignupViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToResetPasswordView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.resetPasswordView,
+      arguments: ResetPasswordViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToUserInfoView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.userInfoView,
+      arguments: UserInfoViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToJournalView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.journalView,
+      arguments: JournalViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToMoodTrackerView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.moodTrackerView,
+      arguments: MoodTrackerViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToNewJournalEntryView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.newJournalEntryView,
+      arguments: NewJournalEntryViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> navigateToChatbotView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.chatbotView,
+      arguments: ChatbotViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithHomeView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.homeView,
+      arguments: HomeViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithStartupView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.startupView,
+      arguments: StartupViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithWelcomeView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.welcomeView,
+      arguments: WelcomeViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithLoginView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.loginView,
+      arguments: LoginViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithSignupView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.signupView,
+      arguments: SignupViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithResetPasswordView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.resetPasswordView,
+      arguments: ResetPasswordViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithUserInfoView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.userInfoView,
+      arguments: UserInfoViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithJournalView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.journalView,
+      arguments: JournalViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithMoodTrackerView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.moodTrackerView,
+      arguments: MoodTrackerViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithNewJournalEntryView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.newJournalEntryView,
+      arguments: NewJournalEntryViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithChatbotView({
+    _i13.Key? key,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.chatbotView,
+      arguments: ChatbotViewArguments(key: key),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
   }
 }
