@@ -45,6 +45,15 @@ class AppConstants {
   static const String emoji_7 = 'assets/icons/emo7.png';
   static const String emoji_8 = 'assets/icons/emo8.png';
   static const String emoji_9 = 'assets/icons/emo9.png';
+  static const String camera = 'assets/icons/camera.png';
+  static const String person = 'assets/icons/person.png';
+  static const String stat = 'assets/icons/stat.png';
+  static const String notification = 'assets/icons/notification.png';
+  static const String setting = 'assets/icons/setting.png';
+  static const String done = 'assets/icons/done.png';
+  static const String activeChat = 'assets/icons/activeChat.png';
+  static const String pending = 'assets/icons/pending.png';
+  static const String journalIcon = 'assets/icons/journalIcon.png';
 
   //images
   static const String register = 'assets/images/1.png';

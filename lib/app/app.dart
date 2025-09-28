@@ -13,6 +13,9 @@ import 'package:you_app/ui/views/journal/journal_view.dart';
 import 'package:you_app/ui/views/mood_tracker/mood_tracker_view.dart';
 import 'package:you_app/ui/views/new_journal_entry/new_journal_entry_view.dart';
 import 'package:you_app/ui/views/chatbot/chatbot_view.dart';
+import 'package:you_app/ui/views/volunteer_signup/volunteer_signup_view.dart';
+import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_view.dart';
+import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -28,6 +31,9 @@ import 'package:you_app/ui/views/chatbot/chatbot_view.dart';
     MaterialRoute(page: MoodTrackerView),
     MaterialRoute(page: NewJournalEntryView),
     MaterialRoute(page: ChatbotView),
+    MaterialRoute(page: VolunteerSignupView),
+    MaterialRoute(page: VolunteerSignupInfoView),
+    MaterialRoute(page: VolunteerHomeView),
 // @stacked-route
   ],
   dependencies: [

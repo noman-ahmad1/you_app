@@ -10,7 +10,7 @@ import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
 
 class JournalDetails extends StatelessWidget {
-  final JournalViewModel viewModel;
+  final VolunteerSignupInfoViewModel viewModel;
   const JournalDetails({super.key, required this.viewModel});
   @override
   Widget build(BuildContext context) {

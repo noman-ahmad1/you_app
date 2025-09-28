@@ -101,7 +101,7 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                           )),
                         ),
                         onPressed: () {
-                          viewModel.navigateToSignUpView();
+                          viewModel.navigateToSignupView();
                         },
                         child: const Text(
                           'SIGN UP',
@@ -109,6 +109,19 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                               color: AppColors.secondary,
                               fontWeight: FontWeight.w900,
                               fontSize: 18),
+                        ),
+                      ),
+                      Space.verticalSpaceTiny(context),
+                      InkWell(
+                        onTap: () {
+                          viewModel.navigateToVolunteerSignup();
+                        },
+                        child: Text(
+                          'Sign Up | Login as Volunteer',
+                          style: GoogleFonts.crimsonPro(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.secondaryVeryLight),
                         ),
                       ),
                     ],

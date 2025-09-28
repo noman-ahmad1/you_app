@@ -41,6 +41,16 @@ android {
         }
     }
 }
+dependencies {
+    // 1. BOM dependency must be declared using the 'platform()' function call.
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    
+    // 2. Regular dependencies are passed as a string argument to the 'implementation()' function.
+    implementation("com.google.firebase:firebase-auth")
+    
+    // 3. Dependency for Google Sign-In is also passed as a string argument.
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+}
 
 flutter {
     source = "../.."

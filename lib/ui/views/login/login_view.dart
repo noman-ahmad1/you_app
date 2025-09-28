@@ -26,7 +26,7 @@ class LoginView extends StackedView<LoginViewModel> {
             colors: [
               AppColors.primary,
               AppColors.backgroundGradient,
-              AppColors.peach,
+              AppColors.peachDark,
               AppColors.secondary
             ],
             stops: [0, 0.33, 0.66, 1.0],

@@ -12,7 +12,7 @@ import 'package:you_app/ui/views/journal/journal_details.dart';
 import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
 
 class AllEntriesView extends StatelessWidget {
-  final JournalViewModel viewModel;
+  final VolunteerSignupInfoViewModel viewModel;
   const AllEntriesView({super.key, required this.viewModel});
   @override
   Widget build(BuildContext context) {
@@ -193,7 +193,7 @@ class AllEntriesView extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                               builder: (context) => JournalDetails(
-                                    viewModel: JournalViewModel(),
+                                    viewModel: VolunteerSignupInfoViewModel(),
                                   )));
                     },
                     category: "Personal",

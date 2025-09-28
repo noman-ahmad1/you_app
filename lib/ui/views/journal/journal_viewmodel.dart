@@ -6,7 +6,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
-class JournalViewModel extends BaseViewModel {
+class VolunteerSignupInfoViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final AudioPlayer _fxPlayer = AudioPlayer();
   int _currentIndex = 1;

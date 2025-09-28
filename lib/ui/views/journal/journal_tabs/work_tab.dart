@@ -10,7 +10,7 @@ import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
 
 // WorkEntriesView
 class WorkEntriesView extends StatelessWidget {
-  final JournalViewModel viewModel;
+  final VolunteerSignupInfoViewModel viewModel;
   const WorkEntriesView({super.key, required this.viewModel});
   @override
   Widget build(BuildContext context) {
@@ -33,7 +33,7 @@ class WorkEntriesView extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                               builder: (context) => JournalDetails(
-                                    viewModel: JournalViewModel(),
+                                    viewModel: VolunteerSignupInfoViewModel(),
                                   )));
                     },
                     category: "Work",

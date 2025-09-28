@@ -17,8 +17,6 @@ class SignupView extends StackedView<SignupViewModel> {
     SignupViewModel viewModel,
     Widget? child,
   ) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
     final screenSize = MediaQuery.of(context).size;
     return Scaffold(
       body: Container(
@@ -60,26 +58,33 @@ class SignupView extends StackedView<SignupViewModel> {
                         Space.verticalSpaceTiny(context),
                         // SizedBox(height: screenSize.height * 0.04),
                         CustomTextField(
-                          controller: emailController,
-                          labelText: 'Full Name',
-                          keyboardType: TextInputType.emailAddress,
+                          controller: viewModel.firstNameController,
+                          labelText: 'First Name',
+                          keyboardType: TextInputType.name,
                         ),
                         Space.verticalSpaceVTiny(context),
                         CustomTextField(
-                          controller: emailController,
+                          controller: viewModel.secondNameController,
+                          labelText: 'Second Name',
+                          keyboardType: TextInputType.name,
+                        ),
+                        Space.verticalSpaceVTiny(context),
+                        CustomTextField(
+                          controller: viewModel.emailController,
                           labelText: 'Email Address',
                           keyboardType: TextInputType.emailAddress,
                         ),
                         Space.verticalSpaceVTiny(context),
                         CustomTextField(
-                          controller: emailController,
+                          controller: viewModel.passwordController,
                           labelText: 'Type a password',
-                          keyboardType: TextInputType.emailAddress,
+                          keyboardType: TextInputType.visiblePassword,
                         ),
                         Space.verticalSpaceVTiny(context),
                         CustomTextField(
-                          controller: passwordController,
+                          controller: viewModel.confirmPasswordController,
                           labelText: 'Confirm password',
+                          keyboardType: TextInputType.visiblePassword,
                           obscureText: true,
                         ),
                         SizedBox(height: screenSize.height * 0.045),
@@ -104,7 +109,7 @@ class SignupView extends StackedView<SignupViewModel> {
                           ),
                         ),
                         SizedBox(
-                          height: screenSize.height * 0.09,
+                          height: screenSize.height * 0.05,
                         ),
                         const CenteredDividerWithText(
                           text: 'Or Sign up with',
@@ -112,25 +117,15 @@ class SignupView extends StackedView<SignupViewModel> {
                           spacing: 10,
                         ),
                         Space.verticalSpaceTiny(context),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            PaddedImageContainer(
-                              image: AssetImage(AppConstants.apple),
-                              containerWidth: screenSize.width * 0.28,
-                              containerHeight: screenSize.height * 0.07,
-                            ),
-                            Space.horizontalSpaceVTiny(context),
-                            PaddedImageContainer(
-                              image: AssetImage(AppConstants.google),
-                              containerWidth: screenSize.width * 0.28,
-                              containerHeight: screenSize.height * 0.07,
-                            ),
-                          ],
+                        Space.horizontalSpaceVTiny(context),
+                        PaddedImageContainer(
+                          image: AssetImage(AppConstants.google),
+                          containerWidth: screenSize.width * 0.28,
+                          containerHeight: screenSize.height * 0.07,
                         ),
                         Space.verticalSpaceTiny(context),
                         spacedDivider(context),
-                        Space.verticalSpaceSmall(context),
+                        Space.verticalSpaceTiny(context),
                         InkWell(
                           splashColor: AppColors.peachDark,
                           onTap: () {

@@ -10,13 +10,13 @@ import 'package:you_app/ui/views/journal/journal_tabs/personal_tab.dart';
 import 'package:you_app/ui/views/journal/journal_tabs/work_tab.dart';
 import 'journal_viewmodel.dart';
 
-class JournalView extends StackedView<JournalViewModel> {
+class JournalView extends StackedView<VolunteerSignupInfoViewModel> {
   const JournalView({Key? key}) : super(key: key);
 
   @override
   Widget builder(
     BuildContext context,
-    JournalViewModel viewModel,
+    VolunteerSignupInfoViewModel viewModel,
     Widget? child,
   ) {
     return Scaffold(
@@ -54,7 +54,7 @@ class JournalView extends StackedView<JournalViewModel> {
             )));
   }
 
-  Widget _buildTabContent(JournalViewModel viewModel) {
+  Widget _buildTabContent(VolunteerSignupInfoViewModel viewModel) {
     switch (viewModel.currentIndex) {
       case 0:
         return WorkEntriesView(viewModel: viewModel, key: ValueKey('work'));
@@ -69,8 +69,8 @@ class JournalView extends StackedView<JournalViewModel> {
   }
 
   @override
-  JournalViewModel viewModelBuilder(
+  VolunteerSignupInfoViewModel viewModelBuilder(
     BuildContext context,
   ) =>
-      JournalViewModel();
+      VolunteerSignupInfoViewModel();
 }
