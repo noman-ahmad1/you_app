@@ -9,6 +9,15 @@ class AuthenticationService with ListenableServiceMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  // Phone verification properties
+  final ReactiveValue<bool> _isPhoneVerificationSent =
+      ReactiveValue<bool>(false);
+  final ReactiveValue<bool> _isPhoneVerified = ReactiveValue<bool>(false);
+  final ReactiveValue<String?> _verificationId = ReactiveValue<String?>(null);
+  final ReactiveValue<int?> _forceResendingToken = ReactiveValue<int?>(null);
+  final ReactiveValue<bool> _isPhoneCodeSent = ReactiveValue<bool>(false);
+  final ReactiveValue<String?> _pendingPhoneNumber =
+      ReactiveValue<String?>(null);
 
   final ReactiveValue<AppUser?> _currentUser = ReactiveValue<AppUser?>(null);
   final ReactiveValue<AuthStatus> _authStatus =
@@ -26,10 +35,26 @@ class AuthenticationService with ListenableServiceMixin {
   bool get isLoading => _isLoading.value;
   String? get error => _error.value;
   bool get isLoggedIn => _currentUser.value != null;
+  // Phone verification getters
+  bool get isPhoneVerificationSent => _isPhoneVerificationSent.value;
+  bool get isPhoneVerified => _isPhoneVerified.value;
+  bool get isPhoneCodeSent => _isPhoneCodeSent.value;
+  String? get pendingPhoneNumber => _pendingPhoneNumber.value;
 
   AuthenticationService() {
-    listenToReactiveValues(
-        [_currentUser, _allUsers, _authStatus, _isLoading, _error]);
+    listenToReactiveValues([
+      _currentUser,
+      _authStatus,
+      _isLoading,
+      _error,
+      _allUsers,
+      _isPhoneVerificationSent,
+      _isPhoneVerified,
+      _verificationId,
+      _forceResendingToken,
+      _isPhoneCodeSent,
+      _pendingPhoneNumber
+    ]);
     _initializeAuth();
   }
 
@@ -39,6 +64,11 @@ class AuthenticationService with ListenableServiceMixin {
     try {
       await _googleSignIn.initialize(
           // You can specify scopes here, or wherever you call signIn()
+          // scopes: [
+          //   'email',
+          //   'profile',
+          //   'https://www.googleapis.com/auth/calendar.events',
+          // ],
           );
     } catch (e) {
       print('GoogleSignIn initialization failed: $e');
@@ -307,9 +337,6 @@ class AuthenticationService with ListenableServiceMixin {
     required String password,
     required String firstName,
     required String lastName,
-    required String username,
-    required DateTime dateOfBirth,
-    required String gender,
   }) async {
     try {
       _isLoading.value = true;
@@ -329,10 +356,10 @@ class AuthenticationService with ListenableServiceMixin {
         'role': 'user',
         'emailVerified': false,
         'status': 'active',
-        'username': username
-            .toLowerCase(), // Save lowercased for case-insensitive search
-        'dateOfBirth': dateOfBirth,
-        'gender': gender,
+        // 'username': username
+        //     .toLowerCase(), // Save lowercased for case-insensitive search
+        // 'dateOfBirth': dateOfBirth,
+        // 'gender': gender,
         'createdAt': FieldValue.serverTimestamp(),
         'lastLogin': FieldValue.serverTimestamp(),
       });
@@ -355,18 +382,16 @@ class AuthenticationService with ListenableServiceMixin {
   Future<AppUser?> signUpVolunteer({
     required String email,
     required String password,
-    required String phoneNumber,
-    required String firstName, // Added for completeness, usually required
-    required String lastName, // Added for completeness
-    required String
-        profilePictureUrl, // Profile Picture URL (assuming upload is done elsewhere)
-    required DateTime dateOfBirth,
-    required String gender,
   }) async {
     try {
       _isLoading.value = true;
       _error.value = null;
       notifyListeners();
+
+      // Check if phone is verified
+      if (!_isPhoneVerified.value || _pendingPhoneNumber.value == null) {
+        throw Exception('Phone number must be verified before signup');
+      }
 
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -376,23 +401,24 @@ class AuthenticationService with ListenableServiceMixin {
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
         'uid': userCredential.user!.uid,
         'email': email,
-        'phoneNumber': phoneNumber,
+        'firstName': null,
+        'lastName': null,
+        'phoneNumber': _pendingPhoneNumber.value, // Use verified phone number
         'role': 'volunteer',
         'status': 'pending_verification',
         'emailVerified': false,
-        'phoneVerified': false,
-        'profilePictureUrl': profilePictureUrl,
-        'dateOfBirth': dateOfBirth,
-        'gender': gender,
+        'phoneVerified': true, // Mark as verified since we just verified it
         'createdAt': FieldValue.serverTimestamp(),
         'lastLogin': FieldValue.serverTimestamp(),
       });
 
       await userCredential.user!.sendEmailVerification();
-      await _sendPhoneVerification(phoneNumber);
 
       final userData = await _getUserData(userCredential.user!.uid);
       final appUser = _createAppUser(userCredential.user!, userData);
+
+      // Reset phone verification after successful signup
+      _resetPhoneAuthState();
 
       return appUser;
     } on FirebaseAuthException catch (e) {
@@ -531,10 +557,184 @@ class AuthenticationService with ListenableServiceMixin {
     }
   }
 
-  Future<void> _sendPhoneVerification(String phoneNumber) async {
-    // Implement phone verification logic
-    print('Phone verification would be sent to: $phoneNumber');
-    // You'll implement actual phone verification using Firebase Phone Auth
+  // Phone Verification Methods
+  Future<void> sendPhoneVerification(String phoneNumber) async {
+    try {
+      _isLoading.value = true;
+      _error.value = null;
+      _isPhoneVerified.value = false;
+      notifyListeners();
+
+      // Format phone number (ensure it starts with + and country code)
+      String formattedPhone = _formatPhoneNumber(phoneNumber);
+      _pendingPhoneNumber.value = phoneNumber;
+
+      await _auth.verifyPhoneNumber(
+        phoneNumber: formattedPhone,
+        verificationCompleted: _onVerificationCompleted,
+        verificationFailed: _onVerificationFailed,
+        codeSent: _onCodeSent,
+        codeAutoRetrievalTimeout: _onCodeTimeout,
+        timeout: const Duration(seconds: 60),
+        forceResendingToken: _forceResendingToken.value,
+      );
+
+      _isPhoneVerificationSent.value = true;
+    } catch (e) {
+      _error.value = 'Failed to send verification code: $e';
+      throw Exception(_error.value);
+    } finally {
+      _isLoading.value = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> verifyPhoneCode(String smsCode) async {
+    try {
+      _isLoading.value = true;
+      _error.value = null;
+      notifyListeners();
+
+      if (_verificationId.value == null) {
+        throw Exception(
+            'No verification in progress. Please request a new code.');
+      }
+
+      // Create credential and sign in
+      final AuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId.value!,
+        smsCode: smsCode,
+      );
+
+      // Sign in with phone credential (this creates a temporary authentication)
+      await _auth.signInWithCredential(credential);
+
+      // Mark phone as verified
+      _isPhoneVerified.value = true;
+
+      // Store the verified phone number for later use in signup
+      if (_pendingPhoneNumber.value != null) {
+        // You can store this in a temporary variable or proceed with signup
+        print('Phone verified: ${_pendingPhoneNumber.value}');
+      }
+
+      // Reset phone auth state but keep verification status
+      _resetPhoneAuthState(keepVerificationStatus: true);
+    } catch (e) {
+      _error.value = 'Invalid verification code. Please try again.';
+      _isPhoneVerified.value = false;
+      throw Exception(_error.value);
+    } finally {
+      _isLoading.value = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> resendPhoneVerification() async {
+    if (_pendingPhoneNumber.value == null) {
+      throw Exception('No phone number to resend verification');
+    }
+    await sendPhoneVerification(_pendingPhoneNumber.value!);
+  }
+
+// Phone Auth Callbacks
+  void _onVerificationCompleted(PhoneAuthCredential credential) async {
+    try {
+      // Auto-sign in when verification is completed automatically (SMS auto-retrieval)
+      await _auth.signInWithCredential(credential);
+      _isPhoneVerified.value = true;
+
+      _resetPhoneAuthState(keepVerificationStatus: true);
+      notifyListeners();
+    } catch (e) {
+      _error.value = 'Auto-verification failed: $e';
+      notifyListeners();
+    }
+  }
+
+  void _onVerificationFailed(FirebaseAuthException e) {
+    _error.value = _handlePhoneAuthError(e);
+    _isPhoneVerificationSent.value = false;
+    _isPhoneCodeSent.value = false;
+    _isLoading.value = false;
+    notifyListeners();
+  }
+
+  void _onCodeSent(String verificationId, int? forceResendingToken) {
+    _verificationId.value = verificationId;
+    _forceResendingToken.value = forceResendingToken;
+    _isPhoneCodeSent.value = true;
+    _isLoading.value = false;
+    notifyListeners();
+  }
+
+  void _onCodeTimeout(String verificationId) {
+    _error.value = 'Verification code timed out. Please try again.';
+    _isPhoneVerificationSent.value = false;
+    _isPhoneCodeSent.value = false;
+    _isLoading.value = false;
+    notifyListeners();
+  }
+
+// Helper Methods
+  String _formatPhoneNumber(String phoneNumber) {
+    // Remove all non-digit characters
+    String digitsOnly = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+
+    // If number doesn't start with country code, assume it's US/Canada (+1)
+    if (!digitsOnly.startsWith('1') || digitsOnly.length == 10) {
+      digitsOnly = '1$digitsOnly'; // Add US country code
+    }
+
+    return '+$digitsOnly';
+  }
+
+  void _resetPhoneAuthState({bool keepVerificationStatus = false}) {
+    _isPhoneVerificationSent.value = false;
+    _isPhoneCodeSent.value = false;
+    _verificationId.value = null;
+
+    if (!keepVerificationStatus) {
+      _isPhoneVerified.value = false;
+      _pendingPhoneNumber.value = null;
+    }
+
+    notifyListeners();
+  }
+
+  void cancelPhoneVerification() {
+    _resetPhoneAuthState();
+  }
+
+  String _handlePhoneAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-phone-number':
+        return 'The phone number format is invalid. Please use format: +1234567890';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'quota-exceeded':
+        return 'SMS quota exceeded. Please try again later.';
+      case 'operation-not-allowed':
+        return 'Phone authentication is not enabled. Please contact support.';
+      case 'session-expired':
+        return 'The verification session has expired. Please try again.';
+      case 'invalid-verification-code':
+        return 'The verification code is invalid.';
+      case 'missing-verification-code':
+        return 'Please enter the verification code.';
+      default:
+        return 'Phone verification failed: ${e.message}';
+    }
+  }
+
+// Method to get the verified phone number for signup
+  String? get verifiedPhoneNumber {
+    return _isPhoneVerified.value ? _pendingPhoneNumber.value : null;
+  }
+
+// Method to reset phone verification (call this when starting a new signup)
+  void resetPhoneVerification() {
+    _resetPhoneAuthState();
   }
 
   Future<bool> isUsernameAvailable(String username) async {

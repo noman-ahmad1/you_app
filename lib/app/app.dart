@@ -1,3 +1,4 @@
+import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:you_app/ui/dialogs/info_alert/info_alert_dialog.dart';
 import 'package:you_app/ui/views/home/home_view.dart';
@@ -40,6 +41,7 @@ import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart';
     LazySingleton(classType: BottomSheetService),
     LazySingleton(classType: DialogService),
     LazySingleton(classType: NavigationService),
+    LazySingleton(classType: AuthenticationService),
     // @stacked-service
   ],
   bottomsheets: [

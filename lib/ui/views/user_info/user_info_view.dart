@@ -9,7 +9,12 @@ import 'package:you_app/ui/shared/widgets.dart';
 import 'user_info_viewmodel.dart';
 
 class UserInfoView extends StackedView<UserInfoViewModel> {
-  const UserInfoView({Key? key}) : super(key: key);
+  const UserInfoView({
+    Key? key,
+    required this.uid,
+  }) : super(key: key);
+
+  final String uid;
 
   @override
   Widget builder(
@@ -219,8 +224,6 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
   }
 
   @override
-  UserInfoViewModel viewModelBuilder(
-    BuildContext context,
-  ) =>
-      UserInfoViewModel();
+  UserInfoViewModel viewModelBuilder(BuildContext context) =>
+      UserInfoViewModel(uid: uid);
 }

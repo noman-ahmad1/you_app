@@ -88,10 +88,24 @@ class SignupView extends StackedView<SignupViewModel> {
                           obscureText: true,
                         ),
                         SizedBox(height: screenSize.height * 0.045),
+                        if (viewModel.validationError != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10.0),
+                            child: Text(
+                              viewModel.validationError!,
+                              style: GoogleFonts.crimsonPro(
+                                color: AppColors.error,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ),
                         CustomButton(
-                            text: 'Sign Up',
+                            text:
+                                viewModel.isBusy ? 'Signing Up...' : 'Sign Up',
                             onPressed: () {
-                              viewModel.navigateToUserInfoView();
+                              viewModel.isBusy
+                                  ? null // Disable button when busy
+                                  : viewModel.signUp();
                             }),
                         Space.verticalSpaceTiny(context),
                         InkWell(

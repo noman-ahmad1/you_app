@@ -8,7 +8,6 @@ class AppUser {
   final String firstName;
   final String lastName;
   final UserRole role;
-  // ✅ NEW FIELDS
   final String? profilePictureUrl; // For Volunteer and Admin
   final DateTime? dateOfBirth; // For User and Volunteer
   final String? gender; // For User and Volunteer

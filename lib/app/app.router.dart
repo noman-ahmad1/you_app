@@ -154,11 +154,9 @@ class StackedRouter extends _i1.RouterBase {
       );
     },
     _i8.UserInfoView: (data) {
-      final args = data.getArgs<UserInfoViewArguments>(
-        orElse: () => const UserInfoViewArguments(),
-      );
+      final args = data.getArgs<UserInfoViewArguments>(nullOk: false);
       return _i16.MaterialPageRoute<dynamic>(
-        builder: (context) => _i8.UserInfoView(key: args.key),
+        builder: (context) => _i8.UserInfoView(key: args.key, uid: args.uid),
         settings: data,
       );
     },
@@ -367,24 +365,26 @@ class ResetPasswordViewArguments {
 }
 
 class UserInfoViewArguments {
-  const UserInfoViewArguments({this.key});
+  const UserInfoViewArguments({this.key, required this.uid});
 
   final _i16.Key? key;
 
+  final String uid;
+
   @override
   String toString() {
-    return '{"key": "$key"}';
+    return '{"key": "$key", "uid": "$uid"}';
   }
 
   @override
   bool operator ==(covariant UserInfoViewArguments other) {
     if (identical(this, other)) return true;
-    return other.key == key;
+    return other.key == key && other.uid == uid;
   }
 
   @override
   int get hashCode {
-    return key.hashCode;
+    return key.hashCode ^ uid.hashCode;
   }
 }
 
@@ -653,6 +653,7 @@ extension NavigatorStateExtension on _i17.NavigationService {
 
   Future<dynamic> navigateToUserInfoView({
     _i16.Key? key,
+    required String uid,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -661,7 +662,7 @@ extension NavigatorStateExtension on _i17.NavigationService {
   }) async {
     return navigateTo<dynamic>(
       Routes.userInfoView,
-      arguments: UserInfoViewArguments(key: key),
+      arguments: UserInfoViewArguments(key: key, uid: uid),
       id: routerId,
       preventDuplicates: preventDuplicates,
       parameters: parameters,
@@ -905,6 +906,7 @@ extension NavigatorStateExtension on _i17.NavigationService {
 
   Future<dynamic> replaceWithUserInfoView({
     _i16.Key? key,
+    required String uid,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -913,7 +915,7 @@ extension NavigatorStateExtension on _i17.NavigationService {
   }) async {
     return replaceWith<dynamic>(
       Routes.userInfoView,
-      arguments: UserInfoViewArguments(key: key),
+      arguments: UserInfoViewArguments(key: key, uid: uid),
       id: routerId,
       preventDuplicates: preventDuplicates,
       parameters: parameters,
