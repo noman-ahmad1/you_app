@@ -18,4 +18,12 @@ class WelcomeViewModel extends BaseViewModel {
   Future navigateToSignupView() async {
     _navigationService.navigateToSignupView();
   }
+
+  Future navigateToVolunteerSignupInfo() async {
+    _navigationService.navigateToVolunteerSignupInfoView(uid: '');
+  }
+
+  Future userInfo() async {
+    _navigationService.navigateToUserInfoView(uid: '');
+  }
 }

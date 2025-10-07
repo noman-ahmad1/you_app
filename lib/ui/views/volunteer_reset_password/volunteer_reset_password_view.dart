@@ -5,22 +5,22 @@ import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 
-import 'reset_password_viewmodel.dart';
+import 'volunteer_reset_password_viewmodel.dart';
 
-class ResetPasswordView extends StackedView<ResetPasswordViewModel> {
-  // Assuming the oobCode (token) is passed to the view via constructor
+class VolunteerResetPasswordView
+    extends StackedView<VolunteerResetPasswordViewModel> {
+  // Added optional oobCode parameter for the new password phase
   final String? oobCode;
-  const ResetPasswordView({Key? key, this.oobCode}) : super(key: key);
+  const VolunteerResetPasswordView({Key? key, this.oobCode}) : super(key: key);
 
   @override
   Widget builder(
     BuildContext context,
-    ResetPasswordViewModel viewModel,
+    VolunteerResetPasswordViewModel viewModel,
     Widget? child,
   ) {
-    // Placeholder for oobCode. This should be replaced by actual deep link handling.
-    const String PLACEHOLDER_OOB_CODE = 'YOUR_ACTUAL_OOB_CODE_HERE';
-
+    // Placeholder for oobCode used in case of testing the set password flow
+    const String PLACEHOLDER_OOB_CODE = 'VOLUNTEER_OOB_CODE_HERE';
     final bool isInResetMode = oobCode != null;
 
     final screenSize = MediaQuery.of(context).size;
@@ -71,17 +71,17 @@ class ResetPasswordView extends StackedView<ResetPasswordViewModel> {
   }
 
   @override
-  ResetPasswordViewModel viewModelBuilder(
+  VolunteerResetPasswordViewModel viewModelBuilder(
     BuildContext context,
   ) =>
-      ResetPasswordViewModel();
+      VolunteerResetPasswordViewModel();
 }
 
 // --- WIDGETS FOR DIFFERENT STATES ---
 
 // PHASE 1: Initial Forgot Password Form (Email Input)
 class _ForgotPasswordForm extends StatelessWidget {
-  final ResetPasswordViewModel viewModel;
+  final VolunteerResetPasswordViewModel viewModel;
   final Size screenSize;
   const _ForgotPasswordForm({
     required this.viewModel,
@@ -98,7 +98,7 @@ class _ForgotPasswordForm extends StatelessWidget {
         Space.verticalSpaceSmall(context),
         Space.verticalSpaceTiny(context),
         Text(
-          'Forgot Password',
+          'Volunteer Forgot Password',
           style: GoogleFonts.crimsonPro(
               fontSize: 30,
               fontWeight: FontWeight.w900,
@@ -113,7 +113,7 @@ class _ForgotPasswordForm extends StatelessWidget {
         Column(
           children: [
             Space.verticalSpaceVTiny(context),
-            // Bind to Email Controller
+            // Bind to Email Controller from ViewModel
             CustomTextField(
               controller: viewModel.emailController,
               labelText: 'Email Address',
@@ -139,7 +139,7 @@ class _ForgotPasswordForm extends StatelessWidget {
 
 // PHASE 1a: Email Sent Confirmation State (Confirmation Text + Resend Button)
 class _EmailConfirmationState extends StatelessWidget {
-  final ResetPasswordViewModel viewModel;
+  final VolunteerResetPasswordViewModel viewModel;
   final Size screenSize;
   const _EmailConfirmationState({
     required this.viewModel,
@@ -165,7 +165,7 @@ class _EmailConfirmationState extends StatelessWidget {
         Space.verticalSpaceVTiny(context),
         Text(
           textAlign: TextAlign.center,
-          'A password reset link has been successfully sent to:\n${viewModel.sentEmail ?? 'your email address'}\n\nPlease check your inbox and follow the instructions to reset your password.',
+          'A password reset link has been successfully sent to:\n${viewModel.sentEmail ?? 'your email address'}\n\nFollow the link in the email to reset your password.',
           style: GoogleFonts.crimsonPro(
               color: AppColors.primaryVeryDark,
               fontSize: 15,
@@ -185,7 +185,7 @@ class _EmailConfirmationState extends StatelessWidget {
 
 // PHASE 2: Set New Password Form (App opened via oobCode deep link)
 class _SetNewPasswordForm extends StatelessWidget {
-  final ResetPasswordViewModel viewModel;
+  final VolunteerResetPasswordViewModel viewModel;
   final Size screenSize;
   final String oobCode;
   final String placeholderOobCode;
@@ -217,7 +217,7 @@ class _SetNewPasswordForm extends StatelessWidget {
         Text(
           oobCode == placeholderOobCode
               ? 'DEBUG MODE: Placeholder code in use.'
-              : 'Please enter and confirm your new password.',
+              : 'Please enter and confirm your new volunteer password.',
           style: GoogleFonts.crimsonPro(
               color: AppColors.primaryVeryDark, fontSize: 15),
         ),
@@ -260,10 +260,10 @@ class _SetNewPasswordForm extends StatelessWidget {
 }
 
 // Shared Login Prompt
-Widget _buildLoginPrompt(ResetPasswordViewModel viewModel) {
+Widget _buildLoginPrompt(VolunteerResetPasswordViewModel viewModel) {
   return InkWell(
     splashColor: AppColors.peachDark,
-    onTap: viewModel.navigateToLoginView,
+    onTap: viewModel.navigateToVolunteerLogin,
     child: RichText(
       text: TextSpan(
         style:

@@ -12,7 +12,6 @@ class AppUser {
   final DateTime? dateOfBirth; // For User and Volunteer
   final String? gender; // For User and Volunteer
   final String? username; // For User (must be distinct)
-
   final String? phoneNumber;
   final bool emailVerified;
   final bool phoneVerified;

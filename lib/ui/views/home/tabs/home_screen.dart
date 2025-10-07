@@ -38,7 +38,7 @@ class HomeScreen extends StatelessWidget {
                   TopBar(
                     title: 'Home',
                     imageAssetPath: AppConstants.logo,
-                    onMenuPressed: () {},
+                    onMenuPressed: viewModel.isBusy ? null : viewModel.logout,
                   ),
                   Expanded(
                     child: SingleChildScrollView(

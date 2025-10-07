@@ -4,6 +4,7 @@ import 'package:you_app/app/app.bottomsheets.dart';
 import 'package:you_app/app/app.dialogs.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
+import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/app_strings.dart';
 import 'package:stacked/stacked.dart';
@@ -11,6 +12,7 @@ import 'package:stacked_services/stacked_services.dart';
 
 class HomeViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
+  final _authenticationService = locator<AuthenticationService>();
   // Secondary player for short sound effects (e.g., swipe)
   final AudioPlayer _fxPlayer = AudioPlayer();
   // Main player for soothing music audio
@@ -98,6 +100,23 @@ class HomeViewModel extends BaseViewModel {
       await _fxPlayer.play();
     } catch (e) {
       debugPrint("Error playing sound: $e");
+    }
+  }
+
+  Future<void> logout() async {
+    // Show loading state while signing out
+    setBusy(true);
+    try {
+      await _authenticationService.signOut();
+      // Navigate to the Welcome View after successful sign out
+      _navigationService.replaceWith(Routes.welcomeView);
+    } catch (e) {
+      // Handle the error (e.g., show a dialog or snackbar)
+      setError('Logout failed: $e');
+      // In a real app, you might want a better error display
+      print('Logout Error: $e');
+    } finally {
+      setBusy(false);
     }
   }
 

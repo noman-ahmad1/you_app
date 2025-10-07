@@ -13,6 +13,9 @@ import 'package:stacked_services/src/navigation/navigation_service.dart';
 import 'package:stacked_shared/stacked_shared.dart';
 
 import '../services/auth_service.dart';
+import '../services/country_code_service.dart';
+import '../services/firestore_service.dart';
+import '../ui/views/volunteer_signup/volunteer_signup_viewmodel.dart';
 
 final locator = StackedLocator.instance;
 
@@ -29,4 +32,7 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => DialogService());
   locator.registerLazySingleton(() => NavigationService());
   locator.registerLazySingleton(() => AuthenticationService());
+  locator.registerLazySingleton(() => CountryService());
+  locator.registerLazySingleton(() => FirestoreService());
+  locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }

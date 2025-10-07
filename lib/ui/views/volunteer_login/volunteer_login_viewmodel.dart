@@ -1,20 +1,17 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/auth_service.dart';
 
-class LoginViewModel extends BaseViewModel {
+class VolunteerLoginViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _authenticationService = locator<AuthenticationService>();
   final _dialogService = locator<DialogService>();
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
-  String? _validationError;
-  String? get validationError => _validationError;
 
   @override
   void dispose() {
@@ -23,7 +20,7 @@ class LoginViewModel extends BaseViewModel {
     super.dispose();
   }
 
-  Future<void> signInWithEmail() async {
+  Future<void> signInVolunteer() async {
     _validationError = null;
     notifyListeners();
 
@@ -31,7 +28,7 @@ class LoginViewModel extends BaseViewModel {
     final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      _validationError = 'Email and password fields are required.';
+      _validationError = 'Email and password are required.';
       notifyListeners();
       return;
     }
@@ -40,16 +37,17 @@ class LoginViewModel extends BaseViewModel {
 
     try {
       // 1. Calls the AuthService for standard email/password login
+      // NOTE: Using positional arguments (email, password) to match the service signature.
       await _authenticationService.signInWithEmail(
         email,
         password,
       );
 
-      // On successful login, navigate to the home view
-      _navigationService.replaceWith(Routes.homeView);
+      // On successful login, navigate to the volunteer home view
+      _navigationService.replaceWith(Routes.volunteerHomeView);
     } catch (e) {
       String errorMessage = _authenticationService.error ??
-          'Login failed. Please check your email and password.';
+          'Login failed. Please check your credentials.';
       _showErrorDialog('Login Failed', errorMessage);
       _validationError = errorMessage;
     } finally {
@@ -58,38 +56,19 @@ class LoginViewModel extends BaseViewModel {
     }
   }
 
-  Future<void> signInWithGoogle() async {
-    _validationError = null;
-    notifyListeners();
-    setBusy(true);
+  String? _validationError;
+  String? get validationError => _validationError;
 
-    try {
-      // 2. Calls the AuthService for Google Sign-In
-      await _authenticationService.signInWithGoogle();
-
-      // On successful login, navigate to the home view
-      _navigationService.replaceWith(Routes.homeView);
-    } catch (e) {
-      String errorMessage = _authenticationService.error ??
-          'Google Sign-In failed. Please try again.';
-      _showErrorDialog('Google Sign-In Failed', errorMessage);
-      _validationError = errorMessage;
-    } finally {
-      setBusy(false);
-      notifyListeners();
-    }
+  Future navigateToVolunteerResetPassword() async {
+    _navigationService.navigateToVolunteerResetPasswordView();
   }
 
-  Future navigateToResetPassword() async {
-    _navigationService.navigateToResetPasswordView();
+  Future navigateToVolunteerSignUp() async {
+    _navigationService.navigateToVolunteerSignupView();
   }
 
-  Future navigateToSignUp() async {
-    _navigationService.navigateToSignupView();
-  }
-
-  Future navigateToHome() async {
-    _navigationService.navigateToHomeView();
+  Future navigateToVolunteerHome() async {
+    _navigationService.navigateToVolunteerHomeView();
   }
 
   void _showErrorDialog(String title, String description) {

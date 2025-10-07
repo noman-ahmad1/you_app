@@ -1,26 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Required for accessing parent's ViewModel
 import 'package:google_fonts/google_fonts.dart';
-import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_viewmodel.dart';
 
-class PersonalInfoView extends StackedView<VolunteerSignupInfoViewModel> {
-  const PersonalInfoView({Key? key}) : super(key: key);
+// FIX: Changed from StackedView back to StatelessWidget.
+// This ensures this widget uses the parent's ViewModel instance,
+// preserving the state of the controllers.
+class PersonalInfoView extends StatelessWidget {
+  const PersonalInfoView({
+    Key? key,
+    // Removed required this.uid as it's not needed by a StatelessWidget that uses Provider
+  }) : super(key: key);
 
   @override
-  Widget builder(
-    BuildContext context,
-    VolunteerSignupInfoViewModel viewModel,
-    Widget? child,
-  ) {
+  Widget build(BuildContext context) {
+    // FIX: Access the single ViewModel instance created by the parent view.
+    // This allows access to the shared controllers and state.
+    final viewModel = Provider.of<VolunteerSignupInfoViewModel>(context);
+
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Column(
       children: [
+        // --- 1. Profile Photo Upload ---
         Center(
           child: Stack(
             children: [
@@ -43,9 +50,9 @@ class PersonalInfoView extends StackedView<VolunteerSignupInfoViewModel> {
                   ),
                 ),
                 child: ClipOval(
-                  child: viewModel.selectedImage != null
+                  child: viewModel.selectedProfileImage != null
                       ? Image.file(
-                          viewModel.selectedImage!,
+                          viewModel.selectedProfileImage!,
                           fit: BoxFit.cover,
                           width: 120,
                           height: 120,
@@ -95,6 +102,8 @@ class PersonalInfoView extends StackedView<VolunteerSignupInfoViewModel> {
           ),
         ),
         Space.verticalSpaceTiny(context),
+
+        // --- Form Fields ---
         CustomTextField(
           controller: viewModel.firstNameController,
           labelText: 'First Name',
@@ -126,11 +135,10 @@ class PersonalInfoView extends StackedView<VolunteerSignupInfoViewModel> {
 
         // Gender Dropdown styled to match CustomTextField
         DropdownButtonFormField<String>(
-          initialValue: viewModel.selectedGender,
+          value: viewModel.selectedGender, // Use value instead of initialValue
           decoration: InputDecoration(
             fillColor: AppColors.background,
             filled: true,
-            // labelText: 'Gender',
             contentPadding: EdgeInsets.symmetric(
               vertical: screenHeight * 0.0177,
               horizontal: screenWidth * 0.07,
@@ -140,14 +148,14 @@ class PersonalInfoView extends StackedView<VolunteerSignupInfoViewModel> {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(27),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: AppColors.primaryDark,
                 width: 2.0,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(27),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: AppColors.primaryDark,
                 width: 2.0,
               ),
@@ -174,7 +182,7 @@ class PersonalInfoView extends StackedView<VolunteerSignupInfoViewModel> {
             fontSize: 16,
           ),
           dropdownColor: AppColors.background,
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_drop_down,
             color: AppColors.primaryDark,
             size: 24,
@@ -192,11 +200,103 @@ class PersonalInfoView extends StackedView<VolunteerSignupInfoViewModel> {
             ),
           ),
         ),
+        Space.verticalSpaceVTiny(context),
+
+        // --- 2. ID Card Photo Upload (Inline Logic) ---
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 0, 5, 0),
+          width: double.infinity,
+          height: screenHeight * 0.06,
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.circular(27),
+            border: Border.all(
+              color: AppColors.primary,
+              width: 2,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(27),
+            child: viewModel.selectedIdCardImage != null
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'ID card uploaded successfully.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 16,
+                          color: AppColors.secondaryLight,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      Container(
+                        width: screenHeight * 0.05,
+                        height: screenHeight * 0.05,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                          border: Border.all(
+                            color: AppColors.primaryDark,
+                            width: 2,
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: () =>
+                              viewModel.showIdCardImagePickerOptions(context),
+                          child: Padding(
+                            padding: const EdgeInsets.all(5.0),
+                            child: Image.asset(
+                              AppConstants.done,
+                              color: AppColors.background,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Tap Camera icon to upload your ID.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 16,
+                          color: AppColors.secondaryLight,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      Container(
+                        width: screenHeight * 0.05,
+                        height: screenHeight * 0.05,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                          border: Border.all(
+                            color: AppColors.primaryDark,
+                            width: 2,
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: () =>
+                              viewModel.showIdCardImagePickerOptions(context),
+                          child: Padding(
+                            padding: const EdgeInsets.all(7.0),
+                            child: Image.asset(
+                              AppConstants.camera,
+                              color: AppColors.background,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+        Space.verticalSpaceSmall(context),
       ],
     );
   }
-
-  @override
-  VolunteerSignupInfoViewModel viewModelBuilder(BuildContext context) =>
-      VolunteerSignupInfoViewModel();
 }

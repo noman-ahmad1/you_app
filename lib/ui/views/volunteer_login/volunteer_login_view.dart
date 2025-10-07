@@ -5,15 +5,16 @@ import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
-import 'login_viewmodel.dart';
 
-class LoginView extends StackedView<LoginViewModel> {
-  const LoginView({Key? key}) : super(key: key);
+import 'volunteer_login_viewmodel.dart';
+
+class VolunteerLoginView extends StackedView<VolunteerLoginViewModel> {
+  const VolunteerLoginView({Key? key}) : super(key: key);
 
   @override
   Widget builder(
     BuildContext context,
-    LoginViewModel viewModel,
+    VolunteerLoginViewModel viewModel,
     Widget? child,
   ) {
     final screenSize = MediaQuery.of(context).size;
@@ -70,13 +71,13 @@ class LoginView extends StackedView<LoginViewModel> {
                           text: viewModel.isBusy ? 'Logging Inn...' : 'Login',
                           onPressed: viewModel.isBusy
                               ? null
-                              : viewModel.signInWithEmail,
+                              : viewModel.signInVolunteer,
                         ),
                         Space.verticalSpaceTiny(context),
                         InkWell(
                           splashColor: AppColors.peach,
                           onTap: () {
-                            viewModel.navigateToResetPassword();
+                            viewModel.navigateToVolunteerResetPassword();
                           },
                           child: Text(
                             'Forgot the password?',
@@ -87,32 +88,11 @@ class LoginView extends StackedView<LoginViewModel> {
                                 fontSize: 13),
                           ),
                         ),
-                        SizedBox(
-                          height: screenSize.height * 0.09,
-                        ),
-                        const CenteredDividerWithText(
-                          text: 'Or Login with',
-                          // color: AppColors.background,
-                          spacing: 10,
-                        ),
-                        Space.verticalSpaceTiny(context),
-                        InkWell(
-                          onTap: viewModel.isBusy
-                              ? null
-                              : viewModel.signInWithGoogle,
-                          child: PaddedImageContainer(
-                            image: AssetImage(AppConstants.google),
-                            containerWidth: screenSize.width * 0.28,
-                            containerHeight: screenSize.height * 0.07,
-                          ),
-                        ),
-                        Space.verticalSpaceTiny(context),
-                        spacedDivider(context),
                         Space.verticalSpaceSmall(context),
                         InkWell(
                           splashColor: AppColors.peach,
                           onTap: () {
-                            viewModel.navigateToSignUp();
+                            viewModel.navigateToVolunteerSignUp();
                           },
                           child: RichText(
                             text: TextSpan(
@@ -143,8 +123,8 @@ class LoginView extends StackedView<LoginViewModel> {
   }
 
   @override
-  LoginViewModel viewModelBuilder(
+  VolunteerLoginViewModel viewModelBuilder(
     BuildContext context,
   ) =>
-      LoginViewModel();
+      VolunteerLoginViewModel();
 }

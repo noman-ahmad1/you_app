@@ -24,6 +24,8 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
   ) {
     final emailController = TextEditingController();
     final screenSize = MediaQuery.of(context).size;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -54,7 +56,6 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Space.verticalSpaceSmall(context),
-                        Space.verticalSpaceTiny(context),
                         Text(
                           'Tell us a bit more about you',
                           style: GoogleFonts.crimsonPro(
@@ -85,9 +86,9 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
                               ),
                             ),
                             CustomTextField(
-                              controller: emailController,
+                              controller: viewModel.userNameController,
                               labelText: '@ your_username',
-                              keyboardType: TextInputType.emailAddress,
+                              keyboardType: TextInputType.name,
                             ),
                             Space.verticalSpaceVTiny(context),
                             Padding(
@@ -101,10 +102,20 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
                                     fontSize: 18),
                               ),
                             ),
-                            CustomTextField(
-                              controller: emailController,
-                              labelText: 'DD MM YYYY',
-                              keyboardType: TextInputType.emailAddress,
+                            InkWell(
+                              onTap: () => viewModel.selectDate(context),
+                              child: AbsorbPointer(
+                                child: CustomTextField(
+                                  controller: viewModel.dateOfBirthController,
+                                  labelText: 'Date of Birth',
+                                  keyboardType: TextInputType.datetime,
+                                  suffixIcon: Icon(
+                                    Icons.calendar_today,
+                                    color: AppColors.primaryVeryDark,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
                             ),
                             Space.verticalSpaceVTiny(context),
                             Padding(
@@ -112,94 +123,81 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
                                   horizontal: screenSize.width * 0.05,
                                   vertical: screenSize.height * 0.005),
                               child: Text(
-                                'How do you identify your gender?',
+                                'Specify your Gender',
                                 style: GoogleFonts.crimsonPro(
                                     color: AppColors.primaryVeryDark,
                                     fontSize: 18),
                               ),
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ElevatedButton(
-                                    style: ButtonStyle(
-                                      backgroundColor: WidgetStateProperty.all(
-                                          AppColors.primaryVeryDark),
-                                      padding: WidgetStateProperty.all(
-                                          EdgeInsets.symmetric(
-                                        vertical: screenSize.height * 0.022,
-                                        horizontal: screenSize.width * 0.08,
-                                      )),
-                                      shape: WidgetStateProperty.all(
-                                          RoundedRectangleBorder(
-                                        side: const BorderSide(
-                                          color: AppColors.primary,
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(33),
-                                      )),
-                                      elevation: WidgetStateProperty.all(0),
+                            DropdownButtonFormField<String>(
+                              initialValue: viewModel
+                                  .selectedGender, // Use value instead of initialValue
+                              decoration: InputDecoration(
+                                fillColor: AppColors.background,
+                                filled: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: screenHeight * 0.0177,
+                                  horizontal: screenWidth * 0.07,
+                                ),
+                                labelStyle: GoogleFonts.crimsonPro(
+                                  color: AppColors.secondary,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(27),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primaryDark,
+                                    width: 2.0,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(27),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primaryDark,
+                                    width: 2.0,
+                                  ),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(27),
+                                ),
+                              ),
+                              items: viewModel.genders.map((String gender) {
+                                return DropdownMenuItem<String>(
+                                  value: gender,
+                                  child: Text(
+                                    gender,
+                                    style: GoogleFonts.crimsonPro(
+                                      color: AppColors.secondaryLight,
+                                      fontSize: 16,
                                     ),
-                                    onPressed: () {},
-                                    child: const Text(
-                                      '  Male  ',
-                                      style: TextStyle(fontSize: 16),
-                                    )),
-                                Space.horizontalSpaceVTiny(context),
-                                ElevatedButton(
-                                    style: ButtonStyle(
-                                      backgroundColor: WidgetStateProperty.all(
-                                          AppColors.primaryVeryDark),
-                                      padding: WidgetStateProperty.all(
-                                          EdgeInsets.symmetric(
-                                        vertical: screenSize.height * 0.022,
-                                        horizontal: screenSize.width * 0.08,
-                                      )),
-                                      shape: WidgetStateProperty.all(
-                                          RoundedRectangleBorder(
-                                        side: const BorderSide(
-                                          color: AppColors.primary,
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(33),
-                                      )),
-                                      elevation: WidgetStateProperty.all(0),
-                                    ),
-                                    onPressed: () {},
-                                    child: const Text(
-                                      'Female',
-                                      style: TextStyle(fontSize: 16),
-                                    )),
-                                Space.horizontalSpaceVTiny(context),
-                                ElevatedButton(
-                                    style: ButtonStyle(
-                                      backgroundColor: WidgetStateProperty.all(
-                                          AppColors.primaryVeryDark),
-                                      padding: WidgetStateProperty.all(
-                                          EdgeInsets.symmetric(
-                                        vertical: screenSize.height * 0.022,
-                                        horizontal: screenSize.width * 0.08,
-                                      )),
-                                      shape: WidgetStateProperty.all(
-                                          RoundedRectangleBorder(
-                                        side: const BorderSide(
-                                          color: AppColors.primary,
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(33),
-                                      )),
-                                      elevation: WidgetStateProperty.all(0),
-                                    ),
-                                    onPressed: () {},
-                                    child: const Text(
-                                      ' Other ',
-                                      style: TextStyle(fontSize: 16),
-                                    )),
-                              ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: viewModel.setGender,
+                              style: GoogleFonts.crimsonPro(
+                                color: AppColors.secondaryLight,
+                                fontSize: 16,
+                              ),
+                              dropdownColor: AppColors.background,
+                              icon: const Icon(
+                                Icons.arrow_drop_down,
+                                color: AppColors.primaryDark,
+                                size: 24,
+                              ),
+                              iconSize: 24,
+                              elevation: 4,
+                              borderRadius: BorderRadius.circular(12),
+                              menuMaxHeight: 200,
+                              isExpanded: true,
+                              hint: Text(
+                                'Select Gender',
+                                style: GoogleFonts.crimsonPro(
+                                  color: AppColors.secondaryLight,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                        Space.verticalSpaceTiny(context),
                         Space.verticalSpaceTiny(context),
                         Text(
                           'This would help us understand your journey better',
@@ -208,6 +206,17 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
                               fontSize: 15,
                               fontWeight: FontWeight.w700),
                         ),
+                        Space.verticalSpaceTiny(context),
+                        CustomButton(
+                            text: viewModel.isBusy
+                                ? 'Signing Up...'
+                                : 'Complete Sign Up',
+                            onPressed: () {
+                              viewModel.isBusy
+                                  ? null // Disable button when busy
+                                  : viewModel.completeSignUp();
+                            }),
+                        Space.verticalSpaceTiny(context),
                       ],
                     ),
                     Container(

@@ -54,6 +54,7 @@ class AppConstants {
   static const String activeChat = 'assets/icons/activeChat.png';
   static const String pending = 'assets/icons/pending.png';
   static const String journalIcon = 'assets/icons/journalIcon.png';
+  static const String logout = 'assets/icons/logout.png';
 
   //images
   static const String register = 'assets/images/1.png';

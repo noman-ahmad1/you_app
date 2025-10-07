@@ -132,10 +132,17 @@ class SignupView extends StackedView<SignupViewModel> {
                         ),
                         Space.verticalSpaceTiny(context),
                         Space.horizontalSpaceVTiny(context),
-                        PaddedImageContainer(
-                          image: AssetImage(AppConstants.google),
-                          containerWidth: screenSize.width * 0.28,
-                          containerHeight: screenSize.height * 0.07,
+                        InkWell(
+                          onTap: () {
+                            viewModel.isBusy
+                                ? null
+                                : viewModel.signInWithGoogle();
+                          },
+                          child: PaddedImageContainer(
+                            image: AssetImage(AppConstants.google),
+                            containerWidth: screenSize.width * 0.28,
+                            containerHeight: screenSize.height * 0.07,
+                          ),
                         ),
                         Space.verticalSpaceTiny(context),
                         spacedDivider(context),

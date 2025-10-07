@@ -91,6 +91,54 @@ class SignupViewModel extends BaseViewModel {
     }
   }
 
+  void signInWithGoogle() async {
+    // Clear local error messages
+    _validationError = null;
+    _authenticationService.clearError();
+    setBusy(true);
+
+    try {
+      // 1. Call the service to initiate Google Sign-in
+      final user = await _authenticationService.signInWithGoogle();
+
+      if (user != null) {
+        // 2. Success: Navigate to the next screen (User Info/Profile Completion)
+        // This handles both new sign-ups and existing sign-ins via Google.
+        _navigationService.replaceWith(
+          Routes.userInfoView,
+          arguments: UserInfoViewArguments(uid: user.uid),
+        );
+      } else {
+        // Safety fallback, though the service usually throws an error if it fails
+        throw Exception(
+            "Google Sign-In was cancelled or failed to return a user.");
+      }
+    } catch (e) {
+      // 3. Error Handling
+      String errorMessage =
+          'An unexpected error occurred during Google sign-in.';
+
+      if (_authenticationService.error != null) {
+        // Use the detailed error from the service
+        errorMessage = _authenticationService.error!;
+      } else {
+        // Fallback for general exceptions
+        errorMessage = e.toString().contains('Exception:')
+            ? e.toString().split('Exception: ')[1]
+            : e.toString();
+      }
+
+      // Display the error using the DialogService
+      _dialogService.showDialog(
+        title: 'Google Sign In Failed',
+        description: errorMessage,
+      );
+    } finally {
+      setBusy(false);
+      notifyListeners();
+    }
+  }
+
   Future navigateToResetPasswordView() async {
     _navigationService.navigateToResetPasswordView();
   }

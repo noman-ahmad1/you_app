@@ -8,9 +8,6 @@ import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
-import 'package:you_app/ui/common/app_theme.dart';
-import 'package:you_app/ui/common/ui_helpers.dart';
-import 'package:you_app/ui/views/home/home_viewmodel.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_home_viewmodel.dart';
 
@@ -24,6 +21,8 @@ class DashboardScreen extends StatelessWidget {
     final height = mediaQuery.size.height;
     return ViewModelBuilder<VolunteerHomeViewModel>.reactive(
       viewModelBuilder: () => VolunteerHomeViewModel(),
+      onViewModelReady: (viewModel) =>
+          viewModel.initialize(), // Ensure initialization if needed
       builder: (context, viewModel, child) {
         return Stack(
           children: [
@@ -56,7 +55,8 @@ class DashboardScreen extends StatelessWidget {
                                   SizedBox(height: height * 0.03),
                                   _buildStatsRow(width, height),
                                   SizedBox(height: height * 0.03),
-                                  _buildQuickActions(width, height),
+                                  _buildQuickActions(width, height,
+                                      viewModel), // Pass viewModel
                                 ],
                               ),
                             ],
@@ -68,6 +68,11 @@ class DashboardScreen extends StatelessWidget {
                 ],
               ),
             ),
+            // Show a loading indicator if the ViewModel is busy (e.g., during logout)
+            if (viewModel.isBusy)
+              const Center(
+                child: CircularProgressIndicator(color: AppColors.secondary),
+              ),
           ],
         );
       },
@@ -209,7 +214,8 @@ class DashboardScreen extends StatelessWidget {
   }
 
   /// QUICK ACTIONS
-  Widget _buildQuickActions(double width, double height) {
+  Widget _buildQuickActions(
+      double width, double height, VolunteerHomeViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -237,9 +243,14 @@ class DashboardScreen extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildActionButton("My Journal", AppConstants.journalIcon, () {
-              print("Open Journal");
-            }, width, height),
+            // LOGOUT BUTTON: Calls the ViewModel's logout method
+            _buildActionButton(
+              "Log Out",
+              AppConstants.logout,
+              viewModel.isBusy ? () {} : viewModel.logout, // Disable when busy
+              width,
+              height,
+            ),
             _buildActionButton("Settings", AppConstants.setting, () {
               print("Settings");
             }, width, height),

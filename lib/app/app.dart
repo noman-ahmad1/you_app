@@ -1,10 +1,14 @@
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/country_code_service.dart';
+import 'package:you_app/services/firestore_service.dart';
 import 'package:you_app/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:you_app/ui/dialogs/info_alert/info_alert_dialog.dart';
 import 'package:you_app/ui/views/home/home_view.dart';
 import 'package:you_app/ui/views/startup/startup_view.dart';
 import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'package:you_app/ui/views/volunteer_signup/volunteer_otp.dart';
+import 'package:you_app/ui/views/volunteer_signup/volunteer_signup_viewmodel.dart';
 import 'package:you_app/ui/views/welcome/welcome_view.dart';
 import 'package:you_app/ui/views/login/login_view.dart';
 import 'package:you_app/ui/views/signup/signup_view.dart';
@@ -17,6 +21,8 @@ import 'package:you_app/ui/views/chatbot/chatbot_view.dart';
 import 'package:you_app/ui/views/volunteer_signup/volunteer_signup_view.dart';
 import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_view.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart';
+import 'package:you_app/ui/views/volunteer_login/volunteer_login_view.dart';
+import 'package:you_app/ui/views/volunteer_reset_password/volunteer_reset_password_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -35,6 +41,9 @@ import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart';
     MaterialRoute(page: VolunteerSignupView),
     MaterialRoute(page: VolunteerSignupInfoView),
     MaterialRoute(page: VolunteerHomeView),
+    MaterialRoute(page: VolunteerLoginView),
+    MaterialRoute(page: VolunteerResetPasswordView),
+    MaterialRoute(page: VolunteerOtpView),
 // @stacked-route
   ],
   dependencies: [
@@ -42,7 +51,11 @@ import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart';
     LazySingleton(classType: DialogService),
     LazySingleton(classType: NavigationService),
     LazySingleton(classType: AuthenticationService),
+    LazySingleton(classType: CountryService),
+    LazySingleton(classType: FirestoreService),
     // @stacked-service
+
+    LazySingleton(classType: VolunteerSignupViewModel),
   ],
   bottomsheets: [
     StackedBottomsheet(classType: NoticeSheet),

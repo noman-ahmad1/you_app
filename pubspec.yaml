@@ -24,9 +24,10 @@ dependencies:
   just_audio: ^0.10.4
   liquid_glass_renderer: ^0.1.1-dev.10
   permission_handler: ^12.0.1
+  pin_code_fields: ^8.0.1
   shared_preferences: ^2.5.3
-  stacked: ^3.4.0
-  stacked_services: ^1.1.0
+  stacked: ^3.5.0
+  stacked_services: ^1.6.0
   step_progress_indicator: ^1.0.2
 
 dev_dependencies:
@@ -44,3 +45,4 @@ flutter:
     - assets/icons/
     - assets/fonts/
     - assets/sounds/
+    - assets/json/

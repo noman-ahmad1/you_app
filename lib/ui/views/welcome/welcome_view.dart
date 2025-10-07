@@ -102,6 +102,7 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                         ),
                         onPressed: () {
                           viewModel.navigateToSignupView();
+                          // viewModel.userInfo();
                         },
                         child: const Text(
                           'SIGN UP',
@@ -115,6 +116,7 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                       InkWell(
                         onTap: () {
                           viewModel.navigateToVolunteerSignup();
+                          // viewModel.navigateToVolunteerSignupInfo();
                         },
                         child: Text(
                           'Sign Up | Login as Volunteer',
