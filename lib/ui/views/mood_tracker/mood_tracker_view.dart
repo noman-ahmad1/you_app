@@ -174,7 +174,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
                   //       fontWeight: FontWeight.w700,
                   //       color: AppColors.secondary),
                   // ),
-                  BarChartSample7()
+                  BarChartSample7(key: viewModel.chartKey)
                 ],
               ),
             ),

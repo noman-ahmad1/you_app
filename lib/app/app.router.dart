@@ -169,7 +169,8 @@ class StackedRouter extends _i1.RouterBase {
         orElse: () => const ResetPasswordViewArguments(),
       );
       return _i19.MaterialPageRoute<dynamic>(
-        builder: (context) => _i7.ResetPasswordView(key: args.key),
+        builder: (context) =>
+            _i7.ResetPasswordView(key: args.key, oobCode: args.oobCode),
         settings: data,
       );
     },
@@ -258,7 +259,10 @@ class StackedRouter extends _i1.RouterBase {
         orElse: () => const VolunteerResetPasswordViewArguments(),
       );
       return _i19.MaterialPageRoute<dynamic>(
-        builder: (context) => _i17.VolunteerResetPasswordView(key: args.key),
+        builder: (context) => _i17.VolunteerResetPasswordView(
+          key: args.key,
+          oobCode: args.oobCode,
+        ),
         settings: data,
       );
     },
@@ -391,24 +395,26 @@ class SignupViewArguments {
 }
 
 class ResetPasswordViewArguments {
-  const ResetPasswordViewArguments({this.key});
+  const ResetPasswordViewArguments({this.key, this.oobCode});
 
   final _i19.Key? key;
 
+  final String? oobCode;
+
   @override
   String toString() {
-    return '{"key": "$key"}';
+    return '{"key": "$key", "oobCode": "$oobCode"}';
   }
 
   @override
   bool operator ==(covariant ResetPasswordViewArguments other) {
     if (identical(this, other)) return true;
-    return other.key == key;
+    return other.key == key && other.oobCode == oobCode;
   }
 
   @override
   int get hashCode {
-    return key.hashCode;
+    return key.hashCode ^ oobCode.hashCode;
   }
 }
 
@@ -615,24 +621,26 @@ class VolunteerLoginViewArguments {
 }
 
 class VolunteerResetPasswordViewArguments {
-  const VolunteerResetPasswordViewArguments({this.key});
+  const VolunteerResetPasswordViewArguments({this.key, this.oobCode});
 
   final _i19.Key? key;
 
+  final String? oobCode;
+
   @override
   String toString() {
-    return '{"key": "$key"}';
+    return '{"key": "$key", "oobCode": "$oobCode"}';
   }
 
   @override
   bool operator ==(covariant VolunteerResetPasswordViewArguments other) {
     if (identical(this, other)) return true;
-    return other.key == key;
+    return other.key == key && other.oobCode == oobCode;
   }
 
   @override
   int get hashCode {
-    return key.hashCode;
+    return key.hashCode ^ oobCode.hashCode;
   }
 }
 
@@ -751,6 +759,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
 
   Future<dynamic> navigateToResetPasswordView({
     _i19.Key? key,
+    String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -759,7 +768,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
   }) async {
     return navigateTo<dynamic>(
       Routes.resetPasswordView,
-      arguments: ResetPasswordViewArguments(key: key),
+      arguments: ResetPasswordViewArguments(key: key, oobCode: oobCode),
       id: routerId,
       preventDuplicates: preventDuplicates,
       parameters: parameters,
@@ -933,6 +942,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
 
   Future<dynamic> navigateToVolunteerResetPasswordView({
     _i19.Key? key,
+    String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -941,7 +951,10 @@ extension NavigatorStateExtension on _i20.NavigationService {
   }) async {
     return navigateTo<dynamic>(
       Routes.volunteerResetPasswordView,
-      arguments: VolunteerResetPasswordViewArguments(key: key),
+      arguments: VolunteerResetPasswordViewArguments(
+        key: key,
+        oobCode: oobCode,
+      ),
       id: routerId,
       preventDuplicates: preventDuplicates,
       parameters: parameters,
@@ -1059,6 +1072,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
 
   Future<dynamic> replaceWithResetPasswordView({
     _i19.Key? key,
+    String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1067,7 +1081,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
   }) async {
     return replaceWith<dynamic>(
       Routes.resetPasswordView,
-      arguments: ResetPasswordViewArguments(key: key),
+      arguments: ResetPasswordViewArguments(key: key, oobCode: oobCode),
       id: routerId,
       preventDuplicates: preventDuplicates,
       parameters: parameters,
@@ -1241,6 +1255,7 @@ extension NavigatorStateExtension on _i20.NavigationService {
 
   Future<dynamic> replaceWithVolunteerResetPasswordView({
     _i19.Key? key,
+    String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1249,7 +1264,10 @@ extension NavigatorStateExtension on _i20.NavigationService {
   }) async {
     return replaceWith<dynamic>(
       Routes.volunteerResetPasswordView,
-      arguments: VolunteerResetPasswordViewArguments(key: key),
+      arguments: VolunteerResetPasswordViewArguments(
+        key: key,
+        oobCode: oobCode,
+      ),
       id: routerId,
       preventDuplicates: preventDuplicates,
       parameters: parameters,

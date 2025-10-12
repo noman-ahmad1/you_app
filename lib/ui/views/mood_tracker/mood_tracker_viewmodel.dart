@@ -10,9 +10,16 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/views/mood_tracker/animated_mood.dart';
 
+// Import the necessary model and service
+import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/models/mood_model.dart';
+
 class MoodTrackerViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
+  // Inject the new FirestoreService
+  final _firestoreService = locator<FirestoreService>();
   final AudioPlayer _fxPlayer = AudioPlayer();
+  Key chartKey = UniqueKey();
 
   bool swiped = false;
   final List<Particle> particles = [];
@@ -105,19 +112,38 @@ class MoodTrackerViewModel extends BaseViewModel {
     }
   }
 
-  Future<void> onEmojiSelected(String emoji) async {
+  Future<void> onEmojiSelected(String emojiAssetPath) async {
     if (_isDisposed) return;
 
     try {
-      // 1. Haptic feedback
+      // 1. **Data Saving Logic (NEW)**
+      final moodLabel = assetToLabelMap[emojiAssetPath];
+
+      if (moodLabel != null) {
+        final newMoodEntry = MoodEntry.create(
+          _firestoreService.userId, // Use the user ID from the service
+          moodLabel,
+          extraField: 'Recorded via MoodTrackerView', // Optional extra data
+        );
+
+        // Save the entry to Firestore
+        await _firestoreService.mood.saveMoodEntry(newMoodEntry);
+
+        chartKey = UniqueKey();
+      } else {
+        debugPrint(
+            'Error: Could not find mood label for asset path: $emojiAssetPath');
+      }
+
+      // 2. Haptic feedback
       HapticFeedback.mediumImpact();
 
-      // 2. Play sound
+      // 3. Play sound
       playSwipeSound(isComplete: true);
 
-      // 3. Navigate
+      // 4. Navigate (Uses the original emojiAssetPath for the AnimatedMoodScreen)
       _navigationService.navigateWithTransition(
-        AnimatedMoodScreen(emoji: emoji),
+        AnimatedMoodScreen(emoji: emojiAssetPath),
         transition: 'fade',
         duration: const Duration(milliseconds: 1000),
       );

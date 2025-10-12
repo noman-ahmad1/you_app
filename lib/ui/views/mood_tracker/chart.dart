@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
-// import 'package:fl_chart_app/presentation/resources/app_resources.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+
+import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/models/mood_model.dart';
 
 class BarChartSample7 extends StatefulWidget {
   BarChartSample7({super.key});
@@ -27,6 +31,13 @@ class BarChartSample7 extends StatefulWidget {
 }
 
 class _BarChartSample7State extends State<BarChartSample7> {
+  final _firestoreService = locator<FirestoreService>();
+
+  // Dynamic chart data from Firestore (per-user, last 30 days)
+  List<_BarData> dynamicDataList = [];
+  bool _isLoading = true;
+  StreamSubscription<List<MoodEntry>>? _moodSubscription;
+
   BarChartGroupData generateBarGroup(
     int x,
     Color color,
@@ -41,22 +52,85 @@ class _BarChartSample7State extends State<BarChartSample7> {
           color: color,
           width: 15,
         ),
-        // BarChartRodData(
-        //   toY: shadowValue,
-        //   color: widget.shadowColor,
-        //   width: 6,
-        // ),
       ],
       showingTooltipIndicators: touchedGroupIndex == x ? [0] : [],
     );
   }
 
   int touchedGroupIndex = -1;
-
   int rotationTurns = 1;
 
   @override
+  void initState() {
+    super.initState();
+    _subscribeToMoodStream();
+  }
+
+  Future<void> _subscribeToMoodStream() async {
+    final userId = _firestoreService.userId;
+    if (userId.isEmpty || userId == 'anonymous_user') {
+      // No logged-in user — keep dummy data and stop loading
+      debugPrint('BarChart: no logged-in user; showing default data.');
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    // Listen to the user stream (your FirestoreService.mood.getUserMoodStream)
+    _moodSubscription = _firestoreService.mood.getUserMoodStream(userId).listen(
+        (List<MoodEntry> moods) {
+      try {
+        // Filter last 30 days on client as a safety net.
+        final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+        final recent = moods.where((m) {
+          final dt = DateTime.tryParse(m.timestamp);
+          if (dt == null) return false;
+          return !dt.isBefore(thirtyDaysAgo); // dt >= thirtyDaysAgo
+        }).toList();
+
+        // Count occurrences by label
+        final Map<String, int> moodCount = {};
+        for (final m in recent) {
+          moodCount[m.moodLabel] = (moodCount[m.moodLabel] ?? 0) + 1;
+        }
+
+        // Map into _BarData in the same order as moodDataMap
+        dynamicDataList = moodDataMap.entries.map((entry) {
+          final label = entry.key;
+          final color = _getColorForLabel(label);
+          final count = (moodCount[label] ?? 0).toDouble();
+          final emoji = entry.value['assetId'] as String;
+          return _BarData(color, count, count, emoji);
+        }).toList();
+
+        setState(() {
+          _isLoading = false;
+        });
+      } catch (e) {
+        debugPrint('BarChart stream processing error: $e');
+        setState(() => _isLoading = false);
+      }
+    }, onError: (e) {
+      debugPrint('BarChart stream error: $e');
+      setState(() => _isLoading = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _moodSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Choose source list: show static widget.dataList while loading
+    final source = _isLoading ? widget.dataList : dynamicDataList;
+
+    // Compute maxY dynamically (keeps 20 as minimum to preserve current look)
+    final maxValue = source.isEmpty
+        ? 20.0
+        : math.max(15.0, source.map((d) => d.value).fold(0.0, math.max));
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -124,11 +198,13 @@ class _BarChartSample7State extends State<BarChartSample7> {
                       reservedSize: 36,
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
+                        if (index < 0 || index >= source.length) {
+                          return const SizedBox.shrink();
+                        }
                         return SideTitleWidget(
                           meta: meta,
                           child: _IconWidget(
-                            emojiAsset: widget.dataList[index].emojiAsset,
-                            // color: widget.dataList[index].color,
+                            emojiAsset: source[index].emojiAsset,
                             isSelected: touchedGroupIndex == index,
                           ),
                         );
@@ -146,7 +222,7 @@ class _BarChartSample7State extends State<BarChartSample7> {
                     strokeWidth: 1,
                   ),
                 ),
-                barGroups: widget.dataList.asMap().entries.map((e) {
+                barGroups: source.asMap().entries.map((e) {
                   final index = e.key;
                   final data = e.value;
                   return generateBarGroup(
@@ -156,7 +232,7 @@ class _BarChartSample7State extends State<BarChartSample7> {
                     data.shadowValue,
                   );
                 }).toList(),
-                maxY: 20,
+                maxY: maxValue,
                 barTouchData: BarTouchData(
                   enabled: true,
                   handleBuiltInTouches: false,
@@ -220,11 +296,9 @@ class _BarData {
 class _IconWidget extends ImplicitlyAnimatedWidget {
   const _IconWidget({
     required this.emojiAsset,
-    // required this.color,
     required this.isSelected,
   }) : super(duration: const Duration(milliseconds: 300));
   final String emojiAsset;
-  // final Color color;
   final bool isSelected;
 
   @override
@@ -247,7 +321,6 @@ class _IconWidgetState extends AnimatedWidgetBaseState<_IconWidget> {
         widget.emojiAsset,
         width: 28,
         height: 28,
-        // color: widget.isSelected ? null : widget.color.withOpacity(0.5),
         colorBlendMode: widget.isSelected ? BlendMode.dst : BlendMode.modulate,
       ),
     );
@@ -263,5 +336,30 @@ class _IconWidgetState extends AnimatedWidgetBaseState<_IconWidget> {
         end: widget.isSelected ? 1.0 : 0.0,
       ),
     ) as Tween<double>?;
+  }
+}
+
+Color _getColorForLabel(String label) {
+  switch (label) {
+    case 'Energized':
+      return AppColors.teal;
+    case 'Joyful':
+      return AppColors.lightPurple;
+    case 'Blessed':
+      return AppColors.pink;
+    case 'Happy':
+      return AppColors.peach;
+    case 'Neutral':
+      return AppColors.darkYellow;
+    case 'Sad':
+      return AppColors.yellow;
+    case 'Restless':
+      return AppColors.camel;
+    case 'Anxious':
+      return AppColors.darkOrange;
+    case 'Angry':
+      return AppColors.red;
+    default:
+      return AppColors.secondary;
   }
 }

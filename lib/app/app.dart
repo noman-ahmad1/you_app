@@ -23,6 +23,7 @@ import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_vie
 import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart';
 import 'package:you_app/ui/views/volunteer_login/volunteer_login_view.dart';
 import 'package:you_app/ui/views/volunteer_reset_password/volunteer_reset_password_view.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 // @stacked-import
 
 @StackedApp(

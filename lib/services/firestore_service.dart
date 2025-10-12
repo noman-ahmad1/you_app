@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:you_app/models/mood_model.dart';
 import 'package:you_app/models/volunteer_info_model.dart';
 
@@ -6,6 +8,13 @@ import 'package:you_app/models/volunteer_info_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // NOTE: In a real Flutter/Canvas app, the 'appId' (aka __app_id) must be
+  // securely provided through configuration or environment variables.
+  // This is a placeholder for demonstration.
+  final String _appId = 'canvas_app_id_placeholder';
+  String get userId => _auth.currentUser?.uid ?? 'anonymous_user';
 
   // Initialize the specific managers
   late final _UserDbManager user;
@@ -16,7 +25,9 @@ class FirestoreService {
     // Initialize managers when the main service is constructed
     user = _UserDbManager(_firestore);
     volunteer_info = _VolunteerDbManager(_firestore);
-    mood = _MoodDbManager(_firestore);
+
+    // Pass the App ID to the Mood Manager to construct the public collection path
+    mood = _MoodDbManager(_firestore, _auth);
   }
 }
 
@@ -77,6 +88,7 @@ class _VolunteerDbManager {
     if (!doc.exists || doc.data() == null) return null;
 
     // Convert the Firestore Map to the VolunteerInfo model
+    // Assuming VolunteerInfo.fromJson is correctly implemented
     return VolunteerInfo.fromJson(doc.data()!);
   }
 
@@ -91,37 +103,90 @@ class _VolunteerDbManager {
   }
 }
 
+// 3. Manages mood entries in the public/global collection
 class _MoodDbManager {
   final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
 
-  _MoodDbManager(this._firestore);
+  // Uses the public path structure with the provided appId
+  _MoodDbManager(this._firestore, this._auth);
 
-  // Base path for mood entries: /artifacts/{appId}/users/{userId}/mood
-  String _collectionPath({required String appId, required String userId}) {
-    return 'artifacts/$appId/users/$userId/mood';
+  // Method to add a new mood entry
+  Future<void> saveMoodEntry(MoodEntry entry) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) {
+      debugPrint('Save Error: No authenticated user.');
+      return;
+    }
+
+    try {
+      final data = {
+        'userId': userId,
+        'moodLabel': entry.moodLabel,
+        'timestamp': FieldValue.serverTimestamp(),
+        'extraField': entry.extraField,
+      };
+
+      await _firestore.collection('mood').add(data);
+      debugPrint('✅ Mood entry saved for $userId - ${entry.moodLabel}');
+    } on FirebaseException catch (e) {
+      debugPrint('🔥 Firebase Save Error: ${e.code} - ${e.message}');
+    } catch (e) {
+      debugPrint('💥 General Save Error: $e');
+    }
   }
 
-  // CREATE: Save a new mood entry
-  Future<void> addMoodEntry({
-    required String appId,
-    required String userId,
-    required MoodEntry entry,
-  }) async {
-    final path = _collectionPath(appId: appId, userId: userId);
-    // Use .add() for a new, auto-generated document ID
-    await _firestore.collection(path).add(entry.toJson());
+  // Stream entries for the current user (filtered by userId)
+  // We use Map<String, dynamic> as a generic return type since we don't have MoodModel definition.
+  Stream<List<MoodEntry>> getUserMoodStream(String userId) {
+    final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+
+    return _firestore
+        .collection('mood')
+        .where('userId', isEqualTo: userId)
+        .where('timestamp', isGreaterThanOrEqualTo: thirtyDaysAgo)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => MoodEntry.fromFirestore(doc.data(), doc.id))
+            .toList());
   }
 
-  // READ: Get all mood entries for chart generation
-  // Returns a list of raw documents (Map<String, dynamic>) for ViewModel to aggregate
-  Future<List<Map<String, dynamic>>> getMoodEntries({
-    required String appId,
-    required String userId,
-  }) async {
-    final path = _collectionPath(appId: appId, userId: userId);
-    final snapshot = await _firestore.collection(path).get();
+  // Admin View: Fetch all mood entries (no user filter)
+  Future<List<MoodEntry>> getAllMoodEntriesForAdmin() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) {
+      debugPrint('⚠️ No authenticated user.');
+      return [];
+    }
 
-    // Map the documents to a simple list of data maps
-    return snapshot.docs.map((doc) => doc.data()).toList();
+    // Optional: verify if user is admin
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    final isAdmin = userDoc.data()?['role'] == 'admin';
+    if (!isAdmin) {
+      debugPrint('🚫 Access denied. User is not an admin.');
+      return [];
+    }
+
+    try {
+      final querySnapshot = await _firestore
+          .collection('mood')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => MoodEntry.fromFirestore(doc.data(), doc.id))
+          .toList();
+    } on FirebaseException catch (e) {
+      debugPrint('🔥 Firebase Fetch Error: ${e.code} - ${e.message}');
+      return [];
+    } catch (e) {
+      debugPrint('💥 General Fetch Error: $e');
+      return [];
+    }
   }
+
+  // FirebaseAuth getFirebaseAuthInstance() {
+  //   return FirebaseAuth.instance;
+  // }
 }

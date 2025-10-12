@@ -3,7 +3,7 @@ import 'package:stacked/stacked.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:you_app/models/user_model.dart';
+import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/firestore_service.dart';
 import 'package:you_app/app/app.locator.dart'; // REQUIRED FOR SERVICE LOCATOR PATTERN
 

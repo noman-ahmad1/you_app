@@ -1,100 +1,105 @@
-import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 
+// --- Mood Configuration Map (The Source of Truth) ---
+// This map allows us to look up the associated emoji/asset
+// using the descriptive label, which is the only value stored in Firestore.
+const Map<String, Map<String, dynamic>> moodDataMap = {
+  'Energized': {'assetId': AppConstants.emoji_1},
+  'Joyful': {'assetId': AppConstants.emoji_2},
+  'Blessed': {'assetId': AppConstants.emoji_3},
+  'Happy': {'assetId': AppConstants.emoji_4},
+  'Neutral': {'assetId': AppConstants.emoji_5},
+  'Sad': {'assetId': AppConstants.emoji_6},
+  'Restless': {'assetId': AppConstants.emoji_7},
+  'Anxious': {'assetId': AppConstants.emoji_8},
+  'Angry': {'assetId': AppConstants.emoji_9},
+};
+
+Map<String, String> get assetToLabelMap {
+  final Map<String, String> inverseMap = {};
+  moodDataMap.forEach((label, data) {
+    final assetId = data['assetId'] as String;
+    inverseMap[assetId] = label;
+  });
+  return inverseMap;
+}
+
+// --- Mood Entry Model ---
 class MoodEntry {
-  final String moodId; // E.g., 'mood_9' (the asset name)
-  final int moodScore; // E.g., 9 (the numerical value)
+  final String id;
+  final String userId;
+  final String moodLabel; // The only field used for identification in Firestore
+  final dynamic extraField;
+
+  // Derived properties, calculated from moodLabel
+  final String moodId; // Renamed to moodId, but represents the emoji/asset name
+
+  // Timestamp data
   final String timestamp; // ISO 8601 string of when it was recorded
-  final String dateOnly; // YYYY-MM-DD string for easy grouping/aggregation
+  final String dateOnly; // YYYY-MM-DD string
 
   MoodEntry({
+    required this.id,
+    required this.userId,
+    required this.moodLabel,
     required this.moodId,
-    required this.moodScore,
     required this.timestamp,
     required this.dateOnly,
+    this.extraField,
   });
 
-  Map<String, dynamic> toJson() {
+  // Factory constructor for creating a MoodEntry instance before saving.
+  // This constructor takes the core data and uses the map to derive score/id.
+  factory MoodEntry.create(String userId, String label, {dynamic extraField}) {
+    final now = DateTime.now();
+    final data =
+        moodDataMap[label] ?? moodDataMap['Neutral']!; // Default to Neutral
+
+    return MoodEntry(
+      id: '', // Empty ID when creating, Firestore service will handle it
+      userId: userId,
+      moodLabel: label,
+      moodId: data['assetId'] as String,
+      timestamp: now.toIso8601String(),
+      dateOnly: now.toIso8601String().split('T').first,
+      extraField: extraField,
+    );
+  }
+
+  // Factory constructor to create a MoodEntry from a Firestore map
+  factory MoodEntry.fromFirestore(Map<String, dynamic> data, String docId) {
+    final label = data['moodLabel'] as String? ?? 'Neutral';
+    final derivedData = moodDataMap[label] ?? moodDataMap['Neutral']!;
+
+    // Safely handle Firestore Timestamp object
+    String formattedTimestamp;
+    if (data['timestamp'] is Timestamp) {
+      formattedTimestamp =
+          (data['timestamp'] as Timestamp).toDate().toIso8601String();
+    } else {
+      formattedTimestamp =
+          data['timestamp'] as String? ?? DateTime.now().toIso8601String();
+    }
+
+    return MoodEntry(
+      id: docId,
+      userId: data['userId'] ?? '',
+      moodLabel: label,
+      moodId: derivedData['assetId'] as String,
+      timestamp: formattedTimestamp,
+      dateOnly: formattedTimestamp.split('T').first,
+      extraField: data['extraField'],
+    );
+  }
+
+  // Method to prepare the minimum data required for saving to Firestore.
+  Map<String, dynamic> toFirestore(String userId) {
     return {
-      'moodId': moodId,
-      'moodScore': moodScore,
-      'timestamp': timestamp,
-      'dateOnly': dateOnly,
+      'userId': userId,
+      'moodLabel': moodLabel, // Only the label is saved
+      'extraField': extraField,
+      // Note: 'timestamp' will be added by FieldValue.serverTimestamp() in the service.
     };
   }
 }
-
-class AppConstants {
-  // Mock asset paths
-  static const String back = 'assets/icons/back.png';
-  static const String background = 'assets/images/background.png';
-  static const String drop = 'assets/sounds/drop.mp3';
-
-  // Emoji constant names (linked to mood scores)
-  static const String emoji_1 = 'mood_9'; // Energized (Score 9)
-  static const String emoji_2 = 'mood_8'; // Main character vibe (Score 8)
-  static const String emoji_3 = 'mood_7'; // Over the moon (Score 7)
-  static const String emoji_4 = 'mood_6'; // chill mode (Score 6)
-  static const String emoji_5 = 'mood_5'; // Holding steady? (Score 5)
-  static const String emoji_6 = 'mood_4'; // Restless? (Score 4)
-  static const String emoji_7 = 'mood_3'; // Running on 1%' (Score 3)
-  static const String emoji_8 = 'mood_2'; // Overstimulated? (Score 2)
-  static const String emoji_9 = 'mood_1'; // About to crash out?? (Score 1)
-}
-
-// Data model for displaying mood statistics in the chart
-class MoodStat {
-  final String dayLabel; // E.g., 'Mon'
-  final double averageMoodScore; // 1.0 (lowest) to 9.0 (highest)
-
-  MoodStat(this.dayLabel, this.averageMoodScore);
-}
-
-// Particle class definition for the animated visual effect
-class Particle {
-  double x, y;
-  double size;
-  double speed;
-  double angle;
-  double life;
-
-  Particle({
-    required this.x,
-    required this.y,
-    required this.size,
-    required this.speed,
-    required this.angle,
-    required this.life,
-  });
-
-  void update() {
-    x += cos(angle) * speed;
-    y += sin(angle) * speed;
-    life--;
-  }
-}
-
-// Map emoji constant names to a numeric score (9 is best, 1 is worst)
-const Map<String, int> MoodScores = {
-  AppConstants.emoji_1: 9,
-  AppConstants.emoji_2: 8,
-  AppConstants.emoji_3: 7,
-  AppConstants.emoji_4: 6,
-  AppConstants.emoji_5: 5,
-  AppConstants.emoji_6: 4,
-  AppConstants.emoji_7: 3,
-  AppConstants.emoji_8: 2,
-  AppConstants.emoji_9: 1,
-};
-
-// Map mood scores to their corresponding emoji asset
-const Map<int, String> ScoreToEmojiAsset = {
-  9: AppConstants.emoji_1,
-  8: AppConstants.emoji_2,
-  7: AppConstants.emoji_3,
-  6: AppConstants.emoji_4,
-  5: AppConstants.emoji_5,
-  4: AppConstants.emoji_6,
-  3: AppConstants.emoji_7,
-  2: AppConstants.emoji_8,
-  1: AppConstants.emoji_9,
-};
