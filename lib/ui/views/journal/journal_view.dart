@@ -10,13 +10,13 @@ import 'package:you_app/ui/views/journal/journal_tabs/personal_tab.dart';
 import 'package:you_app/ui/views/journal/journal_tabs/work_tab.dart';
 import 'journal_viewmodel.dart';
 
-class JournalView extends StackedView<VolunteerSignupInfoViewModel> {
+class JournalView extends StackedView<JournalViewModel> {
   const JournalView({Key? key}) : super(key: key);
 
   @override
   Widget builder(
     BuildContext context,
-    VolunteerSignupInfoViewModel viewModel,
+    JournalViewModel viewModel,
     Widget? child,
   ) {
     return Scaffold(
@@ -54,23 +54,31 @@ class JournalView extends StackedView<VolunteerSignupInfoViewModel> {
             )));
   }
 
-  Widget _buildTabContent(VolunteerSignupInfoViewModel viewModel) {
+  Widget _buildTabContent(JournalViewModel viewModel) {
     switch (viewModel.currentIndex) {
       case 0:
-        return WorkEntriesView(viewModel: viewModel, key: ValueKey('work'));
+        return WorkEntriesView(
+            entries: viewModel.workEntries, key: ValueKey('work'));
       case 1:
-        return AllEntriesView(viewModel: viewModel, key: ValueKey('all'));
+        return AllEntriesView(
+            entries: viewModel.allEntries, key: ValueKey('all'));
       case 2:
         return PersonalEntriesView(
-            viewModel: viewModel, key: ValueKey('personal'));
+            entries: viewModel.personalEntries, key: ValueKey('personal'));
       default:
         return const SizedBox.shrink();
     }
   }
 
   @override
-  VolunteerSignupInfoViewModel viewModelBuilder(
+  JournalViewModel viewModelBuilder(
     BuildContext context,
   ) =>
-      VolunteerSignupInfoViewModel();
+      JournalViewModel();
+
+  @override
+  void onViewModelReady(JournalViewModel viewModel) {
+    // This is crucial to start fetching the data.
+    viewModel.listenToJournalEntries();
+  }
 }

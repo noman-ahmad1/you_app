@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:you_app/models/journal_model.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/views/journal/journal_card.dart';
-import 'package:you_app/ui/views/journal/journal_details.dart';
 import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
 import 'package:you_app/ui/views/new_journal_entry/new_journal_entry_viewmodel.dart';
 
@@ -23,7 +23,7 @@ class NewPersonalEntryView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          'New Entry',
+          viewModel.isEditing ? 'Edit Entry' : 'New Entry',
           textAlign: TextAlign.center,
           style: GoogleFonts.crimsonPro(
               fontSize: 25,
@@ -85,6 +85,7 @@ class NewPersonalEntryView extends StatelessWidget {
                           ],
                         ),
                         child: TextField(
+                          controller: viewModel.titleController,
                           cursorColor: AppColors.secondary,
                           onChanged: (value) {},
                           maxLines: 1,
@@ -131,6 +132,7 @@ class NewPersonalEntryView extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.all(7.0),
                             child: TextField(
+                              controller: viewModel.contentController,
                               cursorColor: AppColors.secondary,
                               onChanged: (value) {},
                               maxLines: 15,
@@ -160,10 +162,12 @@ class NewPersonalEntryView extends StatelessWidget {
                     alignment: Alignment.bottomCenter,
                     child: InkWell(
                       onTap: () {
-                        viewModel.showAppBanner(context,
-                            title: 'Saved',
-                            description: 'Your journal entry has been saved.');
-                        viewModel.navigateToJournal();
+                        if (viewModel.isEditing) {
+                          viewModel.updateJournalEntry();
+                        } else {
+                          viewModel.saveJournalEntry(
+                              label: JournalLabel.personal);
+                        }
                       },
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(35),
@@ -187,14 +191,16 @@ class NewPersonalEntryView extends StatelessWidget {
                               ],
                             ),
                             child: Center(
-                              child: Text(
-                                'Save',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.crimsonPro(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.primaryVeryDark),
-                              ),
+                              child: viewModel.isBusy
+                                  ? const CircularProgressIndicator()
+                                  : Text(
+                                      viewModel.isEditing ? 'Update' : 'Save',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.crimsonPro(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.primaryVeryDark),
+                                    ),
                             ),
                           ),
                         ),

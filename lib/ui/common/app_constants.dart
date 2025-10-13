@@ -55,6 +55,7 @@ class AppConstants {
   static const String pending = 'assets/icons/pending.png';
   static const String journalIcon = 'assets/icons/journalIcon.png';
   static const String logout = 'assets/icons/logout.png';
+  static const String delete = 'assets/icons/delete.png';
 
   //images
   static const String register = 'assets/images/1.png';
@@ -65,6 +66,8 @@ class AppConstants {
   static const String music = 'assets/images/music.jpg';
   static const String santa = 'assets/images/santa.png';
   static const String logo = 'assets/images/You.png';
+  static const String soothing = 'assets/images/soothing.jpeg';
+  static const String soothing2 = 'assets/images/soothing2.jpg';
 
   //sounds
   static const String drop = 'assets/sounds/drop.mp3';

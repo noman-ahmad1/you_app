@@ -23,7 +23,7 @@ import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_vie
 import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart';
 import 'package:you_app/ui/views/volunteer_login/volunteer_login_view.dart';
 import 'package:you_app/ui/views/volunteer_reset_password/volunteer_reset_password_view.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:you_app/ui/views/journal_details/journal_details_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -45,6 +45,7 @@ import 'package:firebase_auth/firebase_auth.dart';
     MaterialRoute(page: VolunteerLoginView),
     MaterialRoute(page: VolunteerResetPasswordView),
     MaterialRoute(page: VolunteerOtpView),
+    MaterialRoute(page: JournalDetailsView),
 // @stacked-route
   ],
   dependencies: [

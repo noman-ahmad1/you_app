@@ -1,19 +1,29 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stacked/stacked.dart';
+import 'package:you_app/models/journal_model.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
-import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
-import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
+import 'package:you_app/ui/shared/topbar.dart';
 
-class JournalDetails extends StatelessWidget {
-  final VolunteerSignupInfoViewModel viewModel;
-  const JournalDetails({super.key, required this.viewModel});
+import 'journal_details_viewmodel.dart';
+
+class JournalDetailsView extends StackedView<JournalDetailsViewModel> {
+  final JournalEntry journalEntry;
+  const JournalDetailsView({
+    Key? key,
+    required this.journalEntry,
+  }) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
+  Widget builder(
+    BuildContext context,
+    JournalDetailsViewModel viewModel,
+    Widget? child,
+  ) {
     final mediaQuery = MediaQuery.of(context);
     final width = mediaQuery.size.width;
     final height = mediaQuery.size.height;
@@ -39,14 +49,6 @@ class JournalDetails extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  'Entry',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.crimsonPro(
-                      fontSize: 25,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.secondary),
-                ),
                 Space.verticalSpaceTiny(context),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(23),
@@ -72,13 +74,70 @@ class JournalDetails extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            'Previously shared thoughts.',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.crimsonPro(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.secondary),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  viewModel.deleteEntry();
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(50),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(
+                                          sigmaX: 200, sigmaY: 200),
+                                      child: Container(
+                                        padding: EdgeInsets.all(width * 0.007),
+                                        width: width * 0.085,
+                                        height: height * 0.038,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.secondaryVeryLight
+                                              .withAlpha(102),
+                                          border: Border.all(
+                                              color: AppColors.secondary,
+                                              width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withAlpha(25),
+                                              blurRadius: 20,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: Image.asset(
+                                            AppConstants.delete,
+                                            color: AppColors.secondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Space.horizontalSpaceMedium(context),
+                              Text(
+                                'Entry',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.crimsonPro(
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.secondary),
+                              ),
+                              Space.horizontalSpaceTiny(context),
+                              Space.horizontalSpaceVTiny(context),
+                              Text(
+                                viewModel.date,
+                                style: GoogleFonts.crimsonPro(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.primaryVeryDark),
+                              ),
+                            ],
                           ),
                           Space.verticalSpaceVTiny(context),
                           ClipRRect(
@@ -106,7 +165,8 @@ class JournalDetails extends StatelessWidget {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    'Calm / Grateful',
+                                    viewModel.entry.title,
+                                    textAlign: TextAlign.center,
                                     style: GoogleFonts.crimsonPro(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w700,
@@ -144,7 +204,7 @@ class JournalDetails extends StatelessWidget {
                                   child: Padding(
                                     padding: const EdgeInsets.all(7.0),
                                     child: Text(
-                                      'Something about today felt lighter. I went for a short walk in the evening, and the breeze actually made me smile.....',
+                                      viewModel.entry.content,
                                       style: GoogleFonts.crimsonPro(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w600,
@@ -186,7 +246,8 @@ class JournalDetails extends StatelessWidget {
                                       ),
                                       child: Center(
                                         child: Text(
-                                          'Personal',
+                                          viewModel
+                                              .category, // Capitalizes "personal" or "work"
                                           textAlign: TextAlign.center,
                                           style: GoogleFonts.crimsonPro(
                                               fontSize: 15,
@@ -251,4 +312,10 @@ class JournalDetails extends StatelessWidget {
               ],
             )));
   }
+
+  @override
+  JournalDetailsViewModel viewModelBuilder(
+    BuildContext context,
+  ) =>
+      JournalDetailsViewModel(entry: journalEntry);
 }

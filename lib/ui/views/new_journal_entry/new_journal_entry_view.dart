@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/models/journal_model.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -17,7 +18,11 @@ import 'package:you_app/ui/views/new_journal_entry/journal_entry_tabs/work_entry
 import 'new_journal_entry_viewmodel.dart';
 
 class NewJournalEntryView extends StackedView<NewJournalEntryViewModel> {
-  const NewJournalEntryView({Key? key}) : super(key: key);
+  final JournalEntry? journalEntry;
+  const NewJournalEntryView({
+    Key? key,
+    this.journalEntry,
+  }) : super(key: key);
 
   @override
   Widget builder(
@@ -78,5 +83,11 @@ class NewJournalEntryView extends StackedView<NewJournalEntryViewModel> {
   NewJournalEntryViewModel viewModelBuilder(
     BuildContext context,
   ) =>
-      NewJournalEntryViewModel();
+      NewJournalEntryViewModel(entry: journalEntry);
+
+  @override
+  void onViewModelReady(NewJournalEntryViewModel viewModel) {
+    // This will pre-fill the form if we are in "Edit Mode"
+    viewModel.initialize();
+  }
 }

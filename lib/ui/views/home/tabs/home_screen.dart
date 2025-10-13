@@ -495,7 +495,7 @@ class HomeScreen extends StatelessWidget {
                                             decoration: BoxDecoration(
                                               image: const DecorationImage(
                                                 image: AssetImage(
-                                                    AppConstants.music),
+                                                    AppConstants.soothing),
                                                 fit: BoxFit.cover,
                                               ),
                                               color: AppColors
@@ -579,7 +579,7 @@ class HomeScreen extends StatelessWidget {
                                             decoration: BoxDecoration(
                                               image: const DecorationImage(
                                                 image: AssetImage(
-                                                    AppConstants.music),
+                                                    AppConstants.soothing2),
                                                 fit: BoxFit.cover,
                                               ),
                                               color: AppColors
