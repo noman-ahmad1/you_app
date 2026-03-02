@@ -22,6 +22,8 @@ class AppColors {
   static const Color camel = Color(0xFFE69454);
   static const Color darkOrange = Color(0xFFED6937);
   static const Color red = Color(0xFFD34641);
+  static const Color green = Color(0xFF4C6D3D);
+  // static const Color grey = Color(0xFF7209B7);
   static const Color textPrimary = Colors.black87;
   static const Color textSecondary = Colors.black54;
 }

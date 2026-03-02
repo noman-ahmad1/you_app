@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:you_app/models/app_user.dart';
+import 'package:you_app/models/chat_messaage_model.dart';
+import 'package:you_app/models/chat_request_model.dart';
 import 'package:you_app/models/journal_model.dart';
 import 'package:you_app/models/mood_model.dart';
 import 'package:you_app/models/volunteer_info_model.dart';
@@ -22,6 +25,8 @@ class FirestoreService {
   late final _VolunteerDbManager volunteer_info;
   late final _MoodDbManager mood;
   late final _JournalDbManager journal;
+  late final _ChatDbManager chat;
+  late final _ChatRequestDbManager chatRequest;
 
   FirestoreService() {
     // Initialize managers when the main service is constructed
@@ -29,6 +34,8 @@ class FirestoreService {
     volunteer_info = _VolunteerDbManager(_firestore);
     mood = _MoodDbManager(_firestore, _auth);
     journal = _JournalDbManager(_firestore, _auth);
+    chat = _ChatDbManager(_firestore);
+    chatRequest = _ChatRequestDbManager(_firestore);
   }
 }
 
@@ -61,6 +68,15 @@ class _UserDbManager {
     });
   }
 
+  Future<void> updateUserAvailability(String uid, String status) async {
+    // Consider adding validation to ensure status is 'online' or 'offline'
+    await _firestore.collection('users').doc(uid).update({
+      'availabilityStatus': status,
+      'lastStatusChange':
+          FieldValue.serverTimestamp(), // Optional: track when it changed
+    });
+  }
+
   // QUERY: Fetch all users (used by admin)
   Future<List<Map<String, dynamic>>> getAll() async {
     final querySnapshot = await _firestore.collection('users').get();
@@ -75,6 +91,19 @@ class _UserDbManager {
         .limit(1)
         .get();
     return query.docs.isEmpty;
+  }
+
+  Future<List<AppUser>> getAvailableVolunteers() async {
+    // Fetches users with the 'volunteer' role who are 'active'
+    final snapshot = await _firestore
+        .collection('users')
+        .where('role', isEqualTo: 'volunteer')
+        .where('status', isEqualTo: 'active')
+        .where('availabilityStatus', isEqualTo: 'online')
+        .get();
+
+    // You'll need an AppUser.fromJson method in your model
+    return snapshot.docs.map((doc) => AppUser.fromJson(doc.data())).toList();
   }
 }
 
@@ -278,3 +307,233 @@ class _JournalDbManager {
     }
   }
 }
+
+// --- Chat Methods  ---
+class _ChatDbManager {
+  final FirebaseFirestore _firestore;
+  _ChatDbManager(this._firestore);
+
+  Future<void> deleteChatAndRequest({
+    required String chatId,
+    required String requestId, // The ID of the document in 'chat_requests'
+  }) async {
+    // Use a batch write for atomicity (both deletions succeed or fail together)
+    final batch = _firestore.batch();
+
+    // 1. Get reference to the chat room document
+    final chatRef = _firestore.collection('chats').doc(chatId);
+
+    // 2. Get reference to the chat request document
+    final requestRef = _firestore.collection('chat_requests').doc(requestId);
+
+    // 3. Add delete operations to the batch
+    batch.delete(chatRef);
+    batch.delete(requestRef);
+
+    // 4. Commit the batch
+    try {
+      await batch.commit();
+      print("Chat ($chatId) and Request ($requestId) deleted successfully.");
+    } catch (e) {
+      print("Error deleting chat and request: $e");
+      // Rethrow to allow the ViewModel to handle the error
+      rethrow;
+    }
+  }
+
+  Future<void> createChatRoomIfNotExists({
+    required String chatId,
+    required AppUser user,
+    required AppUser volunteer,
+  }) async {
+    final docRef = _firestore.collection('chats').doc(chatId);
+
+    final chatRoomData = {
+      'participants': [user.uid, volunteer.uid],
+      'participantInfo': {
+        user.uid: {'name': user.fullName, 'avatarUrl': user.profilePictureUrl},
+        volunteer.uid: {
+          'name': volunteer.fullName,
+          'avatarUrl': volunteer.profilePictureUrl
+        },
+      },
+      'createdAt': FieldValue.serverTimestamp(),
+    };
+
+    // .set with merge:true will create the doc or merge data if it exists.
+    await docRef.set(chatRoomData, SetOptions(merge: true));
+  }
+
+  // Gets a real-time stream of messages for a specific chat room
+  Stream<List<ChatMessage>> getChatMessagesStream(String chatId) {
+    return _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ChatMessage.fromJson(doc.data()))
+            .toList());
+  }
+
+  // Sends a new message
+  Future<void> sendMessage(String chatId, ChatMessage message) async {
+    // Add message to subcollection
+    await _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .add(message.toJson());
+
+    // Also update the 'lastMessage' on the parent chat document
+    await _firestore.collection('chats').doc(chatId).update({
+      'lastMessage': {
+        'text': message.text,
+        'senderId': message.senderId,
+        'timestamp': message.timestamp,
+      }
+    });
+  }
+}
+
+// --- Chat Request Methods ---
+class _ChatRequestDbManager {
+  final FirebaseFirestore _firestore;
+  _ChatRequestDbManager(this._firestore);
+
+  /// Creates a new chat request document in Firestore.
+  Future<void> sendChatRequest(ChatRequest request) async {
+    await _firestore.collection('chat_requests').add(request.toJson());
+  }
+
+  /// Fetches chat requests for a specific volunteer.
+  Stream<List<ChatRequest>> getChatRequestsForVolunteer(String volunteerId) {
+    return _firestore
+        .collection('chat_requests')
+        .where('volunteerId', isEqualTo: volunteerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ChatRequest.fromFirestore(doc))
+            .toList());
+  }
+
+  Future<void> acceptRequest(ChatRequest request) async {
+    // Use a transaction for atomicity
+    await _firestore.runTransaction((transaction) async {
+      final requestRef = _firestore.collection('chat_requests').doc(request.id);
+
+      // Create the chat ID
+      final ids = [request.requesterId, request.volunteerId];
+      ids.sort();
+      final chatId = ids.join('_');
+      final chatRef = _firestore.collection('chats').doc(chatId);
+
+      // Fetch volunteer details (replace with actual fetch if needed)
+      final volunteerName = "Volunteer"; // TODO: Get volunteer name
+      final volunteerAvatar = null; // TODO: Get volunteer avatar
+
+      // 1. Update the request status
+      transaction.update(requestRef, {'status': 'accepted'});
+
+      // 2. Create the chat room document (or merge if it somehow exists)
+      transaction.set(
+          chatRef,
+          {
+            'participants': [request.requesterId, request.volunteerId],
+            'participantInfo': {
+              request.requesterId: {
+                'name': request.requesterName,
+                'avatarUrl': request.requesterAvatarUrl
+              },
+              request.volunteerId: {
+                'name': volunteerName,
+                'avatarUrl': volunteerAvatar
+              },
+            },
+            'createdAt':
+                FieldValue.serverTimestamp(), // Timestamp for chat creation
+            'lastMessage': null, // Initialize last message
+          },
+          SetOptions(merge: true));
+    });
+  }
+
+  Future<void> declineRequest(String requestId) async {
+    await _firestore
+        .collection('chat_requests')
+        .doc(requestId)
+        .update({'status': 'declined'});
+    // Alternatively, you could delete the request:
+    // await _firestore.collection('chat_requests').doc(requestId).delete();
+  }
+
+  /// Gets a real-time stream of ACCEPTED requests (active chats) FOR a volunteer.
+  Stream<List<ChatRequest>> getVolunteerActiveChatsStream(String volunteerId) {
+    return _firestore
+        .collection('chat_requests')
+        .where('volunteerId', isEqualTo: volunteerId)
+        .where('status', isEqualTo: 'accepted') // Only accepted requests
+        .orderBy('createdAt',
+            descending: true) // Or order by last message time later
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ChatRequest.fromFirestore(doc))
+            .toList());
+  }
+
+  Stream<List<ChatRequest>> getVolunteerPendingChatsStream(String volunteerId) {
+    return _firestore
+        .collection('chat_requests')
+        .where('volunteerId', isEqualTo: volunteerId)
+        .where('status', isEqualTo: 'pending') // Only pending requests
+        .orderBy('createdAt',
+            descending: true) // Or order by last message time later
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ChatRequest.fromFirestore(doc))
+            .toList());
+  }
+
+  /// Checks if a pending or accepted request exists between a user and a volunteer.
+  Future<bool> checkExistingRequest(String userId, String volunteerId) async {
+    final query = await _firestore
+        .collection('chat_requests')
+        .where('requesterId', isEqualTo: userId)
+        .where('volunteerId', isEqualTo: volunteerId)
+        // Check for requests that are NOT declined or cancelled (i.e., pending or accepted)
+        .where('status', whereIn: ['pending', 'accepted'])
+        .limit(1)
+        .get();
+
+    return query.docs.isNotEmpty; // Returns true if a request exists
+  }
+
+  Stream<List<ChatRequest>> getUserSentRequestsStream(String userId) {
+    return _firestore
+        .collection('chat_requests')
+        .where('requesterId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ChatRequest.fromFirestore(doc))
+            .toList());
+  }
+
+  Future<void> cancelRequest(String requestId) async {
+    // You might want stricter rules to ensure only pending requests can be cancelled.
+    await _firestore.collection('chat_requests').doc(requestId).delete();
+  }
+
+  /// Updates the status of a chat request (e.g., from 'pending' to 'accepted').
+  Future<void> updateChatRequestStatus(
+      String requestId, String newStatus) async {
+    await _firestore
+        .collection('chat_requests')
+        .doc(requestId)
+        .update({'status': newStatus});
+  }
+}
+
+  /// Fetches chat requests for a specific volunteer.

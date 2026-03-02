@@ -3,6 +3,7 @@ import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
+import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/auth_service.dart';
 
 class LoginViewModel extends BaseViewModel {
@@ -39,22 +40,32 @@ class LoginViewModel extends BaseViewModel {
     setBusy(true);
 
     try {
-      // 1. Calls the AuthService for standard email/password login
-      await _authenticationService.signInWithEmail(
-        email,
-        password,
-      );
+      // 1. Call the AuthService to sign the user in.
+      await _authenticationService.signInWithEmail(email, password);
 
-      // On successful login, navigate to the home view
-      _navigationService.replaceWith(Routes.homeView);
+      // 2. Get the logged-in user's data from the service.
+      final user = _authenticationService.currentUser;
+
+      // 3. Safety check in case the user data is not available.
+      if (user == null) {
+        throw Exception('Failed to load user data after login.');
+      }
+
+      // 4. Navigate based on the user's role.
+      if (user.role == UserRole.volunteer) {
+        _navigationService.replaceWith(Routes.volunteerHomeView);
+      } else {
+        // Both 'user' and 'admin' roles go to the main home view.
+        _navigationService.replaceWith(Routes.homeView);
+      }
     } catch (e) {
       String errorMessage = _authenticationService.error ??
           'Login failed. Please check your email and password.';
       _showErrorDialog('Login Failed', errorMessage);
       _validationError = errorMessage;
+      notifyListeners(); // Ensure error is displayed
     } finally {
       setBusy(false);
-      notifyListeners();
     }
   }
 

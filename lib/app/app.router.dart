@@ -6,11 +6,12 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:flutter/material.dart' as _i20;
+import 'package:flutter/material.dart' as _i21;
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart' as _i1;
-import 'package:stacked_services/stacked_services.dart' as _i22;
-import 'package:you_app/models/journal_model.dart' as _i21;
+import 'package:stacked_services/stacked_services.dart' as _i23;
+import 'package:you_app/models/journal_model.dart' as _i22;
+import 'package:you_app/ui/views/chat/chat_view.dart' as _i20;
 import 'package:you_app/ui/views/chatbot/chatbot_view.dart' as _i12;
 import 'package:you_app/ui/views/home/home_view.dart' as _i2;
 import 'package:you_app/ui/views/journal/journal_view.dart' as _i9;
@@ -75,6 +76,8 @@ class Routes {
 
   static const journalDetailsView = '/journal-details-view';
 
+  static const chatView = '/chat-view';
+
   static const all = <String>{
     homeView,
     startupView,
@@ -94,6 +97,7 @@ class Routes {
     volunteerResetPasswordView,
     volunteerOtpView,
     journalDetailsView,
+    chatView,
   };
 }
 
@@ -123,6 +127,7 @@ class StackedRouter extends _i1.RouterBase {
     ),
     _i1.RouteDef(Routes.volunteerOtpView, page: _i18.VolunteerOtpView),
     _i1.RouteDef(Routes.journalDetailsView, page: _i19.JournalDetailsView),
+    _i1.RouteDef(Routes.chatView, page: _i20.ChatView),
   ];
 
   final _pagesMap = <Type, _i1.StackedRouteFactory>{
@@ -130,7 +135,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<HomeViewArguments>(
         orElse: () => const HomeViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i2.HomeView(key: args.key),
         settings: data,
       );
@@ -139,7 +144,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<StartupViewArguments>(
         orElse: () => const StartupViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i3.StartupView(key: args.key),
         settings: data,
       );
@@ -148,7 +153,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<WelcomeViewArguments>(
         orElse: () => const WelcomeViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i4.WelcomeView(key: args.key),
         settings: data,
       );
@@ -157,7 +162,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<LoginViewArguments>(
         orElse: () => const LoginViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i5.LoginView(key: args.key),
         settings: data,
       );
@@ -166,7 +171,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<SignupViewArguments>(
         orElse: () => const SignupViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i6.SignupView(key: args.key),
         settings: data,
       );
@@ -175,7 +180,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<ResetPasswordViewArguments>(
         orElse: () => const ResetPasswordViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i7.ResetPasswordView(key: args.key, oobCode: args.oobCode),
         settings: data,
@@ -183,7 +188,7 @@ class StackedRouter extends _i1.RouterBase {
     },
     _i8.UserInfoView: (data) {
       final args = data.getArgs<UserInfoViewArguments>(nullOk: false);
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i8.UserInfoView(key: args.key, uid: args.uid),
         settings: data,
       );
@@ -192,7 +197,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<JournalViewArguments>(
         orElse: () => const JournalViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i9.JournalView(key: args.key),
         settings: data,
       );
@@ -201,7 +206,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<MoodTrackerViewArguments>(
         orElse: () => const MoodTrackerViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i10.MoodTrackerView(key: args.key),
         settings: data,
       );
@@ -210,7 +215,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<NewJournalEntryViewArguments>(
         orElse: () => const NewJournalEntryViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i11.NewJournalEntryView(
           key: args.key,
           journalEntry: args.journalEntry,
@@ -222,7 +227,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<ChatbotViewArguments>(
         orElse: () => const ChatbotViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i12.ChatbotView(key: args.key),
         settings: data,
       );
@@ -231,7 +236,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<VolunteerSignupViewArguments>(
         orElse: () => const VolunteerSignupViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i13.VolunteerSignupView(key: args.key),
         settings: data,
       );
@@ -240,7 +245,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<VolunteerSignupInfoViewArguments>(
         nullOk: false,
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i14.VolunteerSignupInfoView(key: args.key, uid: args.uid),
         settings: data,
@@ -250,7 +255,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<VolunteerHomeViewArguments>(
         orElse: () => const VolunteerHomeViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i15.VolunteerHomeView(key: args.key),
         settings: data,
       );
@@ -259,7 +264,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<VolunteerLoginViewArguments>(
         orElse: () => const VolunteerLoginViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i16.VolunteerLoginView(key: args.key),
         settings: data,
       );
@@ -268,7 +273,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<VolunteerResetPasswordViewArguments>(
         orElse: () => const VolunteerResetPasswordViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i17.VolunteerResetPasswordView(
           key: args.key,
           oobCode: args.oobCode,
@@ -280,17 +285,29 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<VolunteerOtpViewArguments>(
         orElse: () => const VolunteerOtpViewArguments(),
       );
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i18.VolunteerOtpView(key: args.key),
         settings: data,
       );
     },
     _i19.JournalDetailsView: (data) {
       final args = data.getArgs<JournalDetailsViewArguments>(nullOk: false);
-      return _i20.MaterialPageRoute<dynamic>(
+      return _i21.MaterialPageRoute<dynamic>(
         builder: (context) => _i19.JournalDetailsView(
           key: args.key,
           journalEntry: args.journalEntry,
+        ),
+        settings: data,
+      );
+    },
+    _i20.ChatView: (data) {
+      final args = data.getArgs<ChatViewArguments>(nullOk: false);
+      return _i21.MaterialPageRoute<dynamic>(
+        builder: (context) => _i20.ChatView(
+          key: args.key,
+          volunteerId: args.volunteerId,
+          volunteerName: args.volunteerName,
+          requestId: args.requestId,
         ),
         settings: data,
       );
@@ -307,7 +324,7 @@ class StackedRouter extends _i1.RouterBase {
 class HomeViewArguments {
   const HomeViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -329,7 +346,7 @@ class HomeViewArguments {
 class StartupViewArguments {
   const StartupViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -351,7 +368,7 @@ class StartupViewArguments {
 class WelcomeViewArguments {
   const WelcomeViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -373,7 +390,7 @@ class WelcomeViewArguments {
 class LoginViewArguments {
   const LoginViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -395,7 +412,7 @@ class LoginViewArguments {
 class SignupViewArguments {
   const SignupViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -417,7 +434,7 @@ class SignupViewArguments {
 class ResetPasswordViewArguments {
   const ResetPasswordViewArguments({this.key, this.oobCode});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   final String? oobCode;
 
@@ -441,7 +458,7 @@ class ResetPasswordViewArguments {
 class UserInfoViewArguments {
   const UserInfoViewArguments({this.key, required this.uid});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   final String uid;
 
@@ -465,7 +482,7 @@ class UserInfoViewArguments {
 class JournalViewArguments {
   const JournalViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -487,7 +504,7 @@ class JournalViewArguments {
 class MoodTrackerViewArguments {
   const MoodTrackerViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -509,9 +526,9 @@ class MoodTrackerViewArguments {
 class NewJournalEntryViewArguments {
   const NewJournalEntryViewArguments({this.key, this.journalEntry});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
-  final _i21.JournalEntry? journalEntry;
+  final _i22.JournalEntry? journalEntry;
 
   @override
   String toString() {
@@ -533,7 +550,7 @@ class NewJournalEntryViewArguments {
 class ChatbotViewArguments {
   const ChatbotViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -555,7 +572,7 @@ class ChatbotViewArguments {
 class VolunteerSignupViewArguments {
   const VolunteerSignupViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -577,7 +594,7 @@ class VolunteerSignupViewArguments {
 class VolunteerSignupInfoViewArguments {
   const VolunteerSignupInfoViewArguments({this.key, required this.uid});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   final String uid;
 
@@ -601,7 +618,7 @@ class VolunteerSignupInfoViewArguments {
 class VolunteerHomeViewArguments {
   const VolunteerHomeViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -623,7 +640,7 @@ class VolunteerHomeViewArguments {
 class VolunteerLoginViewArguments {
   const VolunteerLoginViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -645,7 +662,7 @@ class VolunteerLoginViewArguments {
 class VolunteerResetPasswordViewArguments {
   const VolunteerResetPasswordViewArguments({this.key, this.oobCode});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   final String? oobCode;
 
@@ -669,7 +686,7 @@ class VolunteerResetPasswordViewArguments {
 class VolunteerOtpViewArguments {
   const VolunteerOtpViewArguments({this.key});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
   @override
   String toString() {
@@ -691,9 +708,9 @@ class VolunteerOtpViewArguments {
 class JournalDetailsViewArguments {
   const JournalDetailsViewArguments({this.key, required this.journalEntry});
 
-  final _i20.Key? key;
+  final _i21.Key? key;
 
-  final _i21.JournalEntry journalEntry;
+  final _i22.JournalEntry journalEntry;
 
   @override
   String toString() {
@@ -712,9 +729,48 @@ class JournalDetailsViewArguments {
   }
 }
 
-extension NavigatorStateExtension on _i22.NavigationService {
+class ChatViewArguments {
+  const ChatViewArguments({
+    this.key,
+    required this.volunteerId,
+    required this.volunteerName,
+    required this.requestId,
+  });
+
+  final _i21.Key? key;
+
+  final String volunteerId;
+
+  final String volunteerName;
+
+  final String requestId;
+
+  @override
+  String toString() {
+    return '{"key": "$key", "volunteerId": "$volunteerId", "volunteerName": "$volunteerName", "requestId": "$requestId"}';
+  }
+
+  @override
+  bool operator ==(covariant ChatViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key &&
+        other.volunteerId == volunteerId &&
+        other.volunteerName == volunteerName &&
+        other.requestId == requestId;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode ^
+        volunteerId.hashCode ^
+        volunteerName.hashCode ^
+        requestId.hashCode;
+  }
+}
+
+extension NavigatorStateExtension on _i23.NavigationService {
   Future<dynamic> navigateToHomeView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -732,7 +788,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToStartupView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -750,7 +806,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToWelcomeView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -768,7 +824,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToLoginView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -786,7 +842,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToSignupView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -804,7 +860,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToResetPasswordView({
-    _i20.Key? key,
+    _i21.Key? key,
     String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
@@ -823,7 +879,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToUserInfoView({
-    _i20.Key? key,
+    _i21.Key? key,
     required String uid,
     int? routerId,
     bool preventDuplicates = true,
@@ -842,7 +898,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToJournalView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -860,7 +916,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToMoodTrackerView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -878,8 +934,8 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToNewJournalEntryView({
-    _i20.Key? key,
-    _i21.JournalEntry? journalEntry,
+    _i21.Key? key,
+    _i22.JournalEntry? journalEntry,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -900,7 +956,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToChatbotView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -918,7 +974,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerSignupView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -936,7 +992,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerSignupInfoView({
-    _i20.Key? key,
+    _i21.Key? key,
     required String uid,
     int? routerId,
     bool preventDuplicates = true,
@@ -955,7 +1011,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerHomeView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -973,7 +1029,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerLoginView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -991,7 +1047,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerResetPasswordView({
-    _i20.Key? key,
+    _i21.Key? key,
     String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
@@ -1013,7 +1069,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerOtpView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1031,8 +1087,8 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> navigateToJournalDetailsView({
-    _i20.Key? key,
-    required _i21.JournalEntry journalEntry,
+    _i21.Key? key,
+    required _i22.JournalEntry journalEntry,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1052,8 +1108,34 @@ extension NavigatorStateExtension on _i22.NavigationService {
     );
   }
 
+  Future<dynamic> navigateToChatView({
+    _i21.Key? key,
+    required String volunteerId,
+    required String volunteerName,
+    required String requestId,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(
+      Routes.chatView,
+      arguments: ChatViewArguments(
+        key: key,
+        volunteerId: volunteerId,
+        volunteerName: volunteerName,
+        requestId: requestId,
+      ),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
   Future<dynamic> replaceWithHomeView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1071,7 +1153,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithStartupView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1089,7 +1171,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithWelcomeView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1107,7 +1189,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithLoginView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1125,7 +1207,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithSignupView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1143,7 +1225,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithResetPasswordView({
-    _i20.Key? key,
+    _i21.Key? key,
     String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
@@ -1162,7 +1244,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithUserInfoView({
-    _i20.Key? key,
+    _i21.Key? key,
     required String uid,
     int? routerId,
     bool preventDuplicates = true,
@@ -1181,7 +1263,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithJournalView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1199,7 +1281,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithMoodTrackerView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1217,8 +1299,8 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithNewJournalEntryView({
-    _i20.Key? key,
-    _i21.JournalEntry? journalEntry,
+    _i21.Key? key,
+    _i22.JournalEntry? journalEntry,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1239,7 +1321,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithChatbotView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1257,7 +1339,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerSignupView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1275,7 +1357,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerSignupInfoView({
-    _i20.Key? key,
+    _i21.Key? key,
     required String uid,
     int? routerId,
     bool preventDuplicates = true,
@@ -1294,7 +1376,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerHomeView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1312,7 +1394,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerLoginView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1330,7 +1412,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerResetPasswordView({
-    _i20.Key? key,
+    _i21.Key? key,
     String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
@@ -1352,7 +1434,7 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerOtpView({
-    _i20.Key? key,
+    _i21.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1370,8 +1452,8 @@ extension NavigatorStateExtension on _i22.NavigationService {
   }
 
   Future<dynamic> replaceWithJournalDetailsView({
-    _i20.Key? key,
-    required _i21.JournalEntry journalEntry,
+    _i21.Key? key,
+    required _i22.JournalEntry journalEntry,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1383,6 +1465,32 @@ extension NavigatorStateExtension on _i22.NavigationService {
       arguments: JournalDetailsViewArguments(
         key: key,
         journalEntry: journalEntry,
+      ),
+      id: routerId,
+      preventDuplicates: preventDuplicates,
+      parameters: parameters,
+      transition: transition,
+    );
+  }
+
+  Future<dynamic> replaceWithChatView({
+    _i21.Key? key,
+    required String volunteerId,
+    required String volunteerName,
+    required String requestId,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(
+      Routes.chatView,
+      arguments: ChatViewArguments(
+        key: key,
+        volunteerId: volunteerId,
+        volunteerName: volunteerName,
+        requestId: requestId,
       ),
       id: routerId,
       preventDuplicates: preventDuplicates,

@@ -13,11 +13,11 @@ import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ViewModelWidget<HomeViewModel> {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, HomeViewModel viewModel) {
     final mediaQuery = MediaQuery.of(context);
     final width = mediaQuery.size.width;
     final height = mediaQuery.size.height;

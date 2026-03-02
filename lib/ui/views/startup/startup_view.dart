@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 
 import 'startup_viewmodel.dart';
@@ -35,7 +36,7 @@ class StartupView extends StackedView<StartupViewModel> {
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
-                    color: Colors.black,
+                    color: AppColors.secondary,
                     strokeWidth: 6,
                   ),
                 )

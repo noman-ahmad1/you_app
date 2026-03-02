@@ -130,7 +130,7 @@ class VolunteerSignupView extends StackedView<VolunteerSignupViewModel> {
                                         width: 15,
                                         height: 15,
                                         child: CircularProgressIndicator(
-                                          color: AppColors.background,
+                                          color: AppColors.secondary,
                                           strokeWidth: 2,
                                         ),
                                       )

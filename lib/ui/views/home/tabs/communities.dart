@@ -9,11 +9,11 @@ import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/views/home/community_card.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
 
-class CommunitiesScreen extends StatelessWidget {
+class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
   const CommunitiesScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, HomeViewModel viewModel) {
     return ViewModelBuilder<HomeViewModel>.reactive(
       viewModelBuilder: () => HomeViewModel(),
       builder: (context, model, child) {

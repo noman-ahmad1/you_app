@@ -4,12 +4,20 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
+// Define the enum here or import it if it's in a separate file
+enum VolunteerCardType {
+  availableChat,
+  pendingRequest,
+  activeChat,
+}
+
 class VolunteerCard extends StatelessWidget {
   final String username;
   final String avatarPath;
   final int rating; // number of stars (0–5)
   final List<String> categories;
-  final VoidCallback? onMessageTap;
+  final VoidCallback? onActionTap; // Renamed for clarity
+  final VolunteerCardType type; // Use the enum
 
   const VolunteerCard({
     Key? key,
@@ -17,13 +25,32 @@ class VolunteerCard extends StatelessWidget {
     required this.avatarPath,
     required this.rating,
     required this.categories,
-    this.onMessageTap,
+    required this.type,
+    this.onActionTap, // Renamed parameter
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final height = MediaQuery.sizeOf(context).height;
+
+    // --- Determine Icon and Action based on Type ---
+    String iconAssetPath;
+    switch (type) {
+      case VolunteerCardType.availableChat:
+        iconAssetPath =
+            AppConstants.smsRequest; // Icon to initiate chat/request
+        break;
+      case VolunteerCardType.pendingRequest:
+        iconAssetPath = AppConstants
+            .pending; // Icon showing pending status (replace with your asset)
+        break;
+      case VolunteerCardType.activeChat:
+        iconAssetPath = AppConstants
+            .activeChat; // Icon showing an active chat (replace with your asset)
+        break;
+    }
+    // ---------------------------------------------
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(50),
@@ -48,7 +75,7 @@ class VolunteerCard extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Left side
+              // Left side (Avatar and User Info - unchanged)
               Row(
                 children: [
                   _buildAvatar(width, height),
@@ -57,9 +84,9 @@ class VolunteerCard extends StatelessWidget {
                 ],
               ),
 
-              // Right side message button
+              // Right side action button
               GestureDetector(
-                onTap: onMessageTap,
+                onTap: onActionTap, // Use the renamed callback
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(50),
                   child: BackdropFilter(
@@ -82,7 +109,7 @@ class VolunteerCard extends StatelessWidget {
                         ],
                       ),
                       child: Image.asset(
-                        AppConstants.msg,
+                        iconAssetPath, // Use the dynamically determined icon
                         color: AppColors.secondary,
                         fit: BoxFit.contain,
                       ),
@@ -97,7 +124,10 @@ class VolunteerCard extends StatelessWidget {
     );
   }
 
+  // --- Helper Widgets (_buildAvatar, _buildUserInfo, _buildCategoryChip) ---
+  // These remain unchanged. Paste your existing helper widget code here.
   Widget _buildAvatar(double width, double height) {
+    // ... your existing code ...
     return ClipRRect(
       borderRadius: BorderRadius.circular(35),
       child: BackdropFilter(
@@ -128,6 +158,7 @@ class VolunteerCard extends StatelessWidget {
   }
 
   Widget _buildUserInfo(double width, double height) {
+    // ... your existing code ...
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -173,6 +204,7 @@ class VolunteerCard extends StatelessWidget {
   }
 
   Widget _buildCategoryChip(String text, double width, double height) {
+    // ... your existing code ...
     return ClipRRect(
       borderRadius: BorderRadius.circular(100),
       child: BackdropFilter(

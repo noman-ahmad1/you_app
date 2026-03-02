@@ -10,7 +10,7 @@ class UserCard extends StatelessWidget {
   final String username;
   final String lastMessage;
   final String avatarPath;
-  final String category;
+  // final String category;
   final UserCardType type;
   final String? timeAgo;
   final int? unreadCount;
@@ -25,7 +25,7 @@ class UserCard extends StatelessWidget {
     required this.username,
     required this.lastMessage,
     required this.avatarPath,
-    required this.category,
+    // required this.category,
     required this.type,
     this.timeAgo,
     this.unreadCount,
@@ -148,30 +148,16 @@ class UserCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              username,
-              style: GoogleFonts.crimsonPro(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primaryVeryDark,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (timeAgo != null)
-              Text(
-                timeAgo!,
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.red.withOpacity(0.8),
-                ),
-              ),
-          ],
+        Text(
+          username,
+          style: GoogleFonts.crimsonPro(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.primaryVeryDark,
+          ),
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: height * 0.005),
+        // SizedBox(height: height * 0.002),
         Text(
           lastMessage,
           style: GoogleFonts.crimsonPro(
@@ -182,29 +168,39 @@ class UserCard extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
-        SizedBox(height: height * 0.01),
-        _buildCategoryChip(category, width, height),
+        SizedBox(height: height * 0.002),
+        if (timeAgo != null)
+          Text(
+            timeAgo!,
+            style: GoogleFonts.crimsonPro(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: AppColors.red.withOpacity(0.8),
+            ),
+          ),
+        // SizedBox(height: height * 0.01),
+        // _buildCategoryChip(category, width, height),
       ],
     );
   }
 
-  Widget _buildCategoryChip(String text, double width, double height) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: _getCategoryColor(text).withOpacity(0.2),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.crimsonPro(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: _getCategoryColor(text),
-        ),
-      ),
-    );
-  }
+  // Widget _buildCategoryChip(String text, double width, double height) {
+  //   return Container(
+  //     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  //     decoration: BoxDecoration(
+  //       color: _getCategoryColor(text).withOpacity(0.2),
+  //       borderRadius: BorderRadius.circular(16),
+  //     ),
+  //     child: Text(
+  //       text,
+  //       style: GoogleFonts.crimsonPro(
+  //         fontSize: 12,
+  //         fontWeight: FontWeight.w500,
+  //         color: _getCategoryColor(text),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Color _getCategoryColor(String category) {
     // Define colors based on category

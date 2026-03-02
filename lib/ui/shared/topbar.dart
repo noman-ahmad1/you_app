@@ -5,31 +5,30 @@ import 'package:you_app/ui/common/app_constants.dart';
 
 class TopBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final String imageAssetPath;
-  final VoidCallback? onMenuPressed;
-  final VoidCallback? onBackPressed;
+  final String imageAssetPath; // For the leading icon (back/logo)
+  final VoidCallback? onBackPressed; // Callback for the leading icon
+  final VoidCallback? onMenuPressed; // Callback for the *default* trailing icon
+  final Widget? trailingAction; // Optional custom trailing widget
   final double height;
-  final bool showMenuIcon;
-  final Color? color;
+  final Color? color; // Renamed for clarity
 
   const TopBar({
     Key? key,
     required this.title,
     required this.imageAssetPath,
-    this.onMenuPressed,
     this.onBackPressed,
-    this.showMenuIcon = true,
+    this.onMenuPressed,
+    this.trailingAction,
     this.color,
-    this.height = kToolbarHeight,
+    this.height = kToolbarHeight, // Default AppBar height
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final width = mediaQuery.size.width;
-    final height = mediaQuery.size.height;
     return Container(
-      height: height * 0.09,
+      height: mediaQuery.size.height * 0.09,
       decoration: const BoxDecoration(
         color: AppColors.primary,
         boxShadow: [
@@ -41,58 +40,76 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+        padding: const EdgeInsets.fromLTRB(
+            16, kToolbarHeight / 4, 16, 0), // Adjust top padding
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Logo/image that scales with screen width
+            // --- Leading Icon (Back/Logo) ---
             InkWell(
               onTap: onBackPressed,
               child: Image.asset(
                 imageAssetPath,
-                width: width * 0.12,
-                height: width * 0.12,
+                width: width * 0.11, // Adjusted size slightly
+                height: width * 0.11,
                 color: color,
+                // Add semantic label for accessibility
+                semanticLabel: onBackPressed != null ? 'Back' : 'App Logo',
               ),
             ),
-            // SizedBox(
-            //   width: MediaQuery.of(context).size.width * 0.12,
-            //   child: Image.asset(
-            //     imageAssetPath,
-            //     fit: BoxFit.contain,
-            //   ),
-            // ),
 
-            // Title with responsive font size
-            Text(
-              title,
-              style: GoogleFonts.crimsonPro(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.primaryVeryDark),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            // --- Title ---
+            Expanded(
+              // Allow title to take available space
+              child: Text(
+                title,
+                textAlign: TextAlign.center, // Center title
+                style: GoogleFonts.crimsonPro(
+                    fontSize: 27, // Slightly smaller for better fit
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.primaryVeryDark),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
 
-            // Menu icon (only shown if callback is provided)
-            if (showMenuIcon && onMenuPressed != null)
-              InkWell(
-                onTap: onMenuPressed,
-                child: Image.asset(
-                  AppConstants.menu,
-                  width: width * 0.07,
-                  height: width * 0.07,
-                  color: AppColors.secondary,
-                ),
-              ),
-            if (!showMenuIcon || onMenuPressed == null)
-              SizedBox(width: width * 0.07),
+            // --- Trailing Action ---
+            _buildTrailingAction(context, width),
           ],
         ),
       ),
     );
   }
 
+  /// Builds the trailing widget based on provided parameters.
+  Widget _buildTrailingAction(BuildContext context, double screenWidth) {
+    // 1. If a custom trailingAction is provided, use it.
+    if (trailingAction != null) {
+      return trailingAction!;
+    }
+    // 2. If no custom action, but onMenuPressed is provided, show the default menu icon.
+    else if (onMenuPressed != null) {
+      return InkWell(
+        onTap: onMenuPressed,
+        child: Image.asset(
+          AppConstants.menu,
+          width: screenWidth * 0.07,
+          height: screenWidth * 0.07,
+          color: AppColors.secondary,
+          semanticLabel: 'Menu', // Accessibility label
+        ),
+      );
+    }
+    // 3. Otherwise, show an empty SizedBox to maintain layout balance.
+    else {
+      // Ensure the SizedBox has the same width as the default menu icon
+      // to keep the title centered correctly.
+      return SizedBox(width: screenWidth * 0.07);
+    }
+  }
+
   @override
-  Size get preferredSize => Size.fromHeight(height);
+  // Use the calculated height for preferredSize
+  Size get preferredSize =>
+      Size.fromHeight(height > 0 ? height : AppBar().preferredSize.height);
 }

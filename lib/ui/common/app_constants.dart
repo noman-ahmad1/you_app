@@ -56,6 +56,8 @@ class AppConstants {
   static const String journalIcon = 'assets/icons/journalIcon.png';
   static const String logout = 'assets/icons/logout.png';
   static const String delete = 'assets/icons/delete.png';
+  static const String send = 'assets/icons/send.png';
+  static const String smsRequest = 'assets/icons/smsRequest.png';
 
   //images
   static const String register = 'assets/images/1.png';

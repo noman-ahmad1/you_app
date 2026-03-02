@@ -191,7 +191,9 @@ class NewWorkEntryView extends StatelessWidget {
                             ),
                             child: Center(
                               child: viewModel.isBusy
-                                  ? const CircularProgressIndicator()
+                                  ? const CircularProgressIndicator(
+                                      color: AppColors.secondary,
+                                    )
                                   : Text(
                                       viewModel.isEditing ? 'Update' : 'Save',
                                       textAlign: TextAlign.center,
