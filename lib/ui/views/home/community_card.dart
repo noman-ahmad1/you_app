@@ -58,12 +58,14 @@ class CommunityCard extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                 ),
+                // Space.verticalSpaceVTiny(context),
+                SizedBox(height: height * 0.005),
                 // Title
                 Text(
                   title,
-                  textAlign: TextAlign.center,
+                  textAlign: TextAlign.end,
                   style: GoogleFonts.crimsonPro(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppColors.secondary,
                   ),

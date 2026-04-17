@@ -294,6 +294,23 @@ class HomeViewModel extends BaseViewModel {
     }
   }
 
+  Stream<List<Map<String, dynamic>>> getCommunitiesStream() {
+    return _firestoreService.community.getCommunities();
+  }
+
+  /// Navigates to the Community Chat View
+  void navigateToCommunityChat({
+    required String communityId,
+    required String communityName,
+  }) {
+    // Assuming you have defined a CommunityChatView in your AppRouter.
+    // Replace 'navigateToCommunityChatView' with your exact router method name.
+    _navigationService.navigateToCommunityChatView(
+      communityId: communityId,
+      communityName: communityName,
+    );
+  }
+
   Future<void> logout() async {
     // Show loading state while signing out
     setBusy(true);

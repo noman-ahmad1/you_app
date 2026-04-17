@@ -25,6 +25,7 @@ import 'package:you_app/ui/views/volunteer_login/volunteer_login_view.dart';
 import 'package:you_app/ui/views/volunteer_reset_password/volunteer_reset_password_view.dart';
 import 'package:you_app/ui/views/journal_details/journal_details_view.dart';
 import 'package:you_app/ui/views/chat/chat_view.dart';
+import 'package:you_app/ui/views/community_chat/community_chat_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -48,6 +49,7 @@ import 'package:you_app/ui/views/chat/chat_view.dart';
     MaterialRoute(page: VolunteerOtpView),
     MaterialRoute(page: JournalDetailsView),
     MaterialRoute(page: ChatView),
+    MaterialRoute(page: CommunityChatView),
 // @stacked-route
   ],
   dependencies: [
