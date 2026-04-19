@@ -22,6 +22,7 @@ import '../services/journal_service.dart';
 import '../services/chat_service.dart';
 import '../services/chat_request_service.dart';
 import '../services/community_service.dart';
+import '../services/chatbot_service.dart';
 import '../ui/views/volunteer_signup/volunteer_signup_viewmodel.dart';
 
 final locator = StackedLocator.instance;
@@ -48,5 +49,6 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => ChatService());
   locator.registerLazySingleton(() => ChatRequestService());
   locator.registerLazySingleton(() => CommunityService());
+  locator.registerLazySingleton(() => ChatbotService());
   locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }
