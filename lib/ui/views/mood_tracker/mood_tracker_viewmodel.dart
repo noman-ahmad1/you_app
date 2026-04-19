@@ -7,17 +7,23 @@ import 'package:just_audio/just_audio.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/views/mood_tracker/animated_mood.dart';
 
 // Import the necessary model and service
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 import 'package:you_app/models/mood_model.dart';
 
 class MoodTrackerViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
-  // Inject the new FirestoreService
-  final _firestoreService = locator<FirestoreService>();
+  final _authenticationService = locator<AuthenticationService>();
   final AudioPlayer _fxPlayer = AudioPlayer();
   Key chartKey = UniqueKey();
 
@@ -120,14 +126,15 @@ class MoodTrackerViewModel extends BaseViewModel {
       final moodLabel = assetToLabelMap[emojiAssetPath];
 
       if (moodLabel != null) {
+        final userId = _authenticationService.currentUser?.uid ?? "";
         final newMoodEntry = MoodEntry.create(
-          _firestoreService.userId, // Use the user ID from the service
+          userId, // Use the user ID from the service
           moodLabel,
           extraField: 'Recorded via MoodTrackerView', // Optional extra data
         );
 
         // Save the entry to Firestore
-        await _firestoreService.mood.saveMoodEntry(newMoodEntry);
+        await locator<MoodService>().saveMoodEntry(newMoodEntry);
 
         chartKey = UniqueKey();
       } else {

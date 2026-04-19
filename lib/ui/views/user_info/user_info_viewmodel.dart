@@ -4,7 +4,13 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/ui/common/app_colors.dart'; // Needed for the date picker theme
 
@@ -14,7 +20,6 @@ class UserInfoViewModel extends BaseViewModel {
   // --- Dependencies restored ---
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
-  final _firestoreService = locator<FirestoreService>();
   final _authenticationService = locator<AuthenticationService>();
 
   // --- State ---
@@ -115,7 +120,7 @@ class UserInfoViewModel extends BaseViewModel {
     // 2. Asynchronous uniqueness check
     // The Firestore service function already converts the username to lowercase for the query.
     final isAvailable =
-        await _firestoreService.user.checkUsernameAvailability(username);
+        await locator<UserService>().checkUsernameAvailability(username);
 
     if (!isAvailable) {
       _validationError =
@@ -151,7 +156,7 @@ class UserInfoViewModel extends BaseViewModel {
       };
 
       // 1. Update the existing user document using the passed UID
-      await _firestoreService.user.update(uid, updateData);
+      await locator<UserService>().update(uid, updateData);
 
       // 2. Refresh the local AppUser object in the AuthService to reflect new data
       await _authenticationService.checkCurrentUserStatus();

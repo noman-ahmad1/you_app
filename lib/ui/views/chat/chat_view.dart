@@ -109,11 +109,6 @@ class ChatView extends StackedView<ChatViewModel> {
         requestId: requestId,
       );
 
-  @override
-  void onViewModelReady(ChatViewModel viewModel) {
-    // Start listening for messages as soon as the view is ready.
-    viewModel.listenToMessages();
-  }
 }
 
 class _MessageInputField extends ViewModelWidget<ChatViewModel> {

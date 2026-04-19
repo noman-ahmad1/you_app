@@ -1,6 +1,12 @@
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/country_code_service.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 import 'package:you_app/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:you_app/ui/dialogs/info_alert/info_alert_dialog.dart';
 import 'package:you_app/ui/views/home/home_view.dart';
@@ -55,10 +61,17 @@ import 'package:you_app/ui/views/community_chat/community_chat_view.dart';
   dependencies: [
     LazySingleton(classType: BottomSheetService),
     LazySingleton(classType: DialogService),
+    LazySingleton(classType: SnackbarService),
     LazySingleton(classType: NavigationService),
     LazySingleton(classType: AuthenticationService),
     LazySingleton(classType: CountryService),
-    LazySingleton(classType: FirestoreService),
+    LazySingleton(classType: UserService),
+    LazySingleton(classType: VolunteerService),
+    LazySingleton(classType: MoodService),
+    LazySingleton(classType: JournalService),
+    LazySingleton(classType: ChatService),
+    LazySingleton(classType: ChatRequestService),
+    LazySingleton(classType: CommunityService),
     // @stacked-service
 
     LazySingleton(classType: VolunteerSignupViewModel),

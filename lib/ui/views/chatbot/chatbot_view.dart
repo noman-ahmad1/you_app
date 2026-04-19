@@ -41,79 +41,18 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
         ),
         child: Column(
           children: [
-            // Chat list
-            // Expanded(
-            //   child: ListView.builder(
-            //     padding: const EdgeInsets.all(12),
-            //     controller: viewModel.scrollController,
-            //     itemCount: viewModel.messages.length,
-            //     itemBuilder: (context, index) {
-            //       final msg = viewModel.messages[index];
-            //       final isUser = msg.isUser;
-
-            //       return Align(
-            //         alignment:
-            //             isUser ? Alignment.centerRight : Alignment.centerLeft,
-            //         child: Padding(
-            //           padding: const EdgeInsets.symmetric(vertical: 6),
-            //           child: ClipRRect(
-            //             borderRadius: BorderRadius.only(
-            //               topLeft: const Radius.circular(20),
-            //               topRight: const Radius.circular(20),
-            //               bottomLeft: isUser
-            //                   ? const Radius.circular(20)
-            //                   : const Radius.circular(5),
-            //               bottomRight: isUser
-            //                   ? const Radius.circular(5)
-            //                   : const Radius.circular(20),
-            //             ),
-            //             child: BackdropFilter(
-            //               filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-            //               child: Container(
-            //                 padding: EdgeInsets.all(width * 0.03),
-            //                 decoration: BoxDecoration(
-            //                   color: isUser
-            //                       ? AppColors.secondary.withAlpha(180)
-            //                       : AppColors.secondaryVeryLight.withAlpha(140),
-            //                   border: Border.all(
-            //                     color: AppColors.secondary,
-            //                     width: 1.5,
-            //                   ),
-            //                   borderRadius: BorderRadius.only(
-            //                     topLeft: const Radius.circular(20),
-            //                     topRight: const Radius.circular(20),
-            //                     bottomLeft: isUser
-            //                         ? const Radius.circular(20)
-            //                         : const Radius.circular(5),
-            //                     bottomRight: isUser
-            //                         ? const Radius.circular(5)
-            //                         : const Radius.circular(20),
-            //                   ),
-            //                   boxShadow: [
-            //                     BoxShadow(
-            //                       color: Colors.black.withAlpha(25),
-            //                       blurRadius: 12,
-            //                       offset: const Offset(0, 4),
-            //                     ),
-            //                   ],
-            //                 ),
-            //                 child: Text(
-            //                   msg.text,
-            //                   style: GoogleFonts.crimsonPro(
-            //                     fontSize: 15,
-            //                     fontWeight: FontWeight.w500,
-            //                     color:
-            //                         isUser ? Colors.white : AppColors.secondary,
-            //                   ),
-            //                 ),
-            //               ),
-            //             ),
-            //           ),
-            //         ),
-            //       );
-            //     },
-            //   ),
-            // ),
+            // Chat list placeholder
+            Expanded(
+              child: Center(
+                child: Text(
+                  'Dodo is resting right now...',
+                  style: GoogleFonts.crimsonPro(
+                    fontSize: 18,
+                    color: AppColors.secondary.withAlpha(200),
+                  ),
+                ),
+              ),
+            ),
 
             // Input field
             SafeArea(
@@ -123,7 +62,6 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
                   children: [
                     Expanded(
                       child: TextField(
-                        // controller: viewModel.inputController,
                         style: GoogleFonts.crimsonPro(
                           color: AppColors.secondary,
                         ),
@@ -142,12 +80,10 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
                             borderSide: BorderSide.none,
                           ),
                         ),
-                        // onSubmitted: (_) => viewModel.sendMessage(),
                       ),
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      // onTap: viewModel.sendMessage,
                       child: CircleAvatar(
                         backgroundColor: AppColors.secondary,
                         child: const Icon(Icons.send, color: Colors.white),

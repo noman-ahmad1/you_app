@@ -6,12 +6,17 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/chat_request_model.dart';
 import 'package:you_app/services/auth_service.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 
 class VolunteerHomeViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _authenticationService = locator<AuthenticationService>();
-  final _firestoreService = locator<FirestoreService>();
   final _dialogService = locator<DialogService>();
 
   StreamSubscription? _requestsSubscription;
@@ -70,7 +75,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
     final userId = _authenticationService.currentUser?.uid;
     if (userId == null) return;
     try {
-      final userDoc = await _firestoreService.user.get(userId);
+      final userDoc = await locator<UserService>().get(userId);
       final currentStatus = userDoc?['availabilityStatus'] as String?;
       _isAvailable.value = (currentStatus == 'online');
     } catch (e) {
@@ -93,7 +98,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
 
     // Then update Firestore in the background
     try {
-      await _firestoreService.user
+      await locator<UserService>()
           .updateUserAvailability(userId, newStatusString);
     } catch (e) {
       // Revert UI on error and show message
@@ -115,7 +120,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
     notifyListeners(); // Update UI immediately
 
     _requestsSubscription?.cancel();
-    _requestsSubscription = _firestoreService.chatRequest
+    _requestsSubscription = locator<ChatRequestService>()
         .getVolunteerPendingChatsStream(volunteerId)
         .listen((newRequests) {
       _pendingRequests = newRequests;
@@ -137,7 +142,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
     notifyListeners(); // Update UI immediately
 
     _activeChatsSubscription?.cancel();
-    _activeChatsSubscription = _firestoreService.chatRequest
+    _activeChatsSubscription = locator<ChatRequestService>()
         .getVolunteerActiveChatsStream(volunteerId)
         .listen((newChats) {
       _activeChats = newChats;
@@ -155,7 +160,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
     // Show loading specifically for this action
     setBusyForObject(request.id, true);
     try {
-      await _firestoreService.chatRequest.acceptRequest(request);
+      await locator<ChatRequestService>().acceptRequest(request);
       // Pending list updates automatically via stream.
       // Active chat list updates automatically via stream.
 
@@ -181,7 +186,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
     setBusyForObject(
         request.id, true); // Indicate activity for this specific request
     try {
-      await _firestoreService.chatRequest.declineRequest(request.id!);
+      await locator<ChatRequestService>().declineRequest(request.id!);
       // Request disappears automatically via the pending stream listener.
     } catch (e) {
       print("Error declining request: $e");

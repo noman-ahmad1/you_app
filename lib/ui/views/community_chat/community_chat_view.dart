@@ -93,11 +93,6 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
         communityId: communityId,
         communityName: communityName,
       );
-
-  @override
-  void onViewModelReady(CommunityChatViewModel viewModel) {
-    viewModel.listenToMessages();
-  }
 }
 
 // -------------------------------------------------------------------

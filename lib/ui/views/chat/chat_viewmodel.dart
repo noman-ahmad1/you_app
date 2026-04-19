@@ -6,14 +6,20 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/chat_messaage_model.dart';
 import 'package:you_app/services/auth_service.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 
-class ChatViewModel extends BaseViewModel {
+class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   // --- Services ---
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
-  final _firestoreService = locator<FirestoreService>();
   final _authenticationService = locator<AuthenticationService>();
+  final _snackbarService = locator<SnackbarService>();
 
   // --- Properties passed from the View ---
   final String volunteerId;
@@ -22,10 +28,9 @@ class ChatViewModel extends BaseViewModel {
 
   // --- State ---
   final messageController = TextEditingController();
-  List<ChatMessage> _messages = [];
-  List<ChatMessage> get messages => _messages;
 
-  StreamSubscription? _messageStreamSubscription;
+  List<ChatMessage> get messages => data ?? [];
+
   String? _chatId;
 
   ChatViewModel({
@@ -37,34 +42,31 @@ class ChatViewModel extends BaseViewModel {
   /// The current user's ID, for checking who sent a message.
   String? get currentUserId => _authenticationService.currentUser?.uid;
 
-  /// Initializes the chat by creating the chat ID and listening for messages.
-  void listenToMessages() {
+  @override
+  Stream<List<ChatMessage>> get stream {
     final userId = currentUserId;
     if (userId == null) {
-      // Handle error: user not logged in
-      return;
+      return const Stream.empty();
     }
 
     // Sort UIDs to create a consistent, predictable chat ID.
-    // This ensures both the user and volunteer access the same chat room.
     final ids = [userId, volunteerId];
     ids.sort();
     _chatId = ids.join('_');
 
-    setBusy(true);
+    return locator<ChatService>().getChatMessagesStream(_chatId!);
+  }
 
-    // Listen to the real-time stream of messages from Firestore.
-    _messageStreamSubscription = _firestoreService.chat
-        .getChatMessagesStream(_chatId!)
-        .listen((newMessages) {
-      _messages = newMessages;
-      setBusy(false);
-      notifyListeners(); // Rebuild the UI with the new messages
-    }, onError: (error) {
-      setBusy(false);
-      // Handle stream errors
-      print("Error fetching chat messages: $error");
-    });
+  @override
+  void onData(List<ChatMessage>? data) {
+    setBusy(false);
+  }
+
+  @override
+  void onError(error, StackTrace? stackTrace) {
+    setBusy(false);
+    _snackbarService.showSnackbar(
+        message: "Error fetching chat messages: $error");
   }
 
   /// Sends a message to Firestore.
@@ -85,10 +87,13 @@ class ChatViewModel extends BaseViewModel {
 
     // Call the service to send the message.
     try {
-      await _firestoreService.chat.sendMessage(_chatId!, message);
+      await locator<ChatService>().sendMessage(_chatId!, message);
     } catch (e) {
       // Handle potential send errors (e.g., show a 'failed to send' icon)
-      print("Error sending message: $e");
+      _snackbarService.showSnackbar(
+        title: 'Error',
+        message: 'Could not send message. Please try again.',
+      );
     }
   }
 
@@ -107,7 +112,7 @@ class ChatViewModel extends BaseViewModel {
       // 3. Proceed with deletion ONLY if confirmed
       setBusy(true);
       try {
-        await _firestoreService.chat.deleteChatAndRequest(
+        await locator<ChatService>().deleteChatAndRequest(
           chatId: _chatId!,
           requestId: requestId,
         );
@@ -131,8 +136,6 @@ class ChatViewModel extends BaseViewModel {
 
   @override
   void dispose() {
-    // CRITICAL: Cancel the stream subscription to prevent memory leaks.
-    _messageStreamSubscription?.cancel();
     messageController.dispose();
     super.dispose();
   }

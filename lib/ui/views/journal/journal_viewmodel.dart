@@ -7,13 +7,18 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/journal_model.dart'; // Make sure this is your JournalEntry model
 import 'package:you_app/services/auth_service.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
 class JournalViewModel extends BaseViewModel {
   // --- Services ---
   final _navigationService = locator<NavigationService>();
-  final _firestoreService = locator<FirestoreService>();
   final _authenticationService = locator<AuthenticationService>();
   final AudioPlayer _fxPlayer = AudioPlayer();
 
@@ -49,7 +54,7 @@ class JournalViewModel extends BaseViewModel {
     // Cancel any previous stream to prevent memory leaks
     _journalStreamSubscription?.cancel();
 
-    _journalStreamSubscription = _firestoreService.journal
+    _journalStreamSubscription = locator<JournalService>()
         .getJournalEntriesStream(userId: userId)
         .listen((entries) {
       _allEntries = entries; // Update the main list with new data

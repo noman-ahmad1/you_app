@@ -7,7 +7,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 
 import 'package:you_app/app/app.locator.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 import 'package:you_app/models/mood_model.dart';
 
 class BarChartSample7 extends StatefulWidget {
@@ -31,7 +38,7 @@ class BarChartSample7 extends StatefulWidget {
 }
 
 class _BarChartSample7State extends State<BarChartSample7> {
-  final _firestoreService = locator<FirestoreService>();
+  final _authenticationService = locator<AuthenticationService>();
 
   // Dynamic chart data from Firestore (per-user, last 30 days)
   List<_BarData> dynamicDataList = [];
@@ -67,7 +74,7 @@ class _BarChartSample7State extends State<BarChartSample7> {
   }
 
   Future<void> _subscribeToMoodStream() async {
-    final userId = _firestoreService.userId;
+    final userId = _authenticationService.currentUser?.uid ?? '';
     if (userId.isEmpty || userId == 'anonymous_user') {
       // No logged-in user — keep dummy data and stop loading
       debugPrint('BarChart: no logged-in user; showing default data.');
@@ -76,7 +83,7 @@ class _BarChartSample7State extends State<BarChartSample7> {
     }
 
     // Listen to the user stream (your FirestoreService.mood.getUserMoodStream)
-    _moodSubscription = _firestoreService.mood.getUserMoodStream(userId).listen(
+    _moodSubscription = locator<MoodService>().getUserMoodStream(userId).listen(
         (List<MoodEntry> moods) {
       try {
         // Filter last 30 days on client as a safety net.

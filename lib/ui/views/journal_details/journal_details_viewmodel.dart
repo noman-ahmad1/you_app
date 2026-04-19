@@ -4,11 +4,16 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/journal_model.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 
 class JournalDetailsViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
-  final _firestoreService = locator<FirestoreService>();
   final _dialogService = locator<DialogService>();
 
   final JournalEntry entry;
@@ -36,8 +41,7 @@ class JournalDetailsViewModel extends BaseViewModel {
     if (response?.confirmed == true) {
       setBusy(true);
       try {
-        // You'll need to add a `deleteJournalEntry` method to your FirestoreService
-        await _firestoreService.journal.deleteJournalEntry(
+        await locator<JournalService>().deleteJournalEntry(
           userId: entry.userId,
           entryId: entry.id!,
         );

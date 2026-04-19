@@ -10,11 +10,18 @@
 import 'package:stacked_services/src/bottom_sheet/bottom_sheet_service.dart';
 import 'package:stacked_services/src/dialog/dialog_service.dart';
 import 'package:stacked_services/src/navigation/navigation_service.dart';
+import 'package:stacked_services/src/snackbar/snackbar_service.dart';
 import 'package:stacked_shared/stacked_shared.dart';
 
 import '../services/auth_service.dart';
 import '../services/country_code_service.dart';
-import '../services/firestore_service.dart';
+import '../services/user_service.dart';
+import '../services/volunteer_service.dart';
+import '../services/mood_service.dart';
+import '../services/journal_service.dart';
+import '../services/chat_service.dart';
+import '../services/chat_request_service.dart';
+import '../services/community_service.dart';
 import '../ui/views/volunteer_signup/volunteer_signup_viewmodel.dart';
 
 final locator = StackedLocator.instance;
@@ -31,8 +38,15 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => BottomSheetService());
   locator.registerLazySingleton(() => DialogService());
   locator.registerLazySingleton(() => NavigationService());
+  locator.registerLazySingleton(() => SnackbarService());
   locator.registerLazySingleton(() => AuthenticationService());
   locator.registerLazySingleton(() => CountryService());
-  locator.registerLazySingleton(() => FirestoreService());
+  locator.registerLazySingleton(() => UserService());
+  locator.registerLazySingleton(() => VolunteerService());
+  locator.registerLazySingleton(() => MoodService());
+  locator.registerLazySingleton(() => JournalService());
+  locator.registerLazySingleton(() => ChatService());
+  locator.registerLazySingleton(() => ChatRequestService());
+  locator.registerLazySingleton(() => CommunityService());
   locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }

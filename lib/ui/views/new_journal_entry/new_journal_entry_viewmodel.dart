@@ -5,13 +5,18 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/journal_model.dart';
 import 'package:you_app/services/auth_service.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 import 'package:you_app/ui/shared/app_banner.dart';
 
 class NewJournalEntryViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
-  final _firestoreService = locator<FirestoreService>();
   final _authenticationService = locator<AuthenticationService>();
 
   final titleController = TextEditingController();
@@ -63,7 +68,7 @@ class NewJournalEntryViewModel extends BaseViewModel {
       );
 
       // 4. **Call Firestore Service**: Save the entry.
-      await _firestoreService.journal.addJournalEntry(newEntry);
+      await locator<JournalService>().addJournalEntry(newEntry);
 
       // 5. **Handle Success**: Show a success banner and navigate away.
       // (Using your existing showAppBanner method would go here if you pass the context)
@@ -95,7 +100,7 @@ class NewJournalEntryViewModel extends BaseViewModel {
         'title': titleController.text.trim(),
         'content': contentController.text.trim(),
       };
-      await _firestoreService.journal.updateJournalEntry(
+      await locator<JournalService>().updateJournalEntry(
         userId: _editingEntry!.userId,
         entryId: _editingEntry!.id!,
         data: updatedData,

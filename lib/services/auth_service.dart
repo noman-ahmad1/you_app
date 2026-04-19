@@ -4,7 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/models/app_user.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 import 'package:you_app/app/app.locator.dart'; // REQUIRED FOR SERVICE LOCATOR PATTERN
 
 class AuthenticationService with ListenableServiceMixin {
@@ -84,7 +90,7 @@ class AuthenticationService with ListenableServiceMixin {
       try {
         // Use the Service Locator to get FirestoreService
         final userData =
-            await locator<FirestoreService>().user.get(firebaseUser.uid);
+            await locator<UserService>().get(firebaseUser.uid);
         final appUser = _createAppUser(firebaseUser, userData);
 
         _currentUser.value = appUser;
@@ -150,7 +156,7 @@ class AuthenticationService with ListenableServiceMixin {
 
   // Simplified to call the FirestoreService via locator
   Future<Map<String, dynamic>?> _getUserData(String uid) async {
-    return locator<FirestoreService>().user.get(uid);
+    return locator<UserService>().get(uid);
   }
 
   AppUser _createAppUser(User firebaseUser, Map<String, dynamic>? userData) {
@@ -219,8 +225,7 @@ class AuthenticationService with ListenableServiceMixin {
       };
 
       // Use FirestoreService via locator to set user data
-      await locator<FirestoreService>()
-          .user
+      await locator<UserService>()
           .set(userCredential.user!.uid, userDataMap);
 
       final userData = await _getUserData(userCredential.user!.uid);
@@ -246,7 +251,7 @@ class AuthenticationService with ListenableServiceMixin {
       notifyListeners();
 
       // Use FirestoreService via locator to fetch all user data maps
-      final dataMaps = await locator<FirestoreService>().user.getAll();
+      final dataMaps = await locator<UserService>().getAll();
 
       final users = dataMaps.map((data) {
         return AppUser(
@@ -285,7 +290,7 @@ class AuthenticationService with ListenableServiceMixin {
 
     try {
       // Use FirestoreService via locator to update the user document
-      await locator<FirestoreService>().user.update(userId, {
+      await locator<UserService>().update(userId, {
         'role': newRole.toString().split('.').last,
         'updatedAt': FieldValue.serverTimestamp(),
         'updatedBy': _currentUser.value!.uid,
@@ -312,7 +317,7 @@ class AuthenticationService with ListenableServiceMixin {
 
     try {
       // Use FirestoreService via locator to update the user document status
-      await locator<FirestoreService>().user.update(volunteerId, {
+      await locator<UserService>().update(volunteerId, {
         'status': 'verified',
         'verifiedAt': FieldValue.serverTimestamp(),
         'verifiedBy': _currentUser.value!.uid,
@@ -338,7 +343,7 @@ class AuthenticationService with ListenableServiceMixin {
       }
 
       // Use FirestoreService via locator to update the user document status
-      await locator<FirestoreService>().user.update(userId, {
+      await locator<UserService>().update(userId, {
         'status': 'deleted',
         'deletedAt': FieldValue.serverTimestamp(),
         'deletedBy': _currentUser.value!.uid,
@@ -361,7 +366,7 @@ class AuthenticationService with ListenableServiceMixin {
     try {
       // Fetch the user document directly from Firestore
       final userData =
-          await locator<FirestoreService>().user.get(firebaseUser.uid);
+          await locator<UserService>().get(firebaseUser.uid);
 
       // Return the role string (e.g., 'volunteer', 'user', 'admin')
       // If userData is null or 'role' is missing, it returns null
@@ -448,8 +453,7 @@ class AuthenticationService with ListenableServiceMixin {
       };
 
       // Use FirestoreService via locator to set user data
-      await locator<FirestoreService>()
-          .user
+      await locator<UserService>()
           .set(userCredential.user!.uid, userDataMap);
       await userCredential.user!.sendEmailVerification();
 
@@ -500,8 +504,7 @@ class AuthenticationService with ListenableServiceMixin {
       };
 
       // Use FirestoreService via locator to set user data
-      await locator<FirestoreService>()
-          .user
+      await locator<UserService>()
           .set(userCredential.user!.uid, userDataMap);
       await userCredential.user!.sendEmailVerification();
 
@@ -533,8 +536,7 @@ class AuthenticationService with ListenableServiceMixin {
       );
 
       // Use FirestoreService via locator to update last login
-      await locator<FirestoreService>()
-          .user
+      await locator<UserService>()
           .updateLastLogin(userCredential.user!.uid);
 
       final userData = await _getUserData(userCredential.user!.uid);
@@ -580,7 +582,7 @@ class AuthenticationService with ListenableServiceMixin {
       // Check if user exists in Firestore
       // Use FirestoreService via locator to get the user data map
       final userDataMap =
-          await locator<FirestoreService>().user.get(userCredential.user!.uid);
+          await locator<UserService>().get(userCredential.user!.uid);
 
       if (userDataMap == null) {
         // Create new user document
@@ -596,14 +598,12 @@ class AuthenticationService with ListenableServiceMixin {
           'lastLogin': FieldValue.serverTimestamp(),
         };
         // Use FirestoreService via locator to set user data
-        await locator<FirestoreService>()
-            .user
+        await locator<UserService>()
             .set(userCredential.user!.uid, newUserData);
       } else {
         // Update last login for existing user
         // Use FirestoreService via locator to update last login
-        await locator<FirestoreService>()
-            .user
+        await locator<UserService>()
             .updateLastLogin(userCredential.user!.uid);
       }
 
@@ -839,7 +839,7 @@ class AuthenticationService with ListenableServiceMixin {
 
   // Uses the FirestoreService via locator for the check
   Future<bool> isUsernameAvailable(String username) async {
-    return locator<FirestoreService>().user.checkUsernameAvailability(username);
+    return locator<UserService>().checkUsernameAvailability(username);
   }
 
   String _handleAuthError(FirebaseAuthException e) {

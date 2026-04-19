@@ -10,7 +10,13 @@ import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/models/chat_request_model.dart';
 import 'package:you_app/services/auth_service.dart';
-import 'package:you_app/services/firestore_service.dart';
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/app_strings.dart';
 import 'package:stacked/stacked.dart';
@@ -19,7 +25,6 @@ import 'package:stacked_services/stacked_services.dart';
 class HomeViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _authenticationService = locator<AuthenticationService>();
-  final _firestoreService = locator<FirestoreService>();
   // Secondary player for short sound effects (e.g., swipe)
   final AudioPlayer _fxPlayer = AudioPlayer();
   // Main player for soothing music audio
@@ -135,7 +140,7 @@ class HomeViewModel extends BaseViewModel {
     setBusy(true); // Show loading while checking
     try {
       // ✅ Check for existing request first
-      bool requestExists = await _firestoreService.chatRequest
+      bool requestExists = await locator<ChatRequestService>()
           .checkExistingRequest(currentUser.uid, volunteer.uid);
 
       if (requestExists) {
@@ -156,7 +161,7 @@ class HomeViewModel extends BaseViewModel {
         requesterAvatarUrl: currentUser.profilePictureUrl,
         volunteerId: volunteer.uid,
       );
-      await _firestoreService.chatRequest.sendChatRequest(request);
+      await locator<ChatRequestService>().sendChatRequest(request);
       // Success is handled by the stream listener updating the UI state.
     } catch (e) {
       await _dialogService.showDialog(
@@ -173,7 +178,7 @@ class HomeViewModel extends BaseViewModel {
     if (userId == null) return;
 
     _sentRequestsSubscription?.cancel();
-    _sentRequestsSubscription = _firestoreService.chatRequest
+    _sentRequestsSubscription = locator<ChatRequestService>()
         .getUserSentRequestsStream(userId)
         .listen((requests) {
       // --- DEBUG PRINTS ---
@@ -243,7 +248,7 @@ class HomeViewModel extends BaseViewModel {
     if (response?.confirmed == true) {
       // ✅ Removed setBusy(true)
       try {
-        await _firestoreService.chatRequest.cancelRequest(request.id!);
+        await locator<ChatRequestService>().cancelRequest(request.id!);
         // The UI will update automatically when the stream listener
         // receives the empty list and calls notifyListeners.
         // fetchVolunteers will be triggered by the listener if needed.
@@ -276,7 +281,7 @@ class HomeViewModel extends BaseViewModel {
 
   // void fetchVolunteers() async {
   //   setBusy(true);
-  //   _volunteers = await _firestoreService.user.getAvailableVolunteers();
+  //   _volunteers = await locator<UserService>().getAvailableVolunteers();
   //   setBusy(false);
   // }
 
@@ -286,7 +291,7 @@ class HomeViewModel extends BaseViewModel {
 
     setBusy(true);
     try {
-      _volunteers = await _firestoreService.user.getAvailableVolunteers();
+      _volunteers = await locator<UserService>().getAvailableVolunteers();
     } catch (e) {
       // Handle error
     } finally {
@@ -295,7 +300,7 @@ class HomeViewModel extends BaseViewModel {
   }
 
   Stream<List<Map<String, dynamic>>> getCommunitiesStream() {
-    return _firestoreService.community.getCommunities();
+    return locator<CommunityService>().getCommunities();
   }
 
   /// Navigates to the Community Chat View

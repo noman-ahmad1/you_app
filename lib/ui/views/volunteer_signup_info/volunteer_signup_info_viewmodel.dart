@@ -12,7 +12,13 @@ import 'package:you_app/ui/common/app_colors.dart';
 // import 'package:you_app/models/volunteer_info.dart';
 // Added missing service imports for storage and database
 // import 'package:you_app/services/storage_service.dart'; // UNCOMMENTED
-import 'package:you_app/services/firestore_service.dart'; // UNCOMMENTED
+import 'package:you_app/services/user_service.dart';
+import 'package:you_app/services/volunteer_service.dart';
+import 'package:you_app/services/mood_service.dart';
+import 'package:you_app/services/journal_service.dart';
+import 'package:you_app/services/chat_service.dart';
+import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/services/community_service.dart'; // UNCOMMENTED
 
 class VolunteerSignupInfoViewModel extends BaseViewModel {
   final String uid;
@@ -22,8 +28,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   final _dialogService = locator<DialogService>();
   // final _storageService =
   //     locator<StorageService>(); // UNCOMMENTED: Added for Firebase Storage
-  final _firestoreService =
-      locator<FirestoreService>(); // UNCOMMENTED: Added for Firestore
+
 
   // --- Image States ---
   File? _selectedProfileImage;
@@ -424,12 +429,12 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
 
   // UPDATED: Now uses firestoreService.user.update
   Future<void> _updateAppUser(Map<String, dynamic> userData) async {
-    await _firestoreService.user.update(uid, userData);
+    await locator<UserService>().update(uid, userData);
   }
 
   // UPDATED: Now uses firestoreService.volunteer_info.saveInfo
   Future<void> _saveVolunteerInfo(Map<String, dynamic> volunteerData) async {
-    await _firestoreService.volunteer_info.saveInfo(uid, volunteerData);
+    await locator<VolunteerService>().saveInfo(uid, volunteerData);
   }
 
   void submitForm() async {
