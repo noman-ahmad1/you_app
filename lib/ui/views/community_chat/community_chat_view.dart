@@ -4,7 +4,6 @@ import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
-
 import 'community_chat_viewmodel.dart';
 
 class CommunityChatView extends StackedView<CommunityChatViewModel> {
