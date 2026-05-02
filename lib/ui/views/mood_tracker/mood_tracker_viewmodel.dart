@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -27,6 +28,10 @@ class MoodTrackerViewModel extends BaseViewModel {
   final AudioPlayer _fxPlayer = AudioPlayer();
   Key chartKey = UniqueKey();
 
+  int moodStreak = 0;
+  String dailyQuote = "Taking a moment to acknowledge your feelings\nis a step toward self-care.";
+  StreamSubscription<List<MoodEntry>>? _moodSubscription;
+
   bool swiped = false;
   final List<Particle> particles = [];
   final Random _random = Random();
@@ -46,6 +51,94 @@ class MoodTrackerViewModel extends BaseViewModel {
 
   MoodTrackerViewModel() {
     _initFxPlayer();
+    _initializeData();
+  }
+
+  void _initializeData() {
+    _setDailyQuote();
+    final userId = _authenticationService.currentUser?.uid;
+    if (userId != null) {
+      _moodSubscription = locator<MoodService>().getUserMoodStream(userId).listen((entries) {
+        _calculateStreak(entries);
+      });
+    }
+  }
+
+  void _calculateStreak(List<MoodEntry> entries) {
+    if (entries.isEmpty) {
+      moodStreak = 0;
+      notifyListeners();
+      return;
+    }
+
+    // Use the string timestamp to create DateTime objects
+    List<DateTime> entryDates = entries.map((e) {
+      try {
+        return DateTime.parse(e.timestamp);
+      } catch (_) {
+        return DateTime.now();
+      }
+    }).toList();
+
+    entryDates.sort((a, b) => b.compareTo(a));
+
+    int streak = 0;
+    DateTime now = DateTime.now();
+    DateTime currentDate = DateTime(now.year, now.month, now.day);
+    
+    // Check if the first entry is from today or yesterday
+    DateTime firstEntryDate = DateTime(entryDates.first.year, entryDates.first.month, entryDates.first.day);
+    if (firstEntryDate.isBefore(currentDate.subtract(const Duration(days: 1)))) {
+       moodStreak = 0;
+       notifyListeners();
+       return;
+    }
+
+    Set<String> uniqueDates = {};
+    for (var date in entryDates) {
+       uniqueDates.add("${date.year}-${date.month}-${date.day}");
+    }
+
+    List<DateTime> sortedUniqueDates = uniqueDates.map((s) {
+       var parts = s.split('-');
+       return DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+    }).toList();
+    
+    sortedUniqueDates.sort((a, b) => b.compareTo(a));
+
+    DateTime checkDate = currentDate;
+    for (int i = 0; i < sortedUniqueDates.length; i++) {
+        if (i == 0) {
+            if (sortedUniqueDates[i] == checkDate || sortedUniqueDates[i] == checkDate.subtract(const Duration(days: 1))) {
+                streak++;
+                checkDate = sortedUniqueDates[i];
+            } else {
+                break;
+            }
+        } else {
+            if (sortedUniqueDates[i] == checkDate.subtract(const Duration(days: 1))) {
+                streak++;
+                checkDate = sortedUniqueDates[i];
+            } else {
+                break;
+            }
+        }
+    }
+
+    moodStreak = streak;
+    notifyListeners();
+  }
+
+  void _setDailyQuote() {
+    final quotes = [
+      "Taking a moment to acknowledge your feelings\nis a step toward self-care.",
+      "Your emotions are valid, no matter what they are.",
+      "Every day is a fresh start. Take a deep breath.",
+      "You are stronger than your hardest days.",
+      "Check in with yourself, you deserve it."
+    ];
+    dailyQuote = quotes[DateTime.now().day % quotes.length];
+    notifyListeners();
   }
 
   void init(VoidCallback onAutoClose, Size screenSize) {
@@ -168,6 +261,7 @@ class MoodTrackerViewModel extends BaseViewModel {
   @override
   void dispose() {
     _isDisposed = true;
+    _moodSubscription?.cancel();
 
     // Stop and dispose ticker
     _ticker?.stop();

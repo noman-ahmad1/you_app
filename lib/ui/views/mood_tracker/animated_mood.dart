@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/views/mood_tracker/mood_tracker_viewmodel.dart';
+import 'package:you_app/ui/views/mood_tracker/mood_recommendation_view.dart';
 
 class AnimatedMoodScreen extends StatefulWidget {
   final String emoji;
@@ -92,7 +93,16 @@ class _AnimatedMoodScreenState extends State<AnimatedMoodScreen>
               try {
                 await _controller.reverse();
                 if (mounted) {
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pushReplacement(
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          MoodRecommendationView(emoji: widget.emoji),
+                      transitionDuration: const Duration(milliseconds: 500),
+                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                    ),
+                  );
                 }
               } catch (e) {
                 debugPrint("Error during animation reverse: $e");

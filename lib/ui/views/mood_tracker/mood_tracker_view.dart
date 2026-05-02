@@ -48,6 +48,23 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Space.verticalSpaceTiny(context),
+                  if (viewModel.moodStreak > 0)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withOpacity(0.4)),
+                      ),
+                      child: Text(
+                        '🔥 ${viewModel.moodStreak} Day Streak!',
+                        style: GoogleFonts.crimsonPro(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.secondary),
+                      ),
+                    ),
                   Text(
                     'Track your mood journey',
                     style: GoogleFonts.crimsonPro(
@@ -55,14 +72,17 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
                         fontWeight: FontWeight.w700,
                         color: AppColors.secondary),
                   ),
-                  // Space.verticalSpaceVTiny(context),
-                  Text(
-                    textAlign: TextAlign.center,
-                    'Taking a moment to acknowledge your feelings\nis a step toward self-care.',
-                    style: GoogleFonts.crimsonPro(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primaryVeryDark),
+                  Space.verticalSpaceVTiny(context),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      textAlign: TextAlign.center,
+                      viewModel.dailyQuote,
+                      style: GoogleFonts.crimsonPro(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primaryVeryDark),
+                    ),
                   ),
                   Space.verticalSpaceTiny(context),
                   SwipeButton(
