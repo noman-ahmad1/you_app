@@ -21,6 +21,7 @@ class AppUser {
   final String availabilityStatus;
   final DateTime? createdAt;
   final List<String>? permissions;
+  final String? fcmToken;
 
   AppUser({
     required this.uid,
@@ -39,6 +40,7 @@ class AppUser {
     this.availabilityStatus = 'offline',
     this.createdAt,
     this.permissions,
+    this.fcmToken,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> data) {
@@ -64,6 +66,7 @@ class AppUser {
       permissions: data['permissions'] != null
           ? List<String>.from(data['permissions'])
           : null,
+      fcmToken: data['fcmToken'],
     );
   }
 
@@ -93,6 +96,7 @@ class AppUser {
     String? availabilityStatus,
     DateTime? createdAt,
     List<String>? permissions,
+    String? fcmToken,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
@@ -107,6 +111,7 @@ class AppUser {
       availabilityStatus: availabilityStatus ?? this.availabilityStatus,
       createdAt: createdAt ?? this.createdAt,
       permissions: permissions ?? this.permissions,
+      fcmToken: fcmToken ?? this.fcmToken,
     );
   }
 }

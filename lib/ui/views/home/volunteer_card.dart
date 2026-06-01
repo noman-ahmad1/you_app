@@ -53,17 +53,17 @@ class VolunteerCard extends StatelessWidget {
     // ---------------------------------------------
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(50),
+      borderRadius: BorderRadius.circular(100),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(2, 2, 5, 2),
+          padding: const EdgeInsets.all(10),
           width: width * 0.9,
-          height: height * 0.085,
+          height: height * 0.11,
           decoration: BoxDecoration(
-            color: AppColors.secondaryVeryLight.withAlpha(70),
-            border: Border.all(color: AppColors.secondary, width: 2),
-            borderRadius: BorderRadius.circular(50),
+            color: AppColors.background.withAlpha(200),
+            border: Border.all(color: AppColors.background, width: 2),
+            borderRadius: BorderRadius.circular(100),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withAlpha(25),
@@ -88,7 +88,7 @@ class VolunteerCard extends StatelessWidget {
               GestureDetector(
                 onTap: onActionTap, // Use the renamed callback
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
+                  borderRadius: BorderRadius.circular(100),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
                     child: Container(
@@ -97,8 +97,8 @@ class VolunteerCard extends StatelessWidget {
                       height: height * 0.06,
                       decoration: BoxDecoration(
                         color: AppColors.secondaryVeryLight.withAlpha(102),
-                        border:
-                            Border.all(color: AppColors.secondary, width: 2),
+                        border: Border.all(
+                            color: AppColors.secondaryVeryLight, width: 2),
                         borderRadius: BorderRadius.circular(100),
                         boxShadow: [
                           BoxShadow(
@@ -138,7 +138,7 @@ class VolunteerCard extends StatelessWidget {
           height: height * 0.075,
           decoration: BoxDecoration(
             color: AppColors.secondaryVeryLight.withAlpha(102),
-            border: Border.all(color: AppColors.secondary, width: 2),
+            border: Border.all(color: AppColors.secondaryVeryLight, width: 2),
             borderRadius: BorderRadius.circular(100),
             boxShadow: [
               BoxShadow(
@@ -185,12 +185,13 @@ class VolunteerCard extends StatelessWidget {
             ...List.generate(5, (index) {
               return Image.asset(
                 index < rating ? AppConstants.starFill : AppConstants.star,
-                width: width * 0.042,
+                width: width * 0.035,
                 color: AppColors.secondary,
               );
             }),
           ],
         ),
+        SizedBox(height: height * 0.007),
         Row(
           children: categories
               .map((category) => Padding(
@@ -206,15 +207,15 @@ class VolunteerCard extends StatelessWidget {
   Widget _buildCategoryChip(String text, double width, double height) {
     // ... your existing code ...
     return ClipRRect(
-      borderRadius: BorderRadius.circular(100),
+      borderRadius: BorderRadius.circular(35),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: width * 0.02),
           height: height * 0.025,
           decoration: BoxDecoration(
-            color: AppColors.secondaryVeryLight.withAlpha(102),
-            border: Border.all(color: AppColors.secondary, width: 2),
+            color: AppColors.secondaryVeryLight.withAlpha(50),
+            border: Border.all(color: AppColors.secondaryVeryLight, width: 2),
             borderRadius: BorderRadius.circular(35),
             boxShadow: [
               BoxShadow(

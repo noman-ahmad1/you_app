@@ -37,12 +37,12 @@ class JournalCard extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
           child: Container(
-            padding: const EdgeInsets.all(7),
+            padding: const EdgeInsets.all(10),
             width: width * 0.9,
             height: height * 0.19,
             decoration: BoxDecoration(
-              color: AppColors.secondaryVeryLight.withAlpha(102),
-              border: Border.all(color: AppColors.secondary, width: 2),
+              color: AppColors.background.withAlpha(200),
+              border: Border.all(color: AppColors.background, width: 2),
               borderRadius: BorderRadius.circular(23),
               boxShadow: [
                 BoxShadow(
@@ -138,8 +138,8 @@ class JournalCard extends StatelessWidget {
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: AppColors.secondaryVeryLight.withAlpha(102),
-            border: Border.all(color: AppColors.secondary, width: 2),
+            color: AppColors.secondaryVeryLight.withAlpha(200),
+            border: Border.all(color: AppColors.secondaryVeryLight, width: 2),
             borderRadius: BorderRadius.circular(35),
             boxShadow: [
               BoxShadow(
@@ -178,7 +178,7 @@ class JournalCard extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             color: AppColors.secondaryVeryLight.withAlpha(102),
-            border: Border.all(color: AppColors.secondary, width: 2),
+            border: Border.all(color: AppColors.secondaryVeryLight, width: 2),
             borderRadius: BorderRadius.circular(35),
             boxShadow: [
               BoxShadow(

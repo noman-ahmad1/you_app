@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // ---------------------------------------------------------
+    // NEW: Threads (Posts) and Replies Security Rules
+    // ---------------------------------------------------------
+    
+    match /posts/{postId} {
+      // Anyone authenticated can read posts
+      allow read: if request.auth != null;
+      
+      // Creating a post requires the authorId to match the requester's UID
+      allow create: if request.auth != null 
+                    && request.resource.data.authorId == request.auth.uid;
+                    
+      // Updating or deleting a post requires the user to be the original author
+      allow update, delete: if request.auth != null 
+                            && resource.data.authorId == request.auth.uid;
+
+      // Subcollection: Replies
+      match /replies/{replyId} {
+        // Anyone authenticated can read replies
+        allow read: if request.auth != null;
+        
+        // Creating a reply requires the authorId to match the requester's UID
+        allow create: if request.auth != null 
+                      && request.resource.data.authorId == request.auth.uid;
+                      
+        // Updating or deleting a reply requires the user to be the original author
+        allow update, delete: if request.auth != null 
+                              && resource.data.authorId == request.auth.uid;
+      }
+    }
+
+    // ---------------------------------------------------------
+    // IMPORTANT: Make sure to copy your existing rules for 'users', 
+    // 'chat_requests', 'chats', etc. below this point before deploying!
+    // ---------------------------------------------------------
+    
+    // match /{document=**} {
+    //   allow read, write: if request.auth != null;
+    // }
+  }
+}

@@ -29,12 +29,42 @@ class JournalDetailsView extends StackedView<JournalDetailsViewModel> {
     final height = mediaQuery.size.height;
     return Scaffold(
         appBar: TopBar(
-          title: 'Journal',
-          imageAssetPath: AppConstants.back,
-          color: AppColors.secondary,
-          onBackPressed: () {
-            viewModel.back();
+          leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+          onLeadingPressed: () {
+            // Handle tap
           },
+          title: 'Hi, Friend',
+          subtitle: 'Saturday, May 16',
+          trailingActions: [
+            // Icon 1 (e.g., Notifications)
+            InkWell(
+              onTap: () {},
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: AppColors.primaryVeryDark.withAlpha(50)),
+                ),
+                child: Icon(Icons.notifications_none,
+                    color: AppColors.primaryVeryDark),
+              ),
+            ),
+            // Icon 2 (e.g., Profile/Flower)
+            InkWell(
+              onTap: () {},
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: AppColors.primaryVeryDark.withAlpha(50)),
+                ),
+                child: Image.asset('assets/images/avatar.png',
+                    width: 24, height: 24),
+              ),
+            ),
+          ],
         ),
         body: Container(
             width: double.infinity,

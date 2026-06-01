@@ -29,62 +29,84 @@ class ChatView extends StackedView<ChatViewModel> {
     final width = mediaQuery.size.width;
     final height = mediaQuery.size.height;
     return Scaffold(
-        appBar: TopBar(
-          title: viewModel.volunteerName,
-          imageAssetPath: AppConstants.back,
-          color: AppColors.secondary,
-          trailingAction: Container(
-            height: height * 0.07,
-            width: width * 0.07,
-            child: InkWell(
-              onTap: () async {
-                print("ATTEMPTING DELETE AS USER: ${viewModel.currentUserId}");
-                await viewModel.deleteChat();
-              },
-              child: Image.asset(AppConstants.delete),
-            ),
-          ),
-          onBackPressed: () {
-            viewModel.back();
-          },
-        ),
+        // appBar: TopBar(
+        //   title: viewModel.volunteerName,
+        //   imageAssetPath: AppConstants.back,
+        //   color: AppColors.secondary,
+        //   trailingAction: Container(
+        //     height: height * 0.07,
+        //     width: width * 0.07,
+        //     child: InkWell(
+        //       onTap: () async {
+        //         print("ATTEMPTING DELETE AS USER: ${viewModel.currentUserId}");
+        //         await viewModel.deleteChat();
+        //       },
+        //       child: Image.asset(AppConstants.delete),
+        //     ),
+        //   ),
+        //   onBackPressed: () {
+        //     viewModel.back();
+        //   },
+        // ),
         body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(AppConstants.background),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Column(
-            children: [
-              Expanded(
-                child: viewModel.isBusy
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                        color: AppColors.secondary,
-                      ))
-                    : viewModel.messages.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.builder(
-                            reverse:
-                                true, // Shows latest messages at the bottom
-                            padding: const EdgeInsets.all(12),
-                            itemCount: viewModel.messages.length,
-                            itemBuilder: (context, index) {
-                              final message = viewModel.messages[index];
-                              final isMe =
-                                  message.senderId == viewModel.currentUserId;
-                              return _MessageBubble(
-                                  message: message, isMe: isMe);
-                            },
-                          ),
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(AppConstants.background),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Column(
+        children: [
+          TopBar(
+            leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+            onLeadingPressed: () {
+              // Handle tap
+            },
+            title: 'Hi, ${viewModel.volunteerName}!',
+            trailingActions: [
+              InkWell(
+                onTap: () {
+                  viewModel.deleteChat();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: AppColors.primaryVeryDark.withAlpha(50)),
+                  ),
+                  child: Image.asset(AppConstants.cancel,
+                      height: 24, width: 24, color: AppColors.primaryVeryDark),
+                ),
               ),
-              _MessageInputField(),
             ],
           ),
-        ));
+          Expanded(
+            child: viewModel.isBusy
+                ? const Center(
+                    child: CircularProgressIndicator(
+                    color: AppColors.secondary,
+                  ))
+                : viewModel.messages.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        reverse: true, // Shows latest messages at the bottom
+                        padding: const EdgeInsets.all(12),
+                        itemCount: viewModel.messages.length,
+                        itemBuilder: (context, index) {
+                          final message = viewModel.messages[index];
+                          final isMe =
+                              message.senderId == viewModel.currentUserId;
+                          return _MessageBubble(message: message, isMe: isMe);
+                        },
+                      ),
+          ),
+          _MessageInputField(),
+        ],
+      ),
+    ));
   }
 
   Widget _buildEmptyState() {
@@ -108,7 +130,6 @@ class ChatView extends StackedView<ChatViewModel> {
         volunteerName: volunteerName,
         requestId: requestId,
       );
-
 }
 
 class _MessageInputField extends ViewModelWidget<ChatViewModel> {

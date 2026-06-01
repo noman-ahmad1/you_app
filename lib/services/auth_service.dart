@@ -11,11 +11,12 @@ import 'package:you_app/services/journal_service.dart';
 import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/services/community_service.dart';
+import 'package:you_app/services/push_notification_service.dart';
 import 'package:you_app/app/app.locator.dart'; // REQUIRED FOR SERVICE LOCATOR PATTERN
 
 class AuthenticationService with ListenableServiceMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // REMOVED: final FirestoreService _firestoreService;
   // FirestoreService is now accessed via locator<FirestoreService>()
@@ -73,13 +74,13 @@ class AuthenticationService with ListenableServiceMixin {
   Future<void> _initializeAuth() async {
     _isLoading.value = true;
 
-    try {
-      await _googleSignIn.initialize(
-          // Scopes can be specified here or wherever you call signIn()
-          );
-    } catch (e) {
-      print('GoogleSignIn initialization failed: $e');
-    }
+    // try {
+    //   await _googleSignIn.initialize(
+    //       // Scopes can be specified here or wherever you call signIn()
+    //       );
+    // } catch (e) {
+    //   print('GoogleSignIn initialization failed: $e');
+    // }
 
     // Set up auth state listener
     _authSubscription = _auth.authStateChanges().listen(_onAuthStateChanged);
@@ -89,11 +90,21 @@ class AuthenticationService with ListenableServiceMixin {
     if (firebaseUser != null) {
       try {
         // Use the Service Locator to get FirestoreService
-        final userData =
-            await locator<UserService>().get(firebaseUser.uid);
+        final userData = await locator<UserService>().get(firebaseUser.uid);
         final appUser = _createAppUser(firebaseUser, userData);
 
         _currentUser.value = appUser;
+
+        // Sync FCM token automatically after authentication
+        Future.microtask(() {
+          try {
+            if (locator.isRegistered<PushNotificationService>()) {
+              locator<PushNotificationService>().syncTokenAfterLogin();
+            }
+          } catch (e) {
+            print('FCM Token sync error on login: $e');
+          }
+        });
 
         // Determine auth status - Admins have different verification requirements
         if (appUser.isAdmin) {
@@ -225,8 +236,7 @@ class AuthenticationService with ListenableServiceMixin {
       };
 
       // Use FirestoreService via locator to set user data
-      await locator<UserService>()
-          .set(userCredential.user!.uid, userDataMap);
+      await locator<UserService>().set(userCredential.user!.uid, userDataMap);
 
       final userData = await _getUserData(userCredential.user!.uid);
       final appUser = _createAppUser(userCredential.user!, userData);
@@ -365,8 +375,7 @@ class AuthenticationService with ListenableServiceMixin {
 
     try {
       // Fetch the user document directly from Firestore
-      final userData =
-          await locator<UserService>().get(firebaseUser.uid);
+      final userData = await locator<UserService>().get(firebaseUser.uid);
 
       // Return the role string (e.g., 'volunteer', 'user', 'admin')
       // If userData is null or 'role' is missing, it returns null
@@ -453,8 +462,7 @@ class AuthenticationService with ListenableServiceMixin {
       };
 
       // Use FirestoreService via locator to set user data
-      await locator<UserService>()
-          .set(userCredential.user!.uid, userDataMap);
+      await locator<UserService>().set(userCredential.user!.uid, userDataMap);
       await userCredential.user!.sendEmailVerification();
 
       final userData = await _getUserData(userCredential.user!.uid);
@@ -504,8 +512,7 @@ class AuthenticationService with ListenableServiceMixin {
       };
 
       // Use FirestoreService via locator to set user data
-      await locator<UserService>()
-          .set(userCredential.user!.uid, userDataMap);
+      await locator<UserService>().set(userCredential.user!.uid, userDataMap);
       await userCredential.user!.sendEmailVerification();
 
       final userData = await _getUserData(userCredential.user!.uid);
@@ -536,8 +543,7 @@ class AuthenticationService with ListenableServiceMixin {
       );
 
       // Use FirestoreService via locator to update last login
-      await locator<UserService>()
-          .updateLastLogin(userCredential.user!.uid);
+      await locator<UserService>().updateLastLogin(userCredential.user!.uid);
 
       final userData = await _getUserData(userCredential.user!.uid);
       final appUser = _createAppUser(userCredential.user!, userData);
@@ -559,8 +565,7 @@ class AuthenticationService with ListenableServiceMixin {
       notifyListeners();
 
       // Initialize Google Sign-In
-      final GoogleSignInAccount? googleUser =
-          await _googleSignIn.authenticate();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         throw Exception('Google sign-in cancelled by user');
       }
@@ -598,13 +603,11 @@ class AuthenticationService with ListenableServiceMixin {
           'lastLogin': FieldValue.serverTimestamp(),
         };
         // Use FirestoreService via locator to set user data
-        await locator<UserService>()
-            .set(userCredential.user!.uid, newUserData);
+        await locator<UserService>().set(userCredential.user!.uid, newUserData);
       } else {
         // Update last login for existing user
         // Use FirestoreService via locator to update last login
-        await locator<UserService>()
-            .updateLastLogin(userCredential.user!.uid);
+        await locator<UserService>().updateLastLogin(userCredential.user!.uid);
       }
 
       // Get updated user data (if it was just created)
@@ -623,6 +626,18 @@ class AuthenticationService with ListenableServiceMixin {
 
   Future<void> signOut() async {
     try {
+      // Remove FCM token from Firestore before logging out to protect privacy
+      final user = _currentUser.value;
+      if (user != null) {
+        try {
+          await locator<UserService>().update(user.uid, {
+            'fcmToken': FieldValue.delete(),
+          });
+        } catch (e) {
+          print('Failed to remove FCM token on signout: $e');
+        }
+      }
+
       await _auth.signOut();
       await _googleSignIn.signOut();
 

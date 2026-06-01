@@ -29,8 +29,8 @@ class JournalEntryBar extends StatelessWidget {
           width: width * 0.9,
           height: height * 0.07,
           decoration: BoxDecoration(
-            color: AppColors.secondaryVeryLight.withAlpha(10),
-            border: Border.all(color: AppColors.secondary, width: 2),
+            color: AppColors.background.withAlpha(50),
+            border: Border.all(color: AppColors.background, width: 2),
             borderRadius: BorderRadius.circular(35),
             boxShadow: [
               BoxShadow(

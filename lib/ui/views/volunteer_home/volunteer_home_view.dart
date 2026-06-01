@@ -5,6 +5,7 @@ import 'package:you_app/ui/views/volunteer_home/tabs/volunteer_home.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/request.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/dashboard.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_bottom_bar.dart';
+import 'package:you_app/ui/views/volunteer_home/volunteer_notifications_drawer.dart';
 
 import 'volunteer_home_viewmodel.dart';
 
@@ -19,6 +20,7 @@ class VolunteerHomeView extends StackedView<VolunteerHomeViewModel> {
   ) {
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: VolunteerNotificationsDrawer(viewModel: viewModel),
       body: Stack(
         children: [
           // Screens
@@ -37,6 +39,7 @@ class VolunteerHomeView extends StackedView<VolunteerHomeViewModel> {
                 child: VolunteerBottomBar(
                   currentIndex: viewModel.currentIndex,
                   onTap: viewModel.setTab,
+                  unreadNotificationsCount: viewModel.pendingRequests.length,
                 ),
               ),
             ),

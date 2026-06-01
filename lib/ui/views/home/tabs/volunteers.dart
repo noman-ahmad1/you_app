@@ -29,10 +29,80 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
           child: Column(
             children: [
               TopBar(
-                title: 'Volunteers',
-                imageAssetPath: AppConstants.back,
-                color: AppColors.secondary,
-                onMenuPressed: () {},
+                leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+                onLeadingPressed: () {
+                  // Handle tap
+                },
+                title: 'Listeners',
+                subtitle: 'Saturday, May 16',
+                trailingActions: [
+                // Icon 1 (e.g., Notifications)
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        viewModel.markAllNotificationsAsRead();
+                        Scaffold.of(context).openDrawer();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: AppColors.primaryVeryDark.withAlpha(50)),
+                        ),
+                        child: Image.asset(AppConstants.notification,
+                            color: AppColors.secondary, width: 24, height: 24),
+                      ),
+                    ),
+                    Positioned(
+                      right: -4,
+                      top: -4,
+                      child: IgnorePointer(
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 300),
+                          opacity: viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            child: Text(
+                              '${viewModel.unreadNotificationsCount}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                // Icon 2 (e.g., Profile/Flower)
+                  // InkWell(
+                  //   onTap: () {},
+                  //   child: Container(
+                  //     padding: const EdgeInsets.all(4),
+                  //     decoration: BoxDecoration(
+                  //       shape: BoxShape.circle,
+                  //       border: Border.all(
+                  //           color: AppColors.primaryVeryDark.withAlpha(50)),
+                  //     ),
+                  //     child: Image.asset('assets/images/avatar.png',
+                  //         width: 24, height: 24),
+                  //   ),
+                  // ),
+                ],
               ),
               Expanded(
                 child: SafeArea(
@@ -93,8 +163,8 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
           filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.secondaryVeryLight.withAlpha(50),
-              border: Border.all(color: AppColors.secondary, width: 2),
+              color: AppColors.background.withAlpha(200),
+              border: Border.all(color: AppColors.background, width: 2),
               borderRadius: BorderRadius.circular(23),
               boxShadow: [
                 BoxShadow(
@@ -129,14 +199,15 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.secondaryVeryLight.withAlpha(50),
-                    border: Border.all(color: AppColors.secondary, width: 2),
+                    border: Border.all(
+                        color: AppColors.secondaryVeryLight, width: 2),
                     borderRadius: BorderRadius.circular(50),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(50),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
+                      // BoxShadow(
+                      //   color: Colors.black.withAlpha(50),
+                      //   blurRadius: 20,
+                      //   offset: const Offset(0, 4),
+                      // ),
                     ],
                   ),
                   child: ElevatedButton.icon(
@@ -177,8 +248,8 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
     return Center(
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.secondaryVeryLight.withAlpha(50),
-          border: Border.all(color: AppColors.secondary, width: 2),
+          color: AppColors.background.withAlpha(200),
+          border: Border.all(color: AppColors.background, width: 2),
           borderRadius: BorderRadius.circular(23),
           boxShadow: [
             BoxShadow(
@@ -192,7 +263,12 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(AppConstants.pending, color: AppColors.primaryVeryDark),
+            Image.asset(
+              AppConstants.pending,
+              color: AppColors.primaryVeryDark,
+              height: 70,
+              width: 70,
+            ),
             Space.verticalSpaceSmall(context),
             Text(
               "Request Sent",
@@ -244,29 +320,78 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
 
   /// Widget to show the list of available volunteers.
   Widget _buildVolunteerList(BuildContext context, HomeViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          'Hello ${viewModel.currentUserName},',
-          style: GoogleFonts.crimsonPro(
-              fontSize: 25,
-              fontWeight: FontWeight.w700,
-              color: AppColors.secondary),
-        ),
-        Text(
-          'Our volunteers are here to listen.',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.crimsonPro(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: AppColors.primaryVeryDark),
-        ),
-        Space.verticalSpaceTiny(context),
-        Expanded(
-          child: viewModel.volunteers.isEmpty
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'YOU\'RE NOT ALONE',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                    color: AppColors.secondary,
+                  ),
+                ),
+                Space.verticalSpaceVTiny(context),
+                RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.crimsonPro(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryVeryDark,
+                    ),
+                    children: const [
+                      TextSpan(text: 'Talk to someone '),
+                      TextSpan(
+                        text: 'who truly cares.',
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: AppColors.secondary,
+                        ),
+                      ),
+                      // TextSpan(text: 'alone in this.'),
+                    ],
+                  ),
+                ),
+                Space.verticalSpaceTiny(context),
+                Text(
+                  'Pairing is exclusive for 24 hours — to keep your space focused.',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Text(
+          //   'Hello ${viewModel.currentUserName},',
+          //   style: GoogleFonts.crimsonPro(
+          //       fontSize: 25,
+          //       fontWeight: FontWeight.w700,
+          //       color: AppColors.secondary),
+          // ),
+          // Text(
+          //   'Our volunteers are here to listen.',
+          //   textAlign: TextAlign.center,
+          //   style: GoogleFonts.crimsonPro(
+          //       fontSize: 17,
+          //       fontWeight: FontWeight.w500,
+          //       color: AppColors.primaryVeryDark),
+          // ),
+          Space.verticalSpaceTiny(context),
+          viewModel.volunteers.isEmpty
               ? _buildEmptyState()
               : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: viewModel.volunteers.length,
                   itemBuilder: (context, index) {
                     final volunteer = viewModel.volunteers[index];
@@ -285,8 +410,8 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                     );
                   },
                 ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -1,19 +1,14 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/auth_service.dart';
-import 'package:you_app/services/user_service.dart';
-import 'package:you_app/services/volunteer_service.dart';
-import 'package:you_app/services/mood_service.dart';
-import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_service.dart';
-import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/services/community_service.dart';
+import 'package:you_app/models/community_post.dart';
+import 'package:you_app/ui/views/community_chat/thread_replies_view.dart';
 
-class CommunityChatViewModel extends StreamViewModel<QuerySnapshot> {
+class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   final _navigationService = locator<NavigationService>();
   final _authService = locator<AuthenticationService>();
   final _snackbarService = locator<SnackbarService>();
@@ -23,19 +18,10 @@ class CommunityChatViewModel extends StreamViewModel<QuerySnapshot> {
 
   final TextEditingController messageController = TextEditingController();
 
-  List<Map<String, dynamic>> get messages {
-    if (data == null) return [];
-    return data!.docs.map((doc) {
-      final mapData = doc.data() as Map<String, dynamic>;
-      mapData['id'] = doc.id;
-      return mapData;
-    }).toList();
-  }
+  List<CommunityPost> get posts => data ?? [];
 
   String get currentUserId => _authService.currentUser?.uid ?? '';
-  // Assuming your AppUser model has a fullName or firstName property
-  String get currentUserName =>
-      _authService.currentUser?.fullName ?? 'Anonymous';
+  String get currentUserName => _authService.currentUser?.fullName ?? 'Anonymous';
 
   CommunityChatViewModel({
     required this.communityId,
@@ -43,11 +29,11 @@ class CommunityChatViewModel extends StreamViewModel<QuerySnapshot> {
   });
 
   @override
-  Stream<QuerySnapshot> get stream =>
-      locator<CommunityService>().getCommunityMessages(communityId);
+  Stream<List<CommunityPost>> get stream =>
+      locator<CommunityService>().getCommunityPosts(communityId);
 
   @override
-  void onData(QuerySnapshot? data) {
+  void onData(List<CommunityPost>? data) {
     setBusy(false);
   }
 
@@ -55,12 +41,12 @@ class CommunityChatViewModel extends StreamViewModel<QuerySnapshot> {
   void onError(error, StackTrace? stackTrace) {
     _snackbarService.showSnackbar(
       title: 'Error',
-      message: 'Failed to load community messages.',
+      message: 'Failed to load community threads.',
     );
     setBusy(false);
   }
 
-  Future<void> sendMessage() async {
+  Future<void> sendPost() async {
     final text = messageController.text.trim();
     if (text.isEmpty) return;
 
@@ -68,17 +54,42 @@ class CommunityChatViewModel extends StreamViewModel<QuerySnapshot> {
     notifyListeners();
 
     try {
-      await locator<CommunityService>().sendCommunityMessage(
+      // Basic Mention extraction
+      // Find words starting with @ and remove the @
+      final words = text.split(' ');
+      List<String> mentionedUsernames = words
+          .where((w) => w.startsWith('@') && w.length > 1)
+          .map((w) => w.substring(1)) // Remove '@'
+          .toList();
+
+      // IMPORTANT: Currently we are storing the username as the mention string because we don't have
+      // an easy mapping to userId on the client. In a full implementation, you'd have a dropdown that assigns userIds.
+      // For this step, we will pass mentionedUsernames as mentionedUsers for now, or you'd search the DB to resolve IDs.
+      // However, the backend expects userIds. Since this is an MVP, we'll pass an empty list unless we resolve it.
+      // (Let's pass empty list to not crash the backend loop).
+      
+      await locator<CommunityService>().createPost(
         communityId: communityId,
-        text: text,
-        senderName: currentUserName,
+        content: text,
+        authorUsername: currentUserName,
+        mentionedUsers: [], // Needs user search to resolve IDs
       );
     } catch (e) {
       _snackbarService.showSnackbar(
         title: 'Error',
-        message: 'Could not send message. Please try again.',
+        message: 'Could not create post. Please try again.',
       );
     }
+  }
+
+  void navigateToThread(CommunityPost post) {
+    _navigationService.navigateWithTransition(
+      ThreadRepliesView(
+        post: post,
+        communityName: communityName,
+      ),
+      transitionStyle: Transition.rightToLeft,
+    );
   }
 
   void back() {
@@ -91,3 +102,4 @@ class CommunityChatViewModel extends StreamViewModel<QuerySnapshot> {
     super.dispose();
   }
 }
+

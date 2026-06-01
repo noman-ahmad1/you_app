@@ -9,13 +9,14 @@ class AppColors {
   static const Color secondaryLight = Color(0xFFA14E67);
   static const Color secondaryVeryLight = Color(0xFFCDBABE);
   static const Color error = Color(0xFFB00020);
-  static const Color background = Color(0xFFD9D9D9);
+  static const Color background = Color.fromARGB(255, 240, 240, 240);
   static const Color darkBackground = Color(0xFF121212);
   static const Color backgroundGradient = Color(0xFFCDBABE);
   static const Color peachDark = Color(0xFF7C5C69);
   static const Color teal = Color(0xFF87BED3);
   static const Color lightPurple = Color(0xFFC2D6EF);
   static const Color pink = Color(0xFFE374AD);
+  static const Color lightPink = Color(0xFFE3C9D3);
   static const Color peach = Color(0xFFD0919E);
   static const Color darkYellow = Color(0xFFF8BC16);
   static const Color yellow = Color(0xFFFFE78D);

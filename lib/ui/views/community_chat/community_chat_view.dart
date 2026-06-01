@@ -4,6 +4,8 @@ import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
+import 'package:you_app/models/community_post.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import 'community_chat_viewmodel.dart';
 
 class CommunityChatView extends StackedView<CommunityChatViewModel> {
@@ -23,14 +25,6 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
     Widget? child,
   ) {
     return Scaffold(
-      appBar: TopBar(
-        title: viewModel.communityName, // Shows the community name
-        imageAssetPath: AppConstants.back,
-        color: AppColors.secondary,
-        onBackPressed: () {
-          viewModel.back();
-        },
-      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -42,31 +36,40 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
         ),
         child: Column(
           children: [
+            TopBar(
+              leadingIconAsset: AppConstants.back,
+              iconColor: AppColors.primaryVeryDark,
+              onLeadingPressed: () {
+                Navigator.pop(context);
+              },
+              title: communityName,
+              trailingActions: [],
+            ),
             Expanded(
               child: viewModel.isBusy
                   ? const Center(
                       child: CircularProgressIndicator(
                       color: AppColors.secondary,
                     ))
-                  : viewModel.messages.isEmpty
+                  : viewModel.posts.isEmpty
                       ? _buildEmptyState()
-                      : ListView.builder(
-                          reverse: true, // Shows latest messages at the bottom
-                          padding: const EdgeInsets.all(12),
-                          itemCount: viewModel.messages.length,
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          itemCount: viewModel.posts.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 12),
                           itemBuilder: (context, index) {
-                            final messageData = viewModel.messages[index];
-                            final isMe = messageData['senderId'] ==
-                                viewModel.currentUserId;
+                            final post = viewModel.posts[index];
+                            final isMe = post.authorId == viewModel.currentUserId;
 
-                            return _CommunityMessageBubble(
-                              messageData: messageData,
+                            return _CommunityPostCard(
+                              post: post,
                               isMe: isMe,
+                              onTap: () => viewModel.navigateToThread(post),
                             );
                           },
                         ),
             ),
-            const _MessageInputField(),
+            const _PostComposer(),
           ],
         ),
       ),
@@ -76,7 +79,7 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
   Widget _buildEmptyState() {
     return Center(
       child: Text(
-        'Be the first to share in this community!',
+        'Be the first to start a thread!',
         style: GoogleFonts.crimsonPro(
           color: AppColors.primaryVeryDark.withAlpha(150),
           fontSize: 16,
@@ -98,8 +101,8 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
 // WIDGETS
 // -------------------------------------------------------------------
 
-class _MessageInputField extends ViewModelWidget<CommunityChatViewModel> {
-  const _MessageInputField({Key? key}) : super(key: key);
+class _PostComposer extends ViewModelWidget<CommunityChatViewModel> {
+  const _PostComposer({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, CommunityChatViewModel viewModel) {
@@ -115,7 +118,7 @@ class _MessageInputField extends ViewModelWidget<CommunityChatViewModel> {
             color: AppColors.secondary,
           ),
           decoration: InputDecoration(
-            hintText: "Share with the community...",
+            hintText: "Start a new thread... (@ to mention)",
             hintStyle: GoogleFonts.crimsonPro(
               color: AppColors.secondary.withAlpha(150),
             ),
@@ -124,23 +127,20 @@ class _MessageInputField extends ViewModelWidget<CommunityChatViewModel> {
             contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
-              borderSide:
-                  const BorderSide(color: AppColors.secondary, width: 2),
+              borderSide: const BorderSide(color: AppColors.secondary, width: 2),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(50),
-              borderSide:
-                  const BorderSide(color: AppColors.secondary, width: 2),
+              borderRadius: BorderRadius.circular(25),
+              borderSide: const BorderSide(color: AppColors.secondary, width: 2),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(50),
-              borderSide:
-                  const BorderSide(color: AppColors.secondary, width: 2),
+              borderRadius: BorderRadius.circular(25),
+              borderSide: const BorderSide(color: AppColors.secondary, width: 2),
             ),
             suffixIcon: Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: GestureDetector(
-                onTap: viewModel.sendMessage,
+                onTap: viewModel.sendPost,
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppColors.secondaryVeryLight.withAlpha(75),
@@ -157,96 +157,136 @@ class _MessageInputField extends ViewModelWidget<CommunityChatViewModel> {
               ),
             ),
           ),
-          onSubmitted: (_) => viewModel.sendMessage(),
+          onSubmitted: (_) => viewModel.sendPost(),
         ),
       ),
     );
   }
 }
 
-class _CommunityMessageBubble extends StatelessWidget {
-  final Map<String, dynamic> messageData;
+class _CommunityPostCard extends StatelessWidget {
+  final CommunityPost post;
   final bool isMe;
+  final VoidCallback onTap;
 
-  const _CommunityMessageBubble({
-    required this.messageData,
+  const _CommunityPostCard({
+    required this.post,
     required this.isMe,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final text = messageData['text'] ?? '';
-    final senderName = messageData['senderName'] ?? 'Anonymous';
+    final timeString = timeago.format(post.createdAt, locale: 'en_short'); // e.g., '5m', '2h'
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Column(
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          // Show Sender Name for incoming messages (because it's a group chat)
-          if (!isMe)
-            Padding(
-              padding: const EdgeInsets.only(left: 14, bottom: 4),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          border: Border(
+            bottom: BorderSide(
+              color: AppColors.primaryVeryDark.withAlpha(20),
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left Column: Avatar
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: isMe ? AppColors.secondary.withAlpha(50) : AppColors.lightPurple.withAlpha(50),
               child: Text(
-                senderName,
+                post.authorUsername.isNotEmpty ? post.authorUsername[0].toUpperCase() : '?',
                 style: GoogleFonts.crimsonPro(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryVeryDark.withAlpha(200),
+                  color: isMe ? AppColors.secondary : AppColors.lightPurple,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
             ),
-          // The actual message bubble
-          Row(
-            mainAxisAlignment:
-                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            children: [
-              Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.75,
-                ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isMe
-                      ? AppColors.secondaryVeryLight.withAlpha(75)
-                      : AppColors.lightPurple.withAlpha(75),
-                  border: Border.all(
-                    color: isMe ? AppColors.secondary : AppColors.lightPurple,
-                    width: 2,
+            const SizedBox(width: 12),
+            // Right Column: Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Row: Name & Timestamp
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        post.authorUsername,
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryVeryDark,
+                        ),
+                      ),
+                      Text(
+                        timeString,
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 13,
+                          color: AppColors.primaryVeryDark.withAlpha(130),
+                        ),
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(20),
-                    topRight: const Radius.circular(20),
-                    bottomLeft: isMe
-                        ? const Radius.circular(20)
-                        : const Radius.circular(5),
-                    bottomRight: isMe
-                        ? const Radius.circular(5)
-                        : const Radius.circular(20),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                  const SizedBox(height: 4),
+                  // Post Body
+                  Text(
+                    post.content,
+                    style: GoogleFonts.crimsonPro(
+                      fontSize: 16,
+                      color: AppColors.primaryVeryDark.withAlpha(220),
+                      height: 1.4,
                     ),
-                  ],
-                ),
-                child: Text(
-                  text,
-                  style: GoogleFonts.crimsonPro(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: isMe ? AppColors.secondary : AppColors.lightPurple,
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  // Action Row
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 18,
+                        color: AppColors.primaryVeryDark.withAlpha(120),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${post.replyCount}',
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primaryVeryDark.withAlpha(120),
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      Icon(
+                        Icons.favorite_border_rounded,
+                        size: 18,
+                        color: AppColors.primaryVeryDark.withAlpha(120),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${post.likeCount}', // If you use likes later
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primaryVeryDark.withAlpha(120),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+

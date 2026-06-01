@@ -18,37 +18,43 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
     Widget? child,
   ) {
     return Scaffold(
-      appBar: TopBar(
-        title: 'Dodo',
-        imageAssetPath: AppConstants.back,
-        color: AppColors.secondary,
-        onBackPressed: () {
-          viewModel.back();
-        },
-      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage(AppConstants.background),
+            image: AssetImage(AppConstants.pinkBackground),
             fit: BoxFit.cover,
           ),
         ),
         child: Column(
           children: [
+            TopBar(
+              isDodo: false,
+              leadingIconAsset: AppConstants.back, // Your 'Y' logo asset
+              onLeadingPressed: () {
+                Navigator.pop(context);
+              },
+              title: 'Dodo',
+              titleColor: AppColors.secondary,
+              iconColor: AppColors.secondary,
+              backgroundColor: AppColors.lightPink,
+              trailingActions: [],
+            ),
             Expanded(
               child: ListView.builder(
+                reverse: true,
                 padding: const EdgeInsets.all(12),
                 itemCount: viewModel.messages.length,
                 itemBuilder: (context, index) {
-                  final msg = viewModel.messages[index];
+                  final msg =
+                      viewModel.messages[viewModel.messages.length - 1 - index];
                   final isMe = msg['isMe'] == 'true';
                   return _MessageBubble(text: msg['text'] ?? '', isMe: isMe);
                 },
               ),
             ),
-            
+
             // Loading Indicator for Dodo thinking
             if (viewModel.isBusy)
               Padding(
@@ -59,7 +65,7 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
                     Text(
                       "Dodo is typing...",
                       style: GoogleFonts.crimsonPro(
-                        color: AppColors.lightPurple,
+                        color: AppColors.primaryVeryDark,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -69,7 +75,7 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
                       width: 12,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.lightPurple,
+                        color: AppColors.primaryVeryDark,
                       ),
                     )
                   ],
@@ -96,7 +102,7 @@ class _MessageInputField extends ViewModelWidget<ChatbotViewModel> {
     return Container(
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(10.0),
+          padding: const EdgeInsets.fromLTRB(10.0, 0, 10.0, 10.0),
           child: TextField(
             controller: viewModel.messageController,
             keyboardType: TextInputType.multiline,
@@ -185,9 +191,9 @@ class _MessageBubble extends StatelessWidget {
           decoration: BoxDecoration(
             color: isMe
                 ? AppColors.secondaryVeryLight.withAlpha(75)
-                : AppColors.lightPurple.withAlpha(75),
+                : AppColors.primary.withAlpha(75),
             border: Border.all(
-              color: isMe ? AppColors.secondary : AppColors.lightPurple,
+              color: isMe ? AppColors.secondary : AppColors.primaryVeryDark,
               width: 2,
             ),
             borderRadius: BorderRadius.only(
@@ -211,7 +217,7 @@ class _MessageBubble extends StatelessWidget {
             style: GoogleFonts.crimsonPro(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: isMe ? AppColors.secondary : AppColors.lightPurple,
+              color: isMe ? AppColors.secondary : AppColors.primaryVeryDark,
             ),
           ),
         ),

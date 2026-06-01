@@ -6,11 +6,13 @@ import 'package:you_app/ui/common/app_constants.dart';
 class VolunteerBottomBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final int unreadNotificationsCount;
 
   const VolunteerBottomBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.unreadNotificationsCount = 0,
   });
 
   @override
@@ -67,6 +69,7 @@ class VolunteerBottomBar extends StatelessWidget {
                     label: 'Pending Chat',
                     isSelected: currentIndex == 0,
                     onTap: () => onTap(0),
+                    unreadNotificationsCount: unreadNotificationsCount,
                   ),
                   _TabItem(
                     assetPath: AppConstants.chat,
@@ -108,12 +111,14 @@ class _TabItem extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final int unreadNotificationsCount;
 
   const _TabItem({
     required this.assetPath,
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.unreadNotificationsCount = 0,
   });
 
   @override
@@ -127,11 +132,47 @@ class _TabItem extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: Container(
           alignment: Alignment.center,
-          child: Image.asset(
-            assetPath,
-            height: iconSize,
-            width: iconSize,
-            color: isSelected ? AppColors.secondary : AppColors.secondary,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Image.asset(
+                assetPath,
+                height: iconSize,
+                width: iconSize,
+                color: isSelected ? AppColors.secondary : AppColors.secondary,
+              ),
+              if (assetPath == AppConstants.notification)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: IgnorePointer(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: unreadNotificationsCount > 0 ? 1.0 : 0.0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 14,
+                          minHeight: 14,
+                        ),
+                        child: Text(
+                          '$unreadNotificationsCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

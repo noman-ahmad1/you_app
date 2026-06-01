@@ -8,6 +8,7 @@ import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/chatbot_service.dart';
+import 'package:you_app/services/push_notification_service.dart';
 import 'package:you_app/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:you_app/ui/dialogs/info_alert/info_alert_dialog.dart';
 import 'package:you_app/ui/views/home/home_view.dart';
@@ -74,6 +75,7 @@ import 'package:you_app/ui/views/community_chat/community_chat_view.dart';
     LazySingleton(classType: ChatRequestService),
     LazySingleton(classType: CommunityService),
     LazySingleton(classType: ChatbotService),
+    LazySingleton(classType: PushNotificationService),
     // @stacked-service
 
     LazySingleton(classType: VolunteerSignupViewModel),

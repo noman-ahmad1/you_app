@@ -11,7 +11,8 @@ import 'mood_recommendation_viewmodel.dart';
 class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
   final String emoji;
 
-  const MoodRecommendationView({Key? key, required this.emoji}) : super(key: key);
+  const MoodRecommendationView({Key? key, required this.emoji})
+      : super(key: key);
 
   @override
   Widget builder(
@@ -23,12 +24,6 @@ class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
     final width = mediaQuery.size.width;
 
     return Scaffold(
-      appBar: TopBar(
-        title: 'Next Steps',
-        imageAssetPath: AppConstants.back,
-        color: AppColors.secondary,
-        onBackPressed: viewModel.back,
-      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -38,29 +33,35 @@ class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
             fit: BoxFit.cover,
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Space.verticalSpaceMedium(context),
-                Text(
-                  'Based on your mood,',
-                  style: GoogleFonts.crimsonPro(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.primaryVeryDark),
-                ),
-                Text(
-                  'Here are some suggestions:',
-                  style: GoogleFonts.crimsonPro(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.secondary),
-                ),
-                Space.verticalSpaceMedium(context),
-                ...viewModel.recommendations.map((item) => Container(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            TopBar(
+              leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+              onLeadingPressed: () {
+                // Handle tap
+              },
+              title: 'Suggestions',
+              trailingActions: [],
+            ),
+            Space.verticalSpaceMedium(context),
+            Text(
+              'Based on your mood,',
+              style: GoogleFonts.crimsonPro(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.primaryVeryDark),
+            ),
+            Text(
+              'Here are some suggestions:',
+              style: GoogleFonts.crimsonPro(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.secondary),
+            ),
+            Space.verticalSpaceMedium(context),
+            ...viewModel.recommendations
+                .map((item) => Container(
                       margin: const EdgeInsets.only(bottom: 15),
                       child: InkWell(
                         onTap: item.onTap,
@@ -68,7 +69,7 @@ class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
                           width: width * 0.9,
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
+                            color: AppColors.background.withAlpha(200),
                             borderRadius: BorderRadius.circular(15),
                             boxShadow: [
                               BoxShadow(
@@ -85,7 +86,8 @@ class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
                                 width: 40,
                                 height: 40,
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.star, color: AppColors.primary);
+                                  return const Icon(Icons.star,
+                                      color: AppColors.primary);
                                 },
                               ),
                               const SizedBox(width: 20),
@@ -110,27 +112,27 @@ class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
                                   ],
                                 ),
                               ),
-                              const Icon(Icons.arrow_forward_ios, color: AppColors.primary, size: 18),
+                              const Icon(Icons.arrow_forward_ios,
+                                  color: AppColors.primary, size: 18),
                             ],
                           ),
                         ),
                       ),
-                    )).toList(),
-                const Spacer(),
-                TextButton(
-                  onPressed: viewModel.skip,
-                  child: Text(
-                    'Skip for now',
-                    style: GoogleFonts.crimsonPro(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.secondary.withOpacity(0.8)),
-                  ),
-                ),
-                Space.verticalSpaceMedium(context),
-              ],
+                    ))
+                .toList(),
+            const Spacer(),
+            TextButton(
+              onPressed: viewModel.skip,
+              child: Text(
+                'Skip for now',
+                style: GoogleFonts.crimsonPro(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.secondary.withOpacity(0.8)),
+              ),
             ),
-          ),
+            Space.verticalSpaceMedium(context),
+          ],
         ),
       ),
     );

@@ -29,15 +29,33 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   // --- State ---
   final messageController = TextEditingController();
 
+  bool _isDeleting = false;
+
   List<ChatMessage> get messages => data ?? [];
 
   String? _chatId;
+
+  static bool isActive = false;
 
   ChatViewModel({
     required this.volunteerId,
     required this.volunteerName,
     required this.requestId,
-  });
+  }) {
+    isActive = true;
+    _initPresence();
+  }
+
+  Future<void> _initPresence() async {
+    final userId = currentUserId;
+    if (userId == null) return;
+    final ids = [userId, volunteerId];
+    ids.sort();
+    final chatId = ids.join('_');
+    try {
+      await locator<ChatService>().setChatPresence(chatId, userId, true);
+    } catch (_) {}
+  }
 
   /// The current user's ID, for checking who sent a message.
   String? get currentUserId => _authenticationService.currentUser?.uid;
@@ -64,6 +82,7 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
 
   @override
   void onError(error, StackTrace? stackTrace) {
+    if (_isDeleting) return;
     setBusy(false);
     _snackbarService.showSnackbar(
         message: "Error fetching chat messages: $error");
@@ -110,6 +129,7 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
     // 2. Check if the user confirmed
     if (response?.confirmed == true) {
       // 3. Proceed with deletion ONLY if confirmed
+      _isDeleting = true; // Set deleting state to true
       setBusy(true);
       try {
         await locator<ChatService>().deleteChatAndRequest(
@@ -136,6 +156,10 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
 
   @override
   void dispose() {
+    isActive = false;
+    if (_chatId != null && currentUserId != null) {
+      locator<ChatService>().setChatPresence(_chatId!, currentUserId!, false);
+    }
     messageController.dispose();
     super.dispose();
   }

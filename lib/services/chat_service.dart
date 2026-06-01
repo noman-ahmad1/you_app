@@ -17,16 +17,63 @@ class ChatService {
     final chatRef = _firestore.collection('chats').doc(chatId);
 
     // 2. Get reference to the chat request document
-    final requestRef = _firestore.collection('chat_requests').doc(requestId);
+    var requestRef = _firestore.collection('chat_requests').doc(requestId);
 
-    // 3. Add delete operations to the batch
+    // Defensive check: If the requestId is a placeholder or doesn't exist,
+    // look up the real request document using the participants' IDs.
+    try {
+      final docSnapshot = await requestRef.get();
+      if (!docSnapshot.exists) {
+        final parts = chatId.split('_');
+        if (parts.length == 2) {
+          final query = await _firestore
+              .collection('chat_requests')
+              .where('requesterId', whereIn: parts)
+              .where('volunteerId', whereIn: parts)
+              .limit(1)
+              .get();
+          if (query.docs.isNotEmpty) {
+            requestRef = query.docs.first.reference;
+            debugPrint("Defensively resolved real request ID: ${requestRef.id}");
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Could not fetch document directly (possibly permission denied due to wrong ID). Performing defensive fallback query: $e");
+      final parts = chatId.split('_');
+      if (parts.length == 2) {
+        try {
+          final query = await _firestore
+              .collection('chat_requests')
+              .where('requesterId', whereIn: parts)
+              .where('volunteerId', whereIn: parts)
+              .limit(1)
+              .get();
+          if (query.docs.isNotEmpty) {
+            requestRef = query.docs.first.reference;
+            debugPrint("Defensively resolved real request ID on error: ${requestRef.id}");
+          }
+        } catch (queryErr) {
+          debugPrint("Failed to perform defensive fallback query: $queryErr");
+        }
+      }
+    }
+
+    // 3. Fetch all messages in the subcollection to delete them
+    final messagesSnapshot = await chatRef.collection('messages').get();
+    for (var doc in messagesSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 4. Add delete operations for the main documents to the batch
     batch.delete(chatRef);
     batch.delete(requestRef);
 
-    // 4. Commit the batch
+    // 5. Commit the batch
     try {
       await batch.commit();
-      debugPrint("Chat ($chatId) and Request ($requestId) deleted successfully.");
+      debugPrint(
+          "Chat ($chatId) and Request (${requestRef.id}) deleted successfully.");
     } catch (e) {
       debugPrint("Error deleting chat and request: $e");
       // Rethrow to allow the ViewModel to handle the error
@@ -70,6 +117,15 @@ class ChatService {
             .toList());
   }
 
+  /// Sets whether a user is currently active in a chat room.
+  Future<void> setChatPresence(String chatId, String userId, bool isActive) async {
+    await _firestore.collection('chats').doc(chatId).set({
+      'participantsActivity': {
+        userId: isActive,
+      }
+    }, SetOptions(merge: true));
+  }
+
   // Sends a new message
   Future<void> sendMessage(String chatId, ChatMessage message) async {
     // Add message to subcollection
@@ -87,5 +143,36 @@ class ChatService {
         'timestamp': message.timestamp,
       }
     });
+
+    // Create an In-App Notification document for the other participant inside their notifications subcollection
+    final parts = chatId.split('_');
+    final recipientId = parts.firstWhere((id) => id != message.senderId, orElse: () => '');
+    
+    if (recipientId.isNotEmpty) {
+      // Check if recipient is currently active in the chat
+      final chatDoc = await _firestore.collection('chats').doc(chatId).get();
+      final data = chatDoc.data();
+      final participantsActivity = data?['participantsActivity'] as Map<String, dynamic>? ?? {};
+      final isRecipientActive = participantsActivity[recipientId] == true;
+
+      // Skip sending notification if recipient is active in the chat
+      if (!isRecipientActive) {
+        await _firestore
+            .collection('users')
+            .doc(recipientId)
+            .collection('notifications')
+            .add({
+          'title': 'New Message 💬',
+          'body': message.text,
+          'type': 'new_message',
+          'isRead': false,
+          'createdAt': FieldValue.serverTimestamp(),
+          'data': {
+            'chatId': chatId,
+            'route': 'chat_view',
+          },
+        });
+      }
+    }
   }
 }

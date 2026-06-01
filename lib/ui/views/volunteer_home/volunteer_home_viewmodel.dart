@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/ui/shared/in_app_notification_banner.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
@@ -12,6 +13,7 @@ import 'package:you_app/services/mood_service.dart';
 import 'package:you_app/services/journal_service.dart';
 import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/services/community_service.dart';
 
 class VolunteerHomeViewModel extends BaseViewModel {
@@ -30,6 +32,10 @@ class VolunteerHomeViewModel extends BaseViewModel {
   List<ChatRequest> get activeChats =>
       _activeChats; // New list for active chats
 
+  StreamSubscription? _notificationsSubscription;
+  int _unreadNotificationsCount = 0;
+  int get unreadNotificationsCount => _unreadNotificationsCount;
+
   bool _isBusyRequests = false;
   bool get isBusyRequests => _isBusyRequests;
 
@@ -47,6 +53,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
     _fetchInitialAvailability();
     listenForRequests();
     listenForActiveChats();
+    listenForNotifications();
   }
 
   int _counter = 0;
@@ -203,7 +210,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
     _navigationService.navigateToChatView(
       volunteerId: acceptedRequest.requesterId,
       volunteerName: acceptedRequest.requesterName,
-      requestId: acceptedRequest.requesterId,
+      requestId: acceptedRequest.id ?? "",
     );
   }
 
@@ -225,6 +232,9 @@ class VolunteerHomeViewModel extends BaseViewModel {
   }
 
   void setTab(int index) {
+    if (index == 0) {
+      markAllNotificationsAsRead();
+    }
     if (index == currentIndex) {
       navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
     } else {
@@ -233,10 +243,102 @@ class VolunteerHomeViewModel extends BaseViewModel {
     }
   }
 
+  /// Listens for unread In-App notifications in the user's subcollection in real-time.
+  void listenForNotifications() {
+    final volunteerId = _authenticationService.currentUser?.uid;
+    if (volunteerId == null) return;
+
+    _notificationsSubscription?.cancel();
+    
+    bool isInitial = true;
+    _notificationsSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(volunteerId)
+        .collection('notifications')
+        .where('isRead', isEqualTo: false)
+        .snapshots()
+        .listen((snapshot) {
+      _unreadNotificationsCount = snapshot.docs.length;
+      notifyListeners();
+
+      // Show sliding banner overlay in real-time when new notification document is added
+      if (!isInitial) {
+        for (var change in snapshot.docChanges) {
+          if (change.type == DocumentChangeType.added) {
+            final data = change.doc.data();
+            if (data != null) {
+              final title = data['title'] as String? ?? 'Notification';
+              final body = data['body'] as String? ?? '';
+              final type = data['type'] as String? ?? '';
+              final customData = data['data'] as Map<String, dynamic>?;
+
+              VoidCallback? onTap;
+              if (type == 'request_received' || type == 'chat_request') {
+                onTap = () {
+                  setTab(0);
+                };
+              } else if (type == 'new_message') {
+                final chatId = customData?['chatId'] as String?;
+                if (chatId != null) {
+                  onTap = () {
+                    final parts = chatId.split('_');
+                    final requesterId = parts.firstWhere((id) => id != volunteerId, orElse: () => '');
+                    _navigationService.navigateToChatView(
+                      volunteerId: requesterId,
+                      volunteerName: "User",
+                      requestId: requesterId,
+                    );
+                  };
+                }
+              }
+
+              // Show the sliding custom overlay banner
+              InAppNotificationBanner.show(
+                title: title,
+                body: body,
+                type: type,
+                onTap: onTap,
+              );
+            }
+          }
+        }
+      }
+      isInitial = false;
+    }, onError: (error) {
+      debugPrint("Error listening for notifications: $error");
+    });
+  }
+
+  /// Marks all unread volunteer notifications as read in Firestore.
+  Future<void> markAllNotificationsAsRead() async {
+    final volunteerId = _authenticationService.currentUser?.uid;
+    if (volunteerId == null) return;
+
+    try {
+      final query = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(volunteerId)
+          .collection('notifications')
+          .where('isRead', isEqualTo: false)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        final batch = FirebaseFirestore.instance.batch();
+        for (var doc in query.docs) {
+          batch.update(doc.reference, {'isRead': true});
+        }
+        await batch.commit();
+      }
+    } catch (e) {
+      debugPrint("Error marking notifications as read: $e");
+    }
+  }
+
   @override
   void dispose() {
     _requestsSubscription?.cancel();
     _activeChatsSubscription?.cancel();
+    _notificationsSubscription?.cancel();
     super.dispose();
   }
 }

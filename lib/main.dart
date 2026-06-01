@@ -1,5 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:you_app/services/push_notification_service.dart';
 import 'package:you_app/app/app.bottomsheets.dart';
 import 'package:you_app/app/app.dialogs.dart';
 import 'package:you_app/app/app.locator.dart';
@@ -13,7 +15,21 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize Hive and clear chatbot history on application startup
+  await Hive.initFlutter();
+  final chatbotBox = await Hive.openBox('chatbot_history');
+  await chatbotBox.clear();
+
   await setupLocator();
+
+  // Initialize Push Notifications
+  try {
+    await locator<PushNotificationService>().initialise();
+  } catch (e) {
+    debugPrint('Error initializing PushNotificationService: $e');
+  }
+
   setupDialogUi();
   setupBottomSheetUi();
   runApp(const MainApp());

@@ -3,12 +3,21 @@ import 'package:flutter/widgets.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/views/home/bottom_bar.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
+import 'package:you_app/ui/views/home/home_drawer.dart';
+import 'package:you_app/ui/views/home/notifications_drawer.dart';
 import 'package:you_app/ui/views/home/tabs/communities.dart';
 import 'package:you_app/ui/views/home/tabs/home_screen.dart';
 import 'package:you_app/ui/views/home/tabs/volunteers.dart';
 
 class HomeView extends StackedView<HomeViewModel> {
-  const HomeView({Key? key}) : super(key: key);
+  final int initialIndex;
+  const HomeView({Key? key, this.initialIndex = 1}) : super(key: key);
+
+  @override
+  void onViewModelReady(HomeViewModel viewModel) {
+    viewModel.currentIndex = initialIndex;
+    super.onViewModelReady(viewModel);
+  }
 
   @override
   Widget builder(
@@ -18,6 +27,8 @@ class HomeView extends StackedView<HomeViewModel> {
   ) {
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: const NotificationsDrawer(),
+      endDrawer: HomeDrawer(viewModel: viewModel),
       body: Stack(
         children: [
           // Screens

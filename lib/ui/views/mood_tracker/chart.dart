@@ -1,71 +1,30 @@
 import 'dart:async';
-import 'dart:math' as math;
-
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:you_app/ui/common/app_colors.dart';
+import 'package:intl/intl.dart';
 
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/auth_service.dart';
-import 'package:you_app/services/user_service.dart';
-import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
-import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_service.dart';
-import 'package:you_app/services/chat_request_service.dart';
-import 'package:you_app/services/community_service.dart';
 import 'package:you_app/models/mood_model.dart';
+import 'package:you_app/ui/common/app_colors.dart';
 
-class BarChartSample7 extends StatefulWidget {
-  BarChartSample7({super.key});
-
-  final shadowColor = const Color(0xFFCCCCCC);
-  final dataList = [
-    const _BarData(AppColors.teal, 18, 18, 'assets/icons/emo1.png'),
-    const _BarData(AppColors.lightPurple, 17, 8, 'assets/icons/emo2.png'),
-    const _BarData(AppColors.pink, 10, 15, 'assets/icons/emo3.png'),
-    const _BarData(AppColors.peach, 2.5, 5, 'assets/icons/emo4.png'),
-    const _BarData(AppColors.darkYellow, 2, 2.5, 'assets/icons/emo5.png'),
-    const _BarData(AppColors.yellow, 2, 2, 'assets/icons/emo6.png'),
-    const _BarData(AppColors.camel, 10, 15, 'assets/icons/emo7.png'),
-    const _BarData(AppColors.darkOrange, 10, 15, 'assets/icons/emo8.png'),
-    const _BarData(AppColors.red, 10, 15, 'assets/icons/emo9.png'),
-  ];
+class WeeklyMoodChart extends StatefulWidget {
+  const WeeklyMoodChart({super.key});
 
   @override
-  State<BarChartSample7> createState() => _BarChartSample7State();
+  State<WeeklyMoodChart> createState() => _WeeklyMoodChartState();
 }
 
-class _BarChartSample7State extends State<BarChartSample7> {
+class _WeeklyMoodChartState extends State<WeeklyMoodChart> {
   final _authenticationService = locator<AuthenticationService>();
-
-  // Dynamic chart data from Firestore (per-user, last 30 days)
-  List<_BarData> dynamicDataList = [];
-  bool _isLoading = true;
   StreamSubscription<List<MoodEntry>>? _moodSubscription;
 
-  BarChartGroupData generateBarGroup(
-    int x,
-    Color color,
-    double value,
-    double shadowValue,
-  ) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: value,
-          color: color,
-          width: 15,
-        ),
-      ],
-      showingTooltipIndicators: touchedGroupIndex == x ? [0] : [],
-    );
-  }
-
-  int touchedGroupIndex = -1;
-  int rotationTurns = 1;
+  bool _isLoading = true;
+  List<double> _weeklyScores = List.filled(7, 0.0);
+  int _totalCheckIns = 0;
+  int _streak = 0;
+  String _topMoodEmoji = '😊'; // Default
 
   @override
   void initState() {
@@ -73,53 +32,204 @@ class _BarChartSample7State extends State<BarChartSample7> {
     _subscribeToMoodStream();
   }
 
-  Future<void> _subscribeToMoodStream() async {
+  void _subscribeToMoodStream() {
     final userId = _authenticationService.currentUser?.uid ?? '';
     if (userId.isEmpty || userId == 'anonymous_user') {
-      // No logged-in user — keep dummy data and stop loading
-      debugPrint('BarChart: no logged-in user; showing default data.');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
       return;
     }
 
-    // Listen to the user stream (your FirestoreService.mood.getUserMoodStream)
     _moodSubscription = locator<MoodService>().getUserMoodStream(userId).listen(
         (List<MoodEntry> moods) {
-      try {
-        // Filter last 30 days on client as a safety net.
-        final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
-        final recent = moods.where((m) {
-          final dt = DateTime.tryParse(m.timestamp);
-          if (dt == null) return false;
-          return !dt.isBefore(thirtyDaysAgo); // dt >= thirtyDaysAgo
-        }).toList();
-
-        // Count occurrences by label
-        final Map<String, int> moodCount = {};
-        for (final m in recent) {
-          moodCount[m.moodLabel] = (moodCount[m.moodLabel] ?? 0) + 1;
-        }
-
-        // Map into _BarData in the same order as moodDataMap
-        dynamicDataList = moodDataMap.entries.map((entry) {
-          final label = entry.key;
-          final color = _getColorForLabel(label);
-          final count = (moodCount[label] ?? 0).toDouble();
-          final emoji = entry.value['assetId'] as String;
-          return _BarData(color, count, count, emoji);
-        }).toList();
-
-        setState(() {
-          _isLoading = false;
-        });
-      } catch (e) {
-        debugPrint('BarChart stream processing error: $e');
+      if (!mounted) return;
+      _processMoodData(moods);
+    }, onError: (e) {
+      debugPrint('WeeklyMoodChart stream error: $e');
+      if (mounted) {
         setState(() => _isLoading = false);
       }
-    }, onError: (e) {
-      debugPrint('BarChart stream error: $e');
-      setState(() => _isLoading = false);
     });
+  }
+
+  void _processMoodData(List<MoodEntry> moods) {
+    _totalCheckIns = moods.length;
+
+    // Calculate Streak
+    _streak = _calculateStreak(moods);
+
+    final now = DateTime.now();
+    // Start of today
+    final today = DateTime(now.year, now.month, now.day);
+
+    // We want data for the last 7 days including today
+    // Or we want data for the current week? The design says M T W T F S S
+    // Let's assume it's a rolling 7 days, ending today, but labels are M-S.
+    // Or standard M-S of the current week. Let's do last 7 days to always show data,
+    // and just use the correct weekday labels.
+
+    List<double> scores = List.filled(7, 0.0);
+    List<DateTime> last7Days = [];
+    for (int i = 6; i >= 0; i--) {
+      last7Days.add(today.subtract(Duration(days: i)));
+    }
+
+    Map<String, int> recentMoodCounts = {};
+
+    for (int i = 0; i < 7; i++) {
+      final day = last7Days[i];
+      final dayMoods = moods.where((m) {
+        try {
+          final dt = DateTime.parse(m.timestamp);
+          return dt.year == day.year &&
+              dt.month == day.month &&
+              dt.day == day.day;
+        } catch (_) {
+          return false;
+        }
+      }).toList();
+
+      if (dayMoods.isNotEmpty) {
+        double totalScore = 0;
+        for (var m in dayMoods) {
+          totalScore += _getScoreForLabel(m.moodLabel);
+          recentMoodCounts[m.moodLabel] =
+              (recentMoodCounts[m.moodLabel] ?? 0) + 1;
+        }
+        scores[i] = totalScore / dayMoods.length;
+      }
+    }
+
+    // Find top mood in the last 7 days
+    if (recentMoodCounts.isNotEmpty) {
+      String topLabel = recentMoodCounts.entries
+          .reduce((a, b) => a.value > b.value ? a : b)
+          .key;
+      // Get emoji from map, default to 😊 if not found or asset is empty
+      final asset = moodDataMap[topLabel]?['assetId'];
+      _topMoodEmoji = _getEmojiCharacterForLabel(topLabel);
+    } else {
+      _topMoodEmoji = '😊';
+    }
+
+    setState(() {
+      _weeklyScores = scores;
+      _isLoading = false;
+    });
+  }
+
+  int _calculateStreak(List<MoodEntry> entries) {
+    if (entries.isEmpty) return 0;
+
+    List<DateTime> entryDates = entries.map((e) {
+      try {
+        return DateTime.parse(e.timestamp);
+      } catch (_) {
+        return DateTime.now();
+      }
+    }).toList();
+
+    entryDates.sort((a, b) => b.compareTo(a));
+
+    int streak = 0;
+    DateTime now = DateTime.now();
+    DateTime currentDate = DateTime(now.year, now.month, now.day);
+
+    DateTime firstEntryDate = DateTime(
+        entryDates.first.year, entryDates.first.month, entryDates.first.day);
+    if (firstEntryDate
+        .isBefore(currentDate.subtract(const Duration(days: 1)))) {
+      return 0;
+    }
+
+    Set<String> uniqueDates = {};
+    for (var date in entryDates) {
+      uniqueDates.add("${date.year}-${date.month}-${date.day}");
+    }
+
+    List<DateTime> sortedUniqueDates = uniqueDates.map((s) {
+      var parts = s.split('-');
+      return DateTime(
+          int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+    }).toList();
+
+    sortedUniqueDates.sort((a, b) => b.compareTo(a));
+
+    DateTime checkDate = currentDate;
+    for (int i = 0; i < sortedUniqueDates.length; i++) {
+      if (i == 0) {
+        if (sortedUniqueDates[i] == checkDate ||
+            sortedUniqueDates[i] ==
+                checkDate.subtract(const Duration(days: 1))) {
+          streak++;
+          checkDate = sortedUniqueDates[i];
+        } else {
+          break;
+        }
+      } else {
+        if (sortedUniqueDates[i] ==
+            checkDate.subtract(const Duration(days: 1))) {
+          streak++;
+          checkDate = sortedUniqueDates[i];
+        } else {
+          break;
+        }
+      }
+    }
+    return streak;
+  }
+
+  double _getScoreForLabel(String label) {
+    switch (label) {
+      case 'Energized':
+        return 1.0;
+      case 'Joyful':
+        return 0.9;
+      case 'Blessed':
+        return 0.8;
+      case 'Happy':
+        return 0.7;
+      case 'Neutral':
+        return 0.6;
+      case 'Sad':
+        return 0.4;
+      case 'Restless':
+        return 0.3;
+      case 'Anxious':
+        return 0.2;
+      case 'Angry':
+        return 0.1;
+      default:
+        return 0.0;
+    }
+  }
+
+  String _getEmojiCharacterForLabel(String label) {
+    // A quick mapping to actual emoji characters since the design shows a real emoji
+    // not an asset for the "Top mood" card.
+    switch (label) {
+      case 'Energized':
+        return '⚡';
+      case 'Joyful':
+        return '😆';
+      case 'Blessed':
+        return '😇';
+      case 'Happy':
+        return '😊';
+      case 'Neutral':
+        return '😐';
+      case 'Sad':
+        return '😢';
+      case 'Restless':
+        return '😬';
+      case 'Anxious':
+        return '😰';
+      case 'Angry':
+        return '😡';
+      default:
+        return '😊';
+    }
   }
 
   @override
@@ -130,243 +240,173 @@ class _BarChartSample7State extends State<BarChartSample7> {
 
   @override
   Widget build(BuildContext context) {
-    // Choose source list: show static widget.dataList while loading
-    final source = _isLoading ? widget.dataList : dynamicDataList;
+    if (_isLoading) {
+      return const Center(
+          child: Padding(
+        padding: EdgeInsets.all(24.0),
+        child: CircularProgressIndicator(),
+      ));
+    }
 
-    // Compute maxY dynamically (keeps 20 as minimum to preserve current look)
-    final maxValue = source.isEmpty
-        ? 20.0
-        : math.max(15.0, source.map((d) => d.value).fold(0.0, math.max));
+    final now = DateTime.now();
+    List<String> dayLabels = [];
+    for (int i = 6; i >= 0; i--) {
+      final d = now.subtract(Duration(days: i));
+      dayLabels.add(DateFormat('E')
+          .format(d)
+          .substring(0, 1)
+          .toUpperCase()); // M, T, W...
+    }
+
+    const Color primaryText = AppColors.secondary;
+    const Color secondaryText = AppColors.secondary;
 
     return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: Container()),
-              Text(
-                'Emotional Insights',
-                style: GoogleFonts.crimsonPro(
-                    fontSize: 25,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.secondary),
-              ),
-              Expanded(
-                  child: Align(
-                alignment: Alignment.centerRight,
-                child: Tooltip(
-                  message: 'Rotate the chart 90 degrees (cw)',
-                  child: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        rotationTurns += 1;
-                      });
-                    },
-                    icon: RotatedBox(
-                      quarterTurns: rotationTurns - 1,
-                      child: const Icon(
-                        color: AppColors.primaryVeryDark,
-                        Icons.rotate_90_degrees_cw,
-                      ),
-                    ),
-                  ),
-                ),
-              )),
-            ],
-          ),
-          const SizedBox(height: 18),
-          AspectRatio(
-            aspectRatio: 1.4,
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceBetween,
-                rotationQuarterTurns: rotationTurns,
-                borderData: FlBorderData(
-                  show: true,
-                  border: Border.symmetric(
-                    horizontal: BorderSide(
-                      color: AppColors.secondary.withValues(alpha: 0.2),
-                    ),
-                  ),
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  leftTitles: const AxisTitles(
-                    drawBelowEverything: true,
-                    sideTitles: SideTitles(
-                      showTitles: false,
-                      reservedSize: 30,
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 36,
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index < 0 || index >= source.length) {
-                          return const SizedBox.shrink();
-                        }
-                        return SideTitleWidget(
-                          meta: meta,
-                          child: _IconWidget(
-                            emojiAsset: source[index].emojiAsset,
-                            isSelected: touchedGroupIndex == index,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  rightTitles: const AxisTitles(),
-                  topTitles: const AxisTitles(),
-                ),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: AppColors.secondary.withValues(alpha: 0.2),
-                    strokeWidth: 1,
-                  ),
-                ),
-                barGroups: source.asMap().entries.map((e) {
-                  final index = e.key;
-                  final data = e.value;
-                  return generateBarGroup(
-                    index,
-                    data.color,
-                    data.value,
-                    data.shadowValue,
-                  );
-                }).toList(),
-                maxY: maxValue,
-                barTouchData: BarTouchData(
-                  enabled: true,
-                  handleBuiltInTouches: false,
-                  touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (group) => Colors.transparent,
-                    tooltipMargin: 0,
-                    getTooltipItem: (
-                      BarChartGroupData group,
-                      int groupIndex,
-                      BarChartRodData rod,
-                      int rodIndex,
-                    ) {
-                      return BarTooltipItem(
-                        rod.toY.toString(),
-                        TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: rod.color,
-                          fontSize: 18,
-                          shadows: const [
-                            Shadow(
-                              color: Colors.black26,
-                              blurRadius: 12,
-                            )
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  touchCallback: (event, response) {
-                    if (event.isInterestedForInteractions &&
-                        response != null &&
-                        response.spot != null) {
-                      setState(() {
-                        touchedGroupIndex = response.spot!.touchedBarGroupIndex;
-                      });
-                    } else {
-                      setState(() {
-                        touchedGroupIndex = -1;
-                      });
-                    }
-                  },
-                ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+            color: AppColors.background
+                .withAlpha(200), // Very light background for the whole section
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: AppColors.background, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Chart Area
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              decoration: BoxDecoration(
+                  color: AppColors.background, // Light background for chart
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    )
+                  ]),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(7, (index) {
+                  return _buildBar(dayLabels[index], _weeklyScores[index]);
+                }),
               ),
             ),
+            const SizedBox(height: 16),
+            // Cards Area
+            Row(
+              children: [
+                Expanded(
+                    child: _buildInfoCard('$_totalCheckIns', 'Check-ins',
+                        primaryText, secondaryText)),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: _buildInfoCard(
+                        '${_streak}d', 'Streak', primaryText, secondaryText)),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: _buildInfoCard(
+                        _topMoodEmoji, 'Top mood', primaryText, secondaryText,
+                        isEmoji: true)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBar(String day, double score) {
+    // If there is no score, show a minimal height
+    final double fillHeight = (score == 0.0) ? 20.0 : score * 120.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 36,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.lightPink, width: 1.5),
+          ),
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            width: 36,
+            height: fillHeight,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: LinearGradient(
+                colors: [AppColors.lightPink, AppColors.lightPurple],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          day,
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF7B7890),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard(
+      String value, String label, Color primaryText, Color secondaryText,
+      {bool isEmoji = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
+      decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ]),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: isEmoji
+                ? const TextStyle(fontSize: 28)
+                : GoogleFonts.crimsonPro(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: primaryText,
+                  ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: secondaryText,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
-  }
-}
-
-class _BarData {
-  const _BarData(this.color, this.value, this.shadowValue, this.emojiAsset);
-
-  final Color color;
-  final double value;
-  final double shadowValue;
-  final String emojiAsset;
-}
-
-class _IconWidget extends ImplicitlyAnimatedWidget {
-  const _IconWidget({
-    required this.emojiAsset,
-    required this.isSelected,
-  }) : super(duration: const Duration(milliseconds: 300));
-  final String emojiAsset;
-  final bool isSelected;
-
-  @override
-  ImplicitlyAnimatedWidgetState<ImplicitlyAnimatedWidget> createState() =>
-      _IconWidgetState();
-}
-
-class _IconWidgetState extends AnimatedWidgetBaseState<_IconWidget> {
-  Tween<double>? _rotationTween;
-
-  @override
-  Widget build(BuildContext context) {
-    final rotation = math.pi * 4 * _rotationTween!.evaluate(animation);
-    final scale = 1 + _rotationTween!.evaluate(animation) * 0.5;
-    return Transform(
-      transform:
-          Matrix4.rotationZ(rotation).scaledByDouble(scale, scale, scale, 1.0),
-      origin: const Offset(14, 14),
-      child: Image.asset(
-        widget.emojiAsset,
-        width: 28,
-        height: 28,
-        colorBlendMode: widget.isSelected ? BlendMode.dst : BlendMode.modulate,
-      ),
-    );
-  }
-
-  @override
-  void forEachTween(TweenVisitor<dynamic> visitor) {
-    _rotationTween = visitor(
-      _rotationTween,
-      widget.isSelected ? 1.0 : 0.0,
-      (dynamic value) => Tween<double>(
-        begin: value as double,
-        end: widget.isSelected ? 1.0 : 0.0,
-      ),
-    ) as Tween<double>?;
-  }
-}
-
-Color _getColorForLabel(String label) {
-  switch (label) {
-    case 'Energized':
-      return AppColors.teal;
-    case 'Joyful':
-      return AppColors.lightPurple;
-    case 'Blessed':
-      return AppColors.pink;
-    case 'Happy':
-      return AppColors.peach;
-    case 'Neutral':
-      return AppColors.darkYellow;
-    case 'Sad':
-      return AppColors.yellow;
-    case 'Restless':
-      return AppColors.camel;
-    case 'Anxious':
-      return AppColors.darkOrange;
-    case 'Angry':
-      return AppColors.red;
-    default:
-      return AppColors.secondary;
   }
 }

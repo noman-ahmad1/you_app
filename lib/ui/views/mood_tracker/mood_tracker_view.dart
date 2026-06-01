@@ -25,181 +25,184 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
     final width = mediaQuery.size.width;
     final height = mediaQuery.size.height;
     return Scaffold(
-        appBar: TopBar(
-          title: 'Mood Tracker',
-          imageAssetPath: AppConstants.back,
-          color: AppColors.secondary,
-          onBackPressed: () {
-            viewModel.back();
-          },
-        ),
         body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(AppConstants.background),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: SingleChildScrollView(
-            child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Space.verticalSpaceTiny(context),
-                  if (viewModel.moodStreak > 0)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withOpacity(0.4)),
-                      ),
-                      child: Text(
-                        '🔥 ${viewModel.moodStreak} Day Streak!',
-                        style: GoogleFonts.crimsonPro(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.secondary),
-                      ),
-                    ),
-                  Text(
-                    'Track your mood journey',
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(AppConstants.background),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: SingleChildScrollView(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              TopBar(
+                leadingIconAsset: AppConstants.back, // Your 'Y' logo asset
+                iconColor: AppColors.primaryVeryDark,
+                onLeadingPressed: () {
+                  Navigator.pop(context);
+                },
+                title: 'Mood Tracker',
+                subtitle: 'Saturday, May 16',
+                trailingActions: [],
+              ),
+              Space.verticalSpaceTiny(context),
+              if (viewModel.moodStreak > 0)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.4)),
+                  ),
+                  child: Text(
+                    '🔥 ${viewModel.moodStreak} Day Streak!',
                     style: GoogleFonts.crimsonPro(
-                        fontSize: 25,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppColors.secondary),
                   ),
-                  Space.verticalSpaceVTiny(context),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      textAlign: TextAlign.center,
-                      viewModel.dailyQuote,
-                      style: GoogleFonts.crimsonPro(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primaryVeryDark),
-                    ),
-                  ),
-                  Space.verticalSpaceTiny(context),
-                  SwipeButton(
-                    text: "Energized",
-                    iconAsset: AppConstants.emoji_1,
-                    direction: SwipeDirection.left,
-                    height: height * 0.065,
-                    width: width * 0.9,
-                    onSwipe: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_1);
-                    },
-                  ),
-                  Space.verticalSpaceVTiny(context),
-                  SwipeButton(
-                    text: "Main character vibe",
-                    iconAsset: AppConstants.emoji_2,
-                    direction: SwipeDirection.left,
-                    height: height * 0.065,
-                    width: width * 0.9,
-                    onSwipe: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_2);
-                    },
-                  ),
-                  Space.verticalSpaceVTiny(context),
-                  SwipeButton(
-                    text: "Over the moon",
-                    iconAsset: AppConstants.emoji_3,
-                    direction: SwipeDirection.left,
-                    height: height * 0.065,
-                    width: width * 0.9,
-                    onSwipe: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_3);
-                    },
-                  ),
-                  Space.verticalSpaceVTiny(context),
-                  SwipeButton(
-                    text: "chill mode",
-                    iconAsset: AppConstants.emoji_4,
-                    direction: SwipeDirection.left,
-                    height: height * 0.065,
-                    width: width * 0.9,
-                    onSwipe: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_4);
-                    },
-                  ),
-                  Space.verticalSpaceVTiny(context),
-                  SwipeButton(
-                    text: "Holding steady?",
-                    iconAsset: AppConstants.emoji_5,
-                    direction: SwipeDirection.both,
-                    height: height * 0.065,
-                    width: width * 0.9,
-                    onSwipeLeft: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_5);
-                    },
-                    onSwipeRight: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_5);
-                    },
-                  ),
-                  Space.verticalSpaceVTiny(context),
-                  SwipeButton(
-                    text: "Restless?",
-                    iconAsset: AppConstants.emoji_6,
-                    direction: SwipeDirection.right,
-                    height: height * 0.065,
-                    width: width * 0.9,
-                    onSwipe: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_6);
-                    },
-                  ),
-                  Space.verticalSpaceVTiny(context),
-                  SwipeButton(
-                    text: "Running on 1%?",
-                    iconAsset: AppConstants.emoji_7,
-                    direction: SwipeDirection.right,
-                    height: height * 0.065,
-                    width: width * 0.9,
-                    onSwipe: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_7);
-                    },
-                  ),
-                  Space.verticalSpaceVTiny(context),
-                  SwipeButton(
-                    text: "Overstimulated?",
-                    iconAsset: AppConstants.emoji_8,
-                    direction: SwipeDirection.right,
-                    height: height * 0.065,
-                    width: width * 0.9,
-                    onSwipe: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_8);
-                    },
-                  ),
-                  Space.verticalSpaceVTiny(context),
-                  SwipeButton(
-                    text: "About to crash out??",
-                    iconAsset: AppConstants.emoji_9,
-                    direction: SwipeDirection.right,
-                    height: height * 0.065,
-                    width: width * 0.9,
-                    onSwipe: () {
-                      viewModel.onEmojiSelected(AppConstants.emoji_9);
-                    },
-                  ),
-                  Space.verticalSpaceVTiny(context),
-                  // Text(
-                  //   'Emotional Insights',
-                  //   style: GoogleFonts.crimsonPro(
-                  //       fontSize: 25,
-                  //       fontWeight: FontWeight.w700,
-                  //       color: AppColors.secondary),
-                  // ),
-                  BarChartSample7(key: viewModel.chartKey)
-                ],
+                ),
+              Text(
+                'Track your mood journey',
+                style: GoogleFonts.crimsonPro(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.secondary),
               ),
-            ),
+              Space.verticalSpaceVTiny(context),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  textAlign: TextAlign.center,
+                  viewModel.dailyQuote,
+                  style: GoogleFonts.crimsonPro(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primaryVeryDark),
+                ),
+              ),
+              Space.verticalSpaceTiny(context),
+              SwipeButton(
+                text: "Energized",
+                iconAsset: AppConstants.emoji_1,
+                direction: SwipeDirection.left,
+                height: height * 0.065,
+                width: width * 0.9,
+                onSwipe: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_1);
+                },
+              ),
+              Space.verticalSpaceVTiny(context),
+              SwipeButton(
+                text: "Main character vibe",
+                iconAsset: AppConstants.emoji_2,
+                direction: SwipeDirection.left,
+                height: height * 0.065,
+                width: width * 0.9,
+                onSwipe: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_2);
+                },
+              ),
+              Space.verticalSpaceVTiny(context),
+              SwipeButton(
+                text: "Over the moon",
+                iconAsset: AppConstants.emoji_3,
+                direction: SwipeDirection.left,
+                height: height * 0.065,
+                width: width * 0.9,
+                onSwipe: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_3);
+                },
+              ),
+              Space.verticalSpaceVTiny(context),
+              SwipeButton(
+                text: "chill mode",
+                iconAsset: AppConstants.emoji_4,
+                direction: SwipeDirection.left,
+                height: height * 0.065,
+                width: width * 0.9,
+                onSwipe: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_4);
+                },
+              ),
+              Space.verticalSpaceVTiny(context),
+              SwipeButton(
+                text: "Holding steady?",
+                iconAsset: AppConstants.emoji_5,
+                direction: SwipeDirection.both,
+                height: height * 0.065,
+                width: width * 0.9,
+                onSwipeLeft: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_5);
+                },
+                onSwipeRight: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_5);
+                },
+              ),
+              Space.verticalSpaceVTiny(context),
+              SwipeButton(
+                text: "Restless?",
+                iconAsset: AppConstants.emoji_6,
+                direction: SwipeDirection.right,
+                height: height * 0.065,
+                width: width * 0.9,
+                onSwipe: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_6);
+                },
+              ),
+              Space.verticalSpaceVTiny(context),
+              SwipeButton(
+                text: "Running on 1%?",
+                iconAsset: AppConstants.emoji_7,
+                direction: SwipeDirection.right,
+                height: height * 0.065,
+                width: width * 0.9,
+                onSwipe: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_7);
+                },
+              ),
+              Space.verticalSpaceVTiny(context),
+              SwipeButton(
+                text: "Overstimulated?",
+                iconAsset: AppConstants.emoji_8,
+                direction: SwipeDirection.right,
+                height: height * 0.065,
+                width: width * 0.9,
+                onSwipe: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_8);
+                },
+              ),
+              Space.verticalSpaceVTiny(context),
+              SwipeButton(
+                text: "About to crash out??",
+                iconAsset: AppConstants.emoji_9,
+                direction: SwipeDirection.right,
+                height: height * 0.065,
+                width: width * 0.9,
+                onSwipe: () {
+                  viewModel.onEmojiSelected(AppConstants.emoji_9);
+                },
+              ),
+              Space.verticalSpaceVTiny(context),
+              // Text(
+              //   'Emotional Insights',
+              //   style: GoogleFonts.crimsonPro(
+              //       fontSize: 25,
+              //       fontWeight: FontWeight.w700,
+              //       color: AppColors.secondary),
+              // ),
+              WeeklyMoodChart(key: viewModel.chartKey)
+            ],
           ),
-        ));
+        ),
+      ),
+    ));
   }
 
   @override

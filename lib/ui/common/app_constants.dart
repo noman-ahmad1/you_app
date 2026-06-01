@@ -49,6 +49,7 @@ class AppConstants {
   static const String person = 'assets/icons/person.png';
   static const String stat = 'assets/icons/stat.png';
   static const String notification = 'assets/icons/notification.png';
+  static const String notification2 = 'assets/icons/notification2.png';
   static const String setting = 'assets/icons/setting.png';
   static const String done = 'assets/icons/done.png';
   static const String activeChat = 'assets/icons/activeChat.png';
@@ -57,19 +58,27 @@ class AppConstants {
   static const String logout = 'assets/icons/logout.png';
   static const String delete = 'assets/icons/delete.png';
   static const String send = 'assets/icons/send.png';
+  static const String cancel = 'assets/icons/cancel.png';
+  static const String heart = 'assets/icons/heart.png';
+  static const String group = 'assets/icons/group.png';
   static const String smsRequest = 'assets/icons/smsRequest.png';
 
   //images
   static const String register = 'assets/images/1.png';
   static const String avatar = 'assets/images/avatar.png';
   static const String background = 'assets/images/background.jpg';
+  static const String pinkBackground = 'assets/images/pink_background.jpg';
   static const String emo = 'assets/images/emo.png';
   static const String journal = 'assets/images/journal.png';
+  static const String journalImg = 'assets/images/journal_img.png';
   static const String music = 'assets/images/music.jpg';
   static const String santa = 'assets/images/santa.png';
+  static const String dodoCut = 'assets/images/dodo_cut.png';
+  static const String dodo = 'assets/images/dodo.png';
   static const String logo = 'assets/images/You.png';
   static const String soothing = 'assets/images/soothing.jpeg';
   static const String soothing2 = 'assets/images/soothing2.jpg';
+  static const String lonliness = 'assets/images/lonliness.png';
 
   //sounds
   static const String drop = 'assets/sounds/drop.mp3';

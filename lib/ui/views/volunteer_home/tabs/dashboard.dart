@@ -6,6 +6,7 @@ import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/app/app.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -36,9 +37,80 @@ class DashboardScreen extends StatelessWidget {
               child: Column(
                 children: [
                   TopBar(
-                    title: 'Dashboard',
-                    imageAssetPath: AppConstants.logo,
-                    onMenuPressed: () {},
+                    leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+                    onLeadingPressed: () {
+                      // Handle tap
+                    },
+                    title: 'Hi, Friend',
+                    subtitle: 'Saturday, May 16',
+                    trailingActions: [
+                      // Icon 1 (e.g., Notifications)
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              viewModel.markAllNotificationsAsRead();
+                              Scaffold.of(context).openDrawer();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: AppColors.primaryVeryDark.withAlpha(50)),
+                              ),
+                              child: Image.asset('assets/icons/notification.png',
+                                  width: 24, height: 24),
+                            ),
+                          ),
+                          Positioned(
+                            right: -4,
+                            top: -4,
+                            child: IgnorePointer(
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 300),
+                                opacity: viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                    minHeight: 18,
+                                  ),
+                                  child: Text(
+                                    '${viewModel.unreadNotificationsCount}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Icon 2 (e.g., Profile/Flower)
+                      InkWell(
+                        onTap: () {},
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: AppColors.primaryVeryDark.withAlpha(50)),
+                          ),
+                          child: Image.asset('assets/images/avatar.png',
+                              width: 24, height: 24),
+                        ),
+                      ),
+                    ],
                   ),
                   Expanded(
                     child: SingleChildScrollView(
@@ -55,8 +127,8 @@ class DashboardScreen extends StatelessWidget {
                                   SizedBox(height: height * 0.03),
                                   _buildStatsRow(width, height),
                                   SizedBox(height: height * 0.03),
-                                  _buildQuickActions(width, height,
-                                      viewModel), // Pass viewModel
+                                  _buildQuickActions(context, width, height,
+                                      viewModel), // Pass context and viewModel
                                 ],
                               ),
                             ],
@@ -214,7 +286,7 @@ class DashboardScreen extends StatelessWidget {
   }
 
   /// QUICK ACTIONS
-  Widget _buildQuickActions(
+  Widget _buildQuickActions(BuildContext context,
       double width, double height, VolunteerHomeViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,8 +303,9 @@ class DashboardScreen extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildActionButton("Pending Requests", AppConstants.pending, () {
-              print("Pending Requests");
+            _buildActionButton("Notifications", AppConstants.pending, () {
+              viewModel.markAllNotificationsAsRead();
+              Scaffold.of(context).openDrawer();
             }, width, height),
             _buildActionButton("Completed Chats", AppConstants.done, () {
               print("Completed Chats");

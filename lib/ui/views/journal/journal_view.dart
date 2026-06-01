@@ -20,14 +20,6 @@ class JournalView extends StackedView<JournalViewModel> {
     Widget? child,
   ) {
     return Scaffold(
-        appBar: TopBar(
-          title: 'Journal',
-          imageAssetPath: AppConstants.back,
-          color: AppColors.secondary,
-          onBackPressed: () {
-            viewModel.back();
-          },
-        ),
         body: Container(
             width: double.infinity,
             height: double.infinity,
@@ -40,6 +32,15 @@ class JournalView extends StackedView<JournalViewModel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                TopBar(
+                  leadingIconAsset: AppConstants.back, // Your 'Y' logo asset
+                  onLeadingPressed: () {
+                    Navigator.pop(context);
+                  },
+                  title: 'Journal',
+                  iconColor: AppColors.primaryVeryDark,
+                  trailingActions: [],
+                ),
                 Space.verticalSpaceTiny(context),
                 FilterBar(
                     currentIndex: viewModel.currentIndex,

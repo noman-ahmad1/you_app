@@ -72,9 +72,9 @@ class NewPersonalEntryView extends StatelessWidget {
                         width: width * 0.8,
                         height: height * 0.065,
                         decoration: BoxDecoration(
-                          color: AppColors.secondaryVeryLight.withAlpha(102),
+                          color: AppColors.background.withAlpha(200),
                           border:
-                              Border.all(color: AppColors.secondary, width: 2),
+                              Border.all(color: AppColors.background, width: 2),
                           borderRadius: BorderRadius.circular(23),
                           boxShadow: [
                             BoxShadow(
@@ -92,6 +92,11 @@ class NewPersonalEntryView extends StatelessWidget {
                           expands: false,
                           textAlignVertical: TextAlignVertical.top,
                           textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.secondary,
+                          ),
                           decoration: InputDecoration(
                             hintText: 'Title',
                             hintStyle: GoogleFonts.crimsonPro(
@@ -117,9 +122,9 @@ class NewPersonalEntryView extends StatelessWidget {
                           width: width * 0.8,
                           // height: height * 0.45,
                           decoration: BoxDecoration(
-                            color: AppColors.secondaryVeryLight.withAlpha(102),
+                            color: AppColors.background.withAlpha(200),
                             border: Border.all(
-                                color: AppColors.secondary, width: 2),
+                                color: AppColors.background, width: 2),
                             borderRadius: BorderRadius.circular(23),
                             boxShadow: [
                               BoxShadow(
@@ -139,6 +144,11 @@ class NewPersonalEntryView extends StatelessWidget {
                               expands: false,
                               textAlignVertical: TextAlignVertical.top,
                               // textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w300,
+                                color: AppColors.primaryVeryDark,
+                              ),
                               decoration: InputDecoration(
                                 hintText:
                                     'Today started with a weird heaviness in my chest. I kept thinking about all the things I haven’t done yet, and it spiraled quickly.....',
@@ -178,9 +188,9 @@ class NewPersonalEntryView extends StatelessWidget {
                             width: width * 0.8,
                             height: height * 0.065,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryLight.withAlpha(102),
+                              color: AppColors.primaryVeryDark,
                               border: Border.all(
-                                  color: AppColors.primaryVeryDark, width: 2),
+                                  color: AppColors.background, width: 2),
                               borderRadius: BorderRadius.circular(35),
                               boxShadow: [
                                 BoxShadow(
@@ -201,7 +211,7 @@ class NewPersonalEntryView extends StatelessWidget {
                                       style: GoogleFonts.crimsonPro(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
-                                          color: AppColors.primaryVeryDark),
+                                          color: AppColors.background),
                                     ),
                             ),
                           ),

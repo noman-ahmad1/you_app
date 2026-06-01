@@ -5,9 +5,26 @@ import 'package:flutter/material.dart';
 class ChatRequestService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Creates a new chat request document in Firestore.
+  /// Creates a new chat request document in Firestore and creates an In-App Notification document for the Volunteer.
   Future<void> sendChatRequest(ChatRequest request) async {
-    await _firestore.collection('chat_requests').add(request.toJson());
+    final docRef = await _firestore.collection('chat_requests').add(request.toJson());
+    
+    // Create the In-App Notification document inside the Volunteer's notifications subcollection
+    await _firestore
+        .collection('users')
+        .doc(request.volunteerId)
+        .collection('notifications')
+        .add({
+      'title': 'New Chat Request 💬',
+      'body': '${request.requesterName} wants to connect with you.',
+      'type': 'request_received',
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+      'data': {
+        'requestId': docRef.id,
+        'route': 'volunteer_dashboard',
+      },
+    });
   }
 
   /// Fetches chat requests for a specific volunteer.
@@ -60,6 +77,23 @@ class ChatRequestService {
             'lastMessage': null, // Initialize last message
           },
           SetOptions(merge: true));
+    });
+
+    // Create the In-App Notification document inside the User's notifications subcollection
+    await _firestore
+        .collection('users')
+        .doc(request.requesterId)
+        .collection('notifications')
+        .add({
+      'title': 'Chat Request Accepted! 🎉',
+      'body': 'A volunteer has accepted your chat request. Let\'s talk!',
+      'type': 'request_accepted',
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+      'data': {
+        'requestId': request.id,
+        'route': 'chat_view',
+      },
     });
   }
 

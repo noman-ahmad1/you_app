@@ -34,14 +34,6 @@ class NewJournalEntryView extends StackedView<NewJournalEntryViewModel> {
     final width = mediaQuery.size.width;
     final height = mediaQuery.size.height;
     return Scaffold(
-        appBar: TopBar(
-          title: 'Journal',
-          imageAssetPath: AppConstants.back,
-          color: AppColors.secondary,
-          onBackPressed: () {
-            viewModel.back();
-          },
-        ),
         body: Container(
             width: double.infinity,
             height: double.infinity,
@@ -53,6 +45,14 @@ class NewJournalEntryView extends StackedView<NewJournalEntryViewModel> {
             ),
             child: Column(
               children: [
+                TopBar(
+                  leadingIconAsset: AppConstants.back, // Your 'Y' logo asset
+                  title: journalEntry == null ? 'New Entry' : 'Edit Entry',
+                  onLeadingPressed: () {
+                    Navigator.pop(context);
+                  },
+                  trailingActions: [],
+                ),
                 Space.verticalSpaceTiny(context),
                 JournalEntryBar(
                     currentIndex: viewModel.currentIndex,

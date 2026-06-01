@@ -1,5 +1,5 @@
-// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 // **************************************************************************
 // StackedLocatorGenerator
@@ -14,23 +14,22 @@ import 'package:stacked_services/src/snackbar/snackbar_service.dart';
 import 'package:stacked_shared/stacked_shared.dart';
 
 import '../services/auth_service.dart';
+import '../services/chat_request_service.dart';
+import '../services/chat_service.dart';
+import '../services/chatbot_service.dart';
+import '../services/community_service.dart';
 import '../services/country_code_service.dart';
+import '../services/journal_service.dart';
+import '../services/mood_service.dart';
+import '../services/push_notification_service.dart';
 import '../services/user_service.dart';
 import '../services/volunteer_service.dart';
-import '../services/mood_service.dart';
-import '../services/journal_service.dart';
-import '../services/chat_service.dart';
-import '../services/chat_request_service.dart';
-import '../services/community_service.dart';
-import '../services/chatbot_service.dart';
 import '../ui/views/volunteer_signup/volunteer_signup_viewmodel.dart';
 
 final locator = StackedLocator.instance;
 
-Future<void> setupLocator({
-  String? environment,
-  EnvironmentFilter? environmentFilter,
-}) async {
+Future<void> setupLocator(
+    {String? environment, EnvironmentFilter? environmentFilter}) async {
 // Register environments
   locator.registerEnvironment(
       environment: environment, environmentFilter: environmentFilter);
@@ -38,8 +37,8 @@ Future<void> setupLocator({
 // Register dependencies
   locator.registerLazySingleton(() => BottomSheetService());
   locator.registerLazySingleton(() => DialogService());
-  locator.registerLazySingleton(() => NavigationService());
   locator.registerLazySingleton(() => SnackbarService());
+  locator.registerLazySingleton(() => NavigationService());
   locator.registerLazySingleton(() => AuthenticationService());
   locator.registerLazySingleton(() => CountryService());
   locator.registerLazySingleton(() => UserService());
@@ -50,5 +49,6 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => ChatRequestService());
   locator.registerLazySingleton(() => CommunityService());
   locator.registerLazySingleton(() => ChatbotService());
+  locator.registerLazySingleton(() => PushNotificationService());
   locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }

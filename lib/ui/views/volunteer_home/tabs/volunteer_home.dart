@@ -27,9 +27,67 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
       child: Column(
         children: [
           TopBar(
-            title: 'Incoming Requests',
-            imageAssetPath: AppConstants.logo,
-            onMenuPressed: () {},
+            leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+            onLeadingPressed: () {
+              // Handle tap
+            },
+            title: 'Hi, Friend',
+            subtitle: 'Saturday, May 16',
+            trailingActions: [
+              // Icon 1 (e.g., Notifications)
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      viewModel.markAllNotificationsAsRead();
+                      Scaffold.of(context).openDrawer();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: AppColors.primaryVeryDark.withAlpha(50)),
+                      ),
+                      child: Icon(Icons.notifications_none,
+                          color: AppColors.primaryVeryDark),
+                    ),
+                  ),
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: IgnorePointer(
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Text(
+                            '${viewModel.unreadNotificationsCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // Icon 2 (e.g., Profile/Flower)
+            ],
           ),
           Expanded(
             child: SafeArea(

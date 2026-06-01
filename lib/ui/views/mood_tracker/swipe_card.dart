@@ -83,9 +83,9 @@ class _SwipeButtonState extends State<SwipeButton>
               filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
               child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.secondaryVeryLight.withAlpha(10),
+                    color: AppColors.background.withAlpha(50),
                     borderRadius: borderRadius,
-                    border: Border.all(color: AppColors.secondary, width: 2),
+                    border: Border.all(color: AppColors.background, width: 2),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withAlpha(25),

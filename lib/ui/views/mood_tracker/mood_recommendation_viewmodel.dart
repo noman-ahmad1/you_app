@@ -38,7 +38,7 @@ class MoodRecommendationViewModel extends BaseViewModel {
           title: 'Journal Your Thoughts',
           subtitle: 'Write down what\'s on your mind',
           iconAsset: AppConstants.journalIcon,
-          onTap: () => _navigationService.navigateTo(Routes.journalDetailsView),
+          onTap: () => navigateToJournal(),
         ),
         RecommendationItem(
           title: 'Talk to Someone',
@@ -93,5 +93,9 @@ class MoodRecommendationViewModel extends BaseViewModel {
 
   void skip() {
     _navigationService.clearStackAndShow(Routes.homeView);
+  }
+
+  Future navigateToJournal() async {
+    _navigationService.navigateToJournalView();
   }
 }
