@@ -10,6 +10,7 @@ class CommunityPost {
   final int likeCount;
   final int replyCount;
   final List<String> mentionedUsers;
+  final List<String> likedBy;
 
   CommunityPost({
     required this.id,
@@ -21,6 +22,7 @@ class CommunityPost {
     this.likeCount = 0,
     this.replyCount = 0,
     this.mentionedUsers = const [],
+    this.likedBy = const [],
   });
 
   factory CommunityPost.fromMap(Map<String, dynamic> data, String documentId) {
@@ -34,6 +36,7 @@ class CommunityPost {
       likeCount: data['likeCount'] ?? 0,
       replyCount: data['replyCount'] ?? 0,
       mentionedUsers: List<String>.from(data['mentionedUsers'] ?? []),
+      likedBy: List<String>.from(data['likedBy'] ?? []),
     );
   }
 
@@ -47,6 +50,7 @@ class CommunityPost {
       'likeCount': likeCount,
       'replyCount': replyCount,
       'mentionedUsers': mentionedUsers,
+      'likedBy': likedBy,
     };
   }
 }

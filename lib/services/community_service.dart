@@ -22,6 +22,7 @@ class CommunityService {
     return _firestore
         .collection('posts')
         .where('communityId', isEqualTo: communityId)
+        .orderBy('likeCount', descending: true)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -96,6 +97,28 @@ class CommunityService {
     batch.update(postRef, {'replyCount': FieldValue.increment(1)});
 
     await batch.commit();
+  }
+
+  // 6. Toggle like on a post
+  Future<void> toggleLikePost(String postId, List<String> currentLikedBy) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final postRef = _firestore.collection('posts').doc(postId);
+    
+    if (currentLikedBy.contains(uid)) {
+      // User has already liked it -> unlike
+      await postRef.update({
+        'likedBy': FieldValue.arrayRemove([uid]),
+        'likeCount': FieldValue.increment(-1),
+      });
+    } else {
+      // User hasn't liked it -> like
+      await postRef.update({
+        'likedBy': FieldValue.arrayUnion([uid]),
+        'likeCount': FieldValue.increment(1),
+      });
+    }
   }
 }
 

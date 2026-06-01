@@ -54,17 +54,23 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                   : viewModel.posts.isEmpty
                       ? _buildEmptyState()
                       : ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 16),
                           itemCount: viewModel.posts.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final post = viewModel.posts[index];
-                            final isMe = post.authorId == viewModel.currentUserId;
+                            final isMe =
+                                post.authorId == viewModel.currentUserId;
 
                             return _CommunityPostCard(
                               post: post,
                               isMe: isMe,
+                              isLiked: post.likedBy
+                                  .contains(viewModel.currentUserId),
                               onTap: () => viewModel.navigateToThread(post),
+                              onLike: () => viewModel.toggleLike(post),
                             );
                           },
                         ),
@@ -127,15 +133,18 @@ class _PostComposer extends ViewModelWidget<CommunityChatViewModel> {
             contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
-              borderSide: const BorderSide(color: AppColors.secondary, width: 2),
+              borderSide:
+                  const BorderSide(color: AppColors.secondary, width: 2),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
-              borderSide: const BorderSide(color: AppColors.secondary, width: 2),
+              borderSide:
+                  const BorderSide(color: AppColors.secondary, width: 2),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
-              borderSide: const BorderSide(color: AppColors.secondary, width: 2),
+              borderSide:
+                  const BorderSide(color: AppColors.secondary, width: 2),
             ),
             suffixIcon: Padding(
               padding: const EdgeInsets.only(right: 8.0),
@@ -167,24 +176,30 @@ class _PostComposer extends ViewModelWidget<CommunityChatViewModel> {
 class _CommunityPostCard extends StatelessWidget {
   final CommunityPost post;
   final bool isMe;
+  final bool isLiked;
   final VoidCallback onTap;
+  final VoidCallback onLike;
 
   const _CommunityPostCard({
     required this.post,
     required this.isMe,
+    required this.isLiked,
     required this.onTap,
+    required this.onLike,
   });
 
   @override
   Widget build(BuildContext context) {
-    final timeString = timeago.format(post.createdAt, locale: 'en_short'); // e.g., '5m', '2h'
+    final timeString =
+        timeago.format(post.createdAt, locale: 'en_short'); // e.g., '5m', '2h'
 
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          color: AppColors.background.withAlpha(200),
           border: Border(
             bottom: BorderSide(
               color: AppColors.primaryVeryDark.withAlpha(20),
@@ -198,9 +213,13 @@ class _CommunityPostCard extends StatelessWidget {
             // Left Column: Avatar
             CircleAvatar(
               radius: 20,
-              backgroundColor: isMe ? AppColors.secondary.withAlpha(50) : AppColors.lightPurple.withAlpha(50),
+              backgroundColor: isMe
+                  ? AppColors.secondary.withAlpha(50)
+                  : AppColors.lightPurple.withAlpha(50),
               child: Text(
-                post.authorUsername.isNotEmpty ? post.authorUsername[0].toUpperCase() : '?',
+                post.authorUsername.isNotEmpty
+                    ? post.authorUsername[0].toUpperCase()
+                    : '?',
                 style: GoogleFonts.crimsonPro(
                   color: isMe ? AppColors.secondary : AppColors.lightPurple,
                   fontWeight: FontWeight.bold,
@@ -264,14 +283,21 @@ class _CommunityPostCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 24),
-                      Icon(
-                        Icons.favorite_border_rounded,
-                        size: 18,
-                        color: AppColors.primaryVeryDark.withAlpha(120),
+                      GestureDetector(
+                        onTap: onLike,
+                        child: Icon(
+                          isLiked
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          size: 18,
+                          color: isLiked
+                              ? Colors.redAccent
+                              : AppColors.primaryVeryDark.withAlpha(120),
+                        ),
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${post.likeCount}', // If you use likes later
+                        '${post.likeCount}',
                         style: GoogleFonts.crimsonPro(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -289,4 +315,3 @@ class _CommunityPostCard extends StatelessWidget {
     );
   }
 }
-

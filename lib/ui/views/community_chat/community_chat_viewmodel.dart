@@ -92,6 +92,10 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
     );
   }
 
+  void toggleLike(CommunityPost post) {
+    locator<CommunityService>().toggleLikePost(post.id, post.likedBy);
+  }
+
   void back() {
     _navigationService.back();
   }

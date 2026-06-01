@@ -72,6 +72,10 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
     }
   }
 
+  void toggleLike() {
+    locator<CommunityService>().toggleLikePost(post.id, post.likedBy);
+  }
+
   void back() {
     _navigationService.back();
   }

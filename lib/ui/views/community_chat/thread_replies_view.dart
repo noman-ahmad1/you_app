@@ -57,12 +57,18 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.all(12.0),
-                            child: _OriginalPostCard(post: post),
+                            child: _OriginalPostCard(
+                              post: post,
+                              isLiked: post.likedBy
+                                  .contains(viewModel.currentUserId),
+                              onLike: viewModel.toggleLike,
+                            ),
                           ),
                         ),
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 8.0),
                             child: Text(
                               'Replies',
                               style: GoogleFonts.crimsonPro(
@@ -79,10 +85,13 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                     final reply = viewModel.replies[index];
-                                    final isMe = reply.authorId == viewModel.currentUserId;
+                                    final isMe = reply.authorId ==
+                                        viewModel.currentUserId;
                                     return Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                      child: _ReplyCard(reply: reply, isMe: isMe),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12.0, vertical: 6.0),
+                                      child:
+                                          _ReplyCard(reply: reply, isMe: isMe),
                                     );
                                   },
                                   childCount: viewModel.replies.length,
@@ -151,15 +160,18 @@ class _ReplyComposer extends ViewModelWidget<ThreadRepliesViewModel> {
             contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
-              borderSide: const BorderSide(color: AppColors.secondary, width: 2),
+              borderSide:
+                  const BorderSide(color: AppColors.secondary, width: 2),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
-              borderSide: const BorderSide(color: AppColors.secondary, width: 2),
+              borderSide:
+                  const BorderSide(color: AppColors.secondary, width: 2),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
-              borderSide: const BorderSide(color: AppColors.secondary, width: 2),
+              borderSide:
+                  const BorderSide(color: AppColors.secondary, width: 2),
             ),
             suffixIcon: Padding(
               padding: const EdgeInsets.only(right: 8.0),
@@ -190,8 +202,14 @@ class _ReplyComposer extends ViewModelWidget<ThreadRepliesViewModel> {
 
 class _OriginalPostCard extends StatelessWidget {
   final CommunityPost post;
+  final bool isLiked;
+  final VoidCallback onLike;
 
-  const _OriginalPostCard({required this.post});
+  const _OriginalPostCard({
+    required this.post,
+    required this.isLiked,
+    required this.onLike,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -200,9 +218,11 @@ class _OriginalPostCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: AppColors.background.withAlpha(200),
+        borderRadius: BorderRadius.circular(20),
         border: Border(
-          bottom: BorderSide(color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
+          bottom: BorderSide(
+              color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
         ),
       ),
       child: Column(
@@ -214,7 +234,9 @@ class _OriginalPostCard extends StatelessWidget {
                 radius: 22,
                 backgroundColor: AppColors.secondary.withAlpha(50),
                 child: Text(
-                  post.authorUsername.isNotEmpty ? post.authorUsername[0].toUpperCase() : '?',
+                  post.authorUsername.isNotEmpty
+                      ? post.authorUsername[0].toUpperCase()
+                      : '?',
                   style: GoogleFonts.crimsonPro(
                     color: AppColors.secondary,
                     fontWeight: FontWeight.bold,
@@ -283,6 +305,36 @@ class _OriginalPostCard extends StatelessWidget {
                   color: AppColors.primaryVeryDark.withAlpha(150),
                 ),
               ),
+              const SizedBox(width: 24),
+              GestureDetector(
+                onTap: onLike,
+                child: Icon(
+                  isLiked
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  size: 18,
+                  color: isLiked
+                      ? Colors.redAccent
+                      : AppColors.primaryVeryDark.withAlpha(120),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${post.likeCount}',
+                style: GoogleFonts.crimsonPro(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryVeryDark,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Likes',
+                style: GoogleFonts.crimsonPro(
+                  fontSize: 15,
+                  color: AppColors.primaryVeryDark.withAlpha(150),
+                ),
+              ),
             ],
           ),
         ],
@@ -307,9 +359,11 @@ class _ReplyCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        color: AppColors.background.withAlpha(150),
         border: Border(
-          bottom: BorderSide(color: AppColors.primaryVeryDark.withAlpha(15), width: 1),
+          bottom: BorderSide(
+              color: AppColors.primaryVeryDark.withAlpha(15), width: 1),
         ),
       ),
       child: Row(
@@ -317,9 +371,13 @@ class _ReplyCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 18,
-            backgroundColor: isMe ? AppColors.secondary.withAlpha(50) : AppColors.lightPurple.withAlpha(50),
+            backgroundColor: isMe
+                ? AppColors.secondary.withAlpha(50)
+                : AppColors.lightPurple.withAlpha(50),
             child: Text(
-              reply.authorUsername.isNotEmpty ? reply.authorUsername[0].toUpperCase() : '?',
+              reply.authorUsername.isNotEmpty
+                  ? reply.authorUsername[0].toUpperCase()
+                  : '?',
               style: GoogleFonts.crimsonPro(
                 color: isMe ? AppColors.secondary : AppColors.lightPurple,
                 fontWeight: FontWeight.bold,
