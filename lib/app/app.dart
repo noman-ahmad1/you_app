@@ -9,6 +9,7 @@ import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/chatbot_service.dart';
 import 'package:you_app/services/push_notification_service.dart';
+import 'package:you_app/services/storage_service.dart';
 import 'package:you_app/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:you_app/ui/dialogs/info_alert/info_alert_dialog.dart';
 import 'package:you_app/ui/views/home/home_view.dart';
@@ -34,6 +35,9 @@ import 'package:you_app/ui/views/volunteer_reset_password/volunteer_reset_passwo
 import 'package:you_app/ui/views/journal_details/journal_details_view.dart';
 import 'package:you_app/ui/views/chat/chat_view.dart';
 import 'package:you_app/ui/views/community_chat/community_chat_view.dart';
+import 'package:you_app/ui/views/volunteer_pending_verification/volunteer_pending_verification_view.dart';
+import 'package:you_app/ui/views/profile/profile_view.dart';
+import 'package:you_app/ui/views/edit_profile/edit_profile_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -58,6 +62,9 @@ import 'package:you_app/ui/views/community_chat/community_chat_view.dart';
     MaterialRoute(page: JournalDetailsView),
     MaterialRoute(page: ChatView),
     MaterialRoute(page: CommunityChatView),
+    MaterialRoute(page: VolunteerPendingVerificationView),
+    MaterialRoute(page: ProfileView),
+    MaterialRoute(page: EditProfileView),
 // @stacked-route
   ],
   dependencies: [
@@ -76,6 +83,7 @@ import 'package:you_app/ui/views/community_chat/community_chat_view.dart';
     LazySingleton(classType: CommunityService),
     LazySingleton(classType: ChatbotService),
     LazySingleton(classType: PushNotificationService),
+    LazySingleton(classType: StorageService),
     // @stacked-service
 
     LazySingleton(classType: VolunteerSignupViewModel),

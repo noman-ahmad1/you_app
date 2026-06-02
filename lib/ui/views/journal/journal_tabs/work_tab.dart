@@ -3,9 +3,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/journal_model.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/views/journal/journal_card.dart';
 import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
@@ -28,14 +31,20 @@ class WorkEntriesView extends ViewModelWidget<JournalViewModel> {
         Expanded(
           child: entries.isEmpty
               ? Center(
-                  child: Text(
-                    'No journal entries yet.\nStart by swiping above to add your first entry!',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.crimsonPro(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.secondary),
+                  child: Lottie.asset(
+                    AppConstants.emptyJournal,
+                    decoder: customDecoder,
+                    width: 200,
+                    height: 200,
                   ),
+                  // Text(
+                  //   'No journal entries yet.\nStart by swiping above to add your first entry!',
+                  //   textAlign: TextAlign.center,
+                  //   style: GoogleFonts.crimsonPro(
+                  //       fontSize: 18,
+                  //       fontWeight: FontWeight.w500,
+                  //       color: AppColors.secondary),
+                  // ),
                 )
               : ListView.builder(
                   padding: EdgeInsets.symmetric(horizontal: width * 0.05),

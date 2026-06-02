@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'community_chat_viewmodel.dart';
+import 'package:you_app/ui/shared/lottie_like_button.dart';
 
 class CommunityChatView extends StackedView<CommunityChatViewModel> {
   final String communityId;
@@ -47,10 +50,17 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
             ),
             Expanded(
               child: viewModel.isBusy
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                      color: AppColors.secondary,
-                    ))
+                  ? Center(
+                      child: Lottie.asset(
+                        AppConstants.loading,
+                        decoder: customDecoder,
+                        width: 200,
+                        height: 200,
+                      ),
+                      //   CircularProgressIndicator(
+                      //   color: AppColors.secondary,
+                      // )
+                    )
                   : viewModel.posts.isEmpty
                       ? _buildEmptyState()
                       : ListView.separated(
@@ -75,7 +85,33 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                           },
                         ),
             ),
-            const _PostComposer(),
+            if (viewModel.isMember)
+              const _PostComposer()
+            else
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: viewModel.joinCommunity,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.secondary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: Text(
+                      'Join Community to Post',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -84,13 +120,23 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Text(
-        'Be the first to start a thread!',
-        style: GoogleFonts.crimsonPro(
-          color: AppColors.primaryVeryDark.withAlpha(150),
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
+      child: Column(
+        children: [
+          Lottie.asset(
+            AppConstants.empty,
+            decoder: customDecoder,
+            width: 250,
+            height: 250,
+          ),
+          Text(
+            'Be the first to start a thread!',
+            style: GoogleFonts.crimsonPro(
+              color: AppColors.primaryVeryDark.withAlpha(150),
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -268,11 +314,10 @@ class _CommunityPostCard extends StatelessWidget {
                   // Action Row
                   Row(
                     children: [
-                      Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        size: 18,
-                        color: AppColors.primaryVeryDark.withAlpha(120),
-                      ),
+                      Image(
+                          image: AssetImage(AppConstants.reply),
+                          width: 20,
+                          color: AppColors.primaryVeryDark.withAlpha(150)),
                       const SizedBox(width: 6),
                       Text(
                         '${post.replyCount}',
@@ -283,17 +328,11 @@ class _CommunityPostCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 24),
-                      GestureDetector(
+                      LottieLikeButton(
+                        isLiked: isLiked,
                         onTap: onLike,
-                        child: Icon(
-                          isLiked
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          size: 18,
-                          color: isLiked
-                              ? Colors.redAccent
-                              : AppColors.primaryVeryDark.withAlpha(120),
-                        ),
+                        size:
+                            32, // Adjust size slightly to match original footprint
                       ),
                       const SizedBox(width: 6),
                       Text(

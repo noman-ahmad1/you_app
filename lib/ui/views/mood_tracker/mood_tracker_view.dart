@@ -90,6 +90,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               Space.verticalSpaceTiny(context),
               SwipeButton(
                 text: "Energized",
+                lottieAsset: AppConstants.swipeRight,
                 iconAsset: AppConstants.emoji_1,
                 direction: SwipeDirection.left,
                 height: height * 0.065,
@@ -101,6 +102,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               Space.verticalSpaceVTiny(context),
               SwipeButton(
                 text: "Main character vibe",
+                lottieAsset: AppConstants.swipeRight,
                 iconAsset: AppConstants.emoji_2,
                 direction: SwipeDirection.left,
                 height: height * 0.065,
@@ -112,6 +114,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               Space.verticalSpaceVTiny(context),
               SwipeButton(
                 text: "Over the moon",
+                lottieAsset: AppConstants.swipeRight,
                 iconAsset: AppConstants.emoji_3,
                 direction: SwipeDirection.left,
                 height: height * 0.065,
@@ -123,6 +126,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               Space.verticalSpaceVTiny(context),
               SwipeButton(
                 text: "chill mode",
+                lottieAsset: AppConstants.swipeRight,
                 iconAsset: AppConstants.emoji_4,
                 direction: SwipeDirection.left,
                 height: height * 0.065,
@@ -133,7 +137,8 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               ),
               Space.verticalSpaceVTiny(context),
               SwipeButton(
-                text: "Holding steady?",
+                text: "Holding                       steady?",
+                lottieAsset: AppConstants.swipeRight,
                 iconAsset: AppConstants.emoji_5,
                 direction: SwipeDirection.both,
                 height: height * 0.065,
@@ -148,6 +153,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               Space.verticalSpaceVTiny(context),
               SwipeButton(
                 text: "Restless?",
+                lottieAsset: AppConstants.swipeLeft,
                 iconAsset: AppConstants.emoji_6,
                 direction: SwipeDirection.right,
                 height: height * 0.065,
@@ -159,6 +165,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               Space.verticalSpaceVTiny(context),
               SwipeButton(
                 text: "Running on 1%?",
+                lottieAsset: AppConstants.swipeLeft,
                 iconAsset: AppConstants.emoji_7,
                 direction: SwipeDirection.right,
                 height: height * 0.065,
@@ -170,6 +177,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               Space.verticalSpaceVTiny(context),
               SwipeButton(
                 text: "Overstimulated?",
+                lottieAsset: AppConstants.swipeLeft,
                 iconAsset: AppConstants.emoji_8,
                 direction: SwipeDirection.right,
                 height: height * 0.065,
@@ -181,6 +189,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               Space.verticalSpaceVTiny(context),
               SwipeButton(
                 text: "About to crash out??",
+                lottieAsset: AppConstants.swipeLeft,
                 iconAsset: AppConstants.emoji_9,
                 direction: SwipeDirection.right,
                 height: height * 0.065,

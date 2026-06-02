@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/journal_model.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
@@ -156,7 +158,7 @@ class AllEntriesView extends ViewModelWidget<JournalViewModel> {
                           },
                           child: Row(
                             children: [
-                              SizedBox(width: width * 0.14),
+                              SizedBox(width: width * 0.2),
                               Text(
                                 "Swipe to express",
                                 style: GoogleFonts.crimsonPro(
@@ -165,6 +167,11 @@ class AllEntriesView extends ViewModelWidget<JournalViewModel> {
                                   color: AppColors.secondary,
                                 ),
                               ),
+                              SizedBox(width: width * 0.14),
+                              Lottie.asset(
+                                decoder: customDecoder,
+                                AppConstants.swipeRight,
+                              )
                             ],
                           ),
                         ),
@@ -188,14 +195,20 @@ class AllEntriesView extends ViewModelWidget<JournalViewModel> {
         Expanded(
           child: entries.isEmpty
               ? Center(
-                  child: Text(
-                    'No journal entries yet.\nStart by swiping above to add your first entry!',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.crimsonPro(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.secondary),
+                  child: Lottie.asset(
+                    AppConstants.emptyJournal,
+                    decoder: customDecoder,
+                    width: 200,
+                    height: 200,
                   ),
+                  // Text(
+                  //   'No journal entries yet.\nStart by swiping above to add your first entry!',
+                  //   textAlign: TextAlign.center,
+                  //   style: GoogleFonts.crimsonPro(
+                  //       fontSize: 18,
+                  //       fontWeight: FontWeight.w500,
+                  //       color: AppColors.secondary),
+                  // ),
                 )
               : ListView.builder(
                   padding: EdgeInsets.symmetric(horizontal: width * 0.05),

@@ -9,7 +9,9 @@ class CommunityCard extends StatelessWidget {
   final String membersCount;
   final String postsToday;
   final String assetPath;
+  final bool isJoined;
   final VoidCallback onTap;
+  final VoidCallback onJoin;
 
   const CommunityCard({
     super.key,
@@ -18,7 +20,9 @@ class CommunityCard extends StatelessWidget {
     required this.membersCount,
     required this.postsToday,
     required this.assetPath,
+    this.isJoined = true,
     required this.onTap,
+    required this.onJoin,
   });
 
   @override
@@ -102,35 +106,58 @@ class CommunityCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        '·',
-                        style: TextStyle(
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '$postsToday posts today',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey[600],
-                        ),
-                      ),
+                      // Text(
+                      //   '·',
+                      //   style: TextStyle(
+                      //       color: Colors.grey[600],
+                      //       fontWeight: FontWeight.bold),
+                      // ),
+                      // const SizedBox(width: 8),
+                      // Text(
+                      //   '$postsToday posts today',
+                      //   style: GoogleFonts.inter(
+                      //     fontSize: 12,
+                      //     fontWeight: FontWeight.w500,
+                      //     color: Colors.grey[600],
+                      //   ),
+                      // ),
                     ],
                   ),
                 ],
               ),
             ),
 
-            // Right Arrow
-            const SizedBox(width: 5),
-            Image.asset(
-              AppConstants.next, // Use your right arrow icon asset
-              color: Colors.grey[600],
-              height: 32,
-              width: 32,
-            ),
+            // Right Action
+            // const SizedBox(width: 5),
+            if (!isJoined)
+              ElevatedButton(
+                onPressed: onJoin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.secondary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Join',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              )
+            else
+              Image.asset(
+                AppConstants.next, // Use your right arrow icon asset
+                color: Colors.grey[600],
+                height: 32,
+                width: 32,
+              ),
           ],
         ),
       ),

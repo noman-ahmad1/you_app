@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/app/app.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
@@ -63,7 +65,9 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                       child: IgnorePointer(
                         child: AnimatedOpacity(
                           duration: const Duration(milliseconds: 300),
-                          opacity: viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
+                          opacity: viewModel.unreadNotificationsCount > 0
+                              ? 1.0
+                              : 0.0,
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: const BoxDecoration(
@@ -155,8 +159,15 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return const Center(
-                                    child: CircularProgressIndicator());
+                                return Center(
+                                  child: Lottie.asset(
+                                    AppConstants.loading,
+                                    decoder: customDecoder,
+                                    width: 200,
+                                    height: 200,
+                                  ),
+                                  // CircularProgressIndicator()
+                                );
                               }
                               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                                 return const Center(
@@ -173,6 +184,9 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                     const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
                                   final community = communities[index];
+                                  final communityId = community['id'];
+                                  final isJoined = viewModel.isCommunityJoined(communityId);
+                                  
                                   return CommunityCard(
                                     title: community['name'] ?? 'Unknown',
                                     description: community['description'] ??
@@ -185,6 +199,10 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                             '128',
                                     assetPath: community['imageAsset'] ??
                                         AppConstants.lonliness,
+                                    isJoined: isJoined,
+                                    onJoin: () {
+                                      viewModel.joinCommunity(communityId);
+                                    },
                                     onTap: () {
                                       // Navigate to the specific community chat
                                       viewModel.navigateToCommunityChat(

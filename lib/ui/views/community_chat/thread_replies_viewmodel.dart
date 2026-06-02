@@ -7,6 +7,7 @@ import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/community_service.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:you_app/models/thread_reply.dart';
+import 'package:you_app/ui/shared/in_app_notification_banner.dart';
 
 class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
   final _navigationService = locator<NavigationService>();
@@ -26,9 +27,42 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
     required this.post,
   });
 
+  bool get isMember {
+    final user = _authService.currentUser;
+    if (user == null) return false;
+    return user.joinedCommunities.contains(post.communityId);
+  }
+
+  Future<void> joinCommunity() async {
+    try {
+      await locator<CommunityService>().joinCommunity(post.communityId);
+      await _authService.checkCurrentUserStatus(); // Refresh user data locally
+      notifyListeners();
+      InAppNotificationBanner.show(
+        title: 'Joined Community!',
+        body: 'You are now a member and can post threads.',
+        type: 'request_accepted',
+      );
+    } catch (e) {
+      _snackbarService.showSnackbar(
+        title: 'Error',
+        message: 'Could not join community. Please try again.',
+      );
+    }
+  }
+
   @override
   Stream<List<ThreadReply>> get stream =>
-      locator<CommunityService>().getThreadReplies(post.id);
+      locator<CommunityService>().getThreadReplies(post.id).map((replies) {
+        replies.sort((a, b) {
+          int cmp = b.likeCount.compareTo(a.likeCount);
+          if (cmp == 0) {
+            cmp = a.createdAt.compareTo(b.createdAt);
+          }
+          return cmp;
+        });
+        return replies;
+      });
 
   @override
   void onData(List<ThreadReply>? data) {
@@ -73,7 +107,37 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
   }
 
   void toggleLike() {
-    locator<CommunityService>().toggleLikePost(post.id, post.likedBy);
+    final uid = currentUserId;
+    if (uid.isEmpty) return;
+    
+    final isLiked = post.likedBy.contains(uid);
+    if (isLiked) {
+      post.likedBy.remove(uid);
+      post.likeCount -= 1;
+    } else {
+      post.likedBy.add(uid);
+      post.likeCount += 1;
+    }
+    notifyListeners();
+    
+    locator<CommunityService>().toggleLikePost(post.id, isLiked);
+  }
+
+  void toggleReplyLike(ThreadReply reply) {
+    final uid = currentUserId;
+    if (uid.isEmpty) return;
+    
+    final isLiked = reply.likedBy.contains(uid);
+    if (isLiked) {
+      reply.likedBy.remove(uid);
+      reply.likeCount -= 1;
+    } else {
+      reply.likedBy.add(uid);
+      reply.likeCount += 1;
+    }
+    notifyListeners();
+    
+    locator<CommunityService>().toggleLikeReply(post.id, reply.id, isLiked);
   }
 
   void back() {

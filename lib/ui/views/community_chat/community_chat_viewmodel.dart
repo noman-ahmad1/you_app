@@ -7,6 +7,7 @@ import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/community_service.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:you_app/ui/views/community_chat/thread_replies_view.dart';
+import 'package:you_app/ui/shared/in_app_notification_banner.dart';
 
 class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   final _navigationService = locator<NavigationService>();
@@ -27,6 +28,30 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
     required this.communityId,
     required this.communityName,
   });
+
+  bool get isMember {
+    final user = _authService.currentUser;
+    if (user == null) return false;
+    return user.joinedCommunities.contains(communityId);
+  }
+
+  Future<void> joinCommunity() async {
+    try {
+      await locator<CommunityService>().joinCommunity(communityId);
+      await _authService.checkCurrentUserStatus(); // Refresh user data locally
+      notifyListeners();
+      InAppNotificationBanner.show(
+        title: 'Joined Community!',
+        body: 'You are now a member of $communityName.',
+        type: 'request_accepted',
+      );
+    } catch (e) {
+      _snackbarService.showSnackbar(
+        title: 'Error',
+        message: 'Could not join community. Please try again.',
+      );
+    }
+  }
 
   @override
   Stream<List<CommunityPost>> get stream =>
@@ -93,7 +118,20 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   }
 
   void toggleLike(CommunityPost post) {
-    locator<CommunityService>().toggleLikePost(post.id, post.likedBy);
+    final uid = currentUserId;
+    if (uid.isEmpty) return;
+    
+    final isLiked = post.likedBy.contains(uid);
+    if (isLiked) {
+      post.likedBy.remove(uid);
+      post.likeCount -= 1;
+    } else {
+      post.likedBy.add(uid);
+      post.likeCount += 1;
+    }
+    notifyListeners();
+    
+    locator<CommunityService>().toggleLikePost(post.id, isLiked);
   }
 
   void back() {

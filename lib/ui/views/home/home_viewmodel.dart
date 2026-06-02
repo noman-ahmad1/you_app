@@ -24,9 +24,12 @@ import 'package:you_app/ui/common/app_strings.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 
-class HomeViewModel extends BaseViewModel {
+class HomeViewModel extends ReactiveViewModel {
   final _navigationService = locator<NavigationService>();
   final _authenticationService = locator<AuthenticationService>();
+
+  @override
+  List<ListenableServiceMixin> get listenableServices => [_authenticationService];
   // Secondary player for short sound effects (e.g., swipe)
   final AudioPlayer _fxPlayer = AudioPlayer();
   // Main player for soothing music audio
@@ -46,6 +49,8 @@ class HomeViewModel extends BaseViewModel {
   StreamSubscription? _notificationsSubscription;
   int _unreadNotificationsCount = 0;
   int get unreadNotificationsCount => _unreadNotificationsCount;
+
+  StreamSubscription? _volunteersSubscription;
 
   bool get hasActiveInteraction =>
       pendingRequest != null || activeChatRequest != null;
@@ -73,7 +78,7 @@ class HomeViewModel extends BaseViewModel {
     _player.playerStateStream.listen((state) {
       notifyListeners();
     });
-    fetchVolunteers();
+    listenToVolunteers();
     listenForSentRequests();
     listenForNotifications();
   }
@@ -141,6 +146,27 @@ class HomeViewModel extends BaseViewModel {
   }
 
   // Inside HomeViewModel...
+
+  bool isCommunityJoined(String communityId) {
+    final user = _authenticationService.currentUser;
+    if (user == null) return false;
+    return user.joinedCommunities.contains(communityId);
+  }
+
+  Future<void> joinCommunity(String communityId) async {
+    try {
+      await locator<CommunityService>().joinCommunity(communityId);
+      await _authenticationService.checkCurrentUserStatus(); // Refresh user data locally
+      notifyListeners();
+      InAppNotificationBanner.show(
+        title: 'Joined Community!',
+        body: 'You can now participate and post threads.',
+        type: 'request_accepted',
+      );
+    } catch (e) {
+      debugPrint("Error joining community: $e");
+    }
+  }
 
   Future<void> sendChatRequest(AppUser volunteer) async {
     final currentUser = _authenticationService.currentUser;
@@ -228,10 +254,11 @@ class HomeViewModel extends BaseViewModel {
       if (hasActiveInteraction) {
         if (_volunteers.isNotEmpty) {
           _volunteers = [];
+          _volunteersSubscription?.cancel();
           // No need for extra notifyListeners here, the one at the end handles it
         }
       } else if (_volunteers.isEmpty && !isBusy) {
-        fetchVolunteers();
+        listenToVolunteers();
       }
 
       notifyListeners(); // Update UI with the correct state
@@ -294,22 +321,28 @@ class HomeViewModel extends BaseViewModel {
   //   setBusy(false);
   // }
 
-  void fetchVolunteers() async {
+  void listenToVolunteers() {
     // CONDITION ADDED: Only fetch if no pending/active request exists.
     if (hasActiveInteraction) return;
 
     setBusy(true);
-    try {
-      _volunteers = await locator<UserService>().getAvailableVolunteers();
-    } catch (e) {
-      // Handle error
-    } finally {
+    _volunteersSubscription?.cancel();
+    _volunteersSubscription = locator<UserService>()
+        .streamAvailableVolunteers()
+        .listen((volunteersList) {
+      _volunteers = volunteersList;
       setBusy(false);
-    }
+      notifyListeners();
+    }, onError: (error) {
+      setBusy(false);
+    });
   }
 
+  Stream<List<Map<String, dynamic>>>? _communitiesStream;
+
   Stream<List<Map<String, dynamic>>> getCommunitiesStream() {
-    return locator<CommunityService>().getCommunities();
+    _communitiesStream ??= locator<CommunityService>().getCommunities();
+    return _communitiesStream!;
   }
 
   /// Navigates to the Community Chat View
@@ -340,6 +373,10 @@ class HomeViewModel extends BaseViewModel {
     } finally {
       setBusy(false);
     }
+  }
+
+  void navigateToProfile() {
+    _navigationService.navigateToProfileView();
   }
 
   void showDialog() {
@@ -488,6 +525,7 @@ class HomeViewModel extends BaseViewModel {
     _player.dispose();
     _sentRequestsSubscription?.cancel();
     _notificationsSubscription?.cancel();
+    _volunteersSubscription?.cancel();
     super.dispose();
   }
 }

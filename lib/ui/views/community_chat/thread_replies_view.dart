@@ -1,6 +1,9 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -8,6 +11,7 @@ import 'package:you_app/models/community_post.dart';
 import 'package:you_app/models/thread_reply.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'thread_replies_viewmodel.dart';
+import 'package:you_app/ui/shared/lottie_like_button.dart';
 
 class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
   final CommunityPost post;
@@ -48,61 +52,98 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
             ),
             Expanded(
               child: viewModel.isBusy
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                      color: AppColors.secondary,
-                    ))
-                  : CustomScrollView(
-                      slivers: [
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: _OriginalPostCard(
-                              post: post,
-                              isLiked: post.likedBy
-                                  .contains(viewModel.currentUserId),
-                              onLike: viewModel.toggleLike,
+                  ? Center(
+                      child: Lottie.asset(
+                        AppConstants.loading,
+                        decoder: customDecoder,
+                        width: 200,
+                        height: 200,
+                      ),
+                      //   CircularProgressIndicator(
+                      //   color: AppColors.secondary,
+                      // )
+                    )
+                  : CustomScrollView(slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: _OriginalPostCard(
+                            post: post,
+                            isLiked:
+                                post.likedBy.contains(viewModel.currentUserId),
+                            onLike: viewModel.toggleLike,
+                          ),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 8.0),
+                          child: Text(
+                            'Replies',
+                            style: GoogleFonts.crimsonPro(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryVeryDark,
                             ),
                           ),
                         ),
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0, vertical: 8.0),
-                            child: Text(
-                              'Replies',
-                              style: GoogleFonts.crimsonPro(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryVeryDark,
+                      ),
+                      viewModel.replies.isEmpty
+                          ? SliverToBoxAdapter(child: _buildEmptyState())
+                          : SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final reply = viewModel.replies[index];
+                                  final isMe =
+                                      reply.authorId == viewModel.currentUserId;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12.0, vertical: 6.0),
+                                    child: _ReplyCard(
+                                      reply: reply,
+                                      isMe: isMe,
+                                      isLiked: reply.likedBy
+                                          .contains(viewModel.currentUserId),
+                                      onLike: () =>
+                                          viewModel.toggleReplyLike(reply),
+                                    ),
+                                  );
+                                },
+                                childCount: viewModel.replies.length,
                               ),
                             ),
-                          ),
-                        ),
-                        viewModel.replies.isEmpty
-                            ? SliverToBoxAdapter(child: _buildEmptyState())
-                            : SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final reply = viewModel.replies[index];
-                                    final isMe = reply.authorId ==
-                                        viewModel.currentUserId;
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12.0, vertical: 6.0),
-                                      child:
-                                          _ReplyCard(reply: reply, isMe: isMe),
-                                    );
-                                  },
-                                  childCount: viewModel.replies.length,
-                                ),
-                              ),
-                        // Add some bottom padding
-                        const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                      ],
-                    ),
+                      // Add some bottom padding
+                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                    ]),
             ),
-            const _ReplyComposer(),
+            if (viewModel.isMember)
+              const _ReplyComposer()
+            else
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: viewModel.joinCommunity,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.secondary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: Text(
+                      'Join Community to Reply',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -113,14 +154,20 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Center(
-        child: Text(
-          'No replies yet. Be the first!',
-          style: GoogleFonts.crimsonPro(
-            color: AppColors.primaryVeryDark.withAlpha(150),
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
+        child: Lottie.asset(
+          AppConstants.empty,
+          decoder: customDecoder,
+          width: 200,
+          height: 200,
         ),
+        // Text(
+        //   'No replies yet. Be the first!',
+        //   style: GoogleFonts.crimsonPro(
+        //     color: AppColors.primaryVeryDark.withAlpha(150),
+        //     fontSize: 16,
+        //     fontWeight: FontWeight.w500,
+        //   ),
+        // ),
       ),
     );
   }
@@ -289,6 +336,11 @@ class _OriginalPostCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
+              Image(
+                  image: AssetImage(AppConstants.reply),
+                  width: 20,
+                  color: AppColors.primaryVeryDark.withAlpha(150)),
+              const SizedBox(width: 6),
               Text(
                 '${post.replyCount}',
                 style: GoogleFonts.crimsonPro(
@@ -306,17 +358,10 @@ class _OriginalPostCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 24),
-              GestureDetector(
+              LottieLikeButton(
+                isLiked: isLiked,
                 onTap: onLike,
-                child: Icon(
-                  isLiked
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  size: 18,
-                  color: isLiked
-                      ? Colors.redAccent
-                      : AppColors.primaryVeryDark.withAlpha(120),
-                ),
+                size: 32,
               ),
               const SizedBox(width: 6),
               Text(
@@ -346,10 +391,14 @@ class _OriginalPostCard extends StatelessWidget {
 class _ReplyCard extends StatelessWidget {
   final ThreadReply reply;
   final bool isMe;
+  final bool isLiked;
+  final VoidCallback onLike;
 
   const _ReplyCard({
     required this.reply,
     required this.isMe,
+    required this.isLiked,
+    required this.onLike,
   });
 
   @override
@@ -422,10 +471,19 @@ class _ReplyCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
-                      Icons.favorite_border_rounded,
-                      size: 16,
-                      color: AppColors.primaryVeryDark.withAlpha(100),
+                    LottieLikeButton(
+                      isLiked: isLiked,
+                      onTap: onLike,
+                      size: 24, // smaller than post like button
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${reply.likeCount}',
+                      style: GoogleFonts.crimsonPro(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primaryVeryDark.withAlpha(120),
+                      ),
                     ),
                   ],
                 ),
@@ -437,3 +495,14 @@ class _ReplyCard extends StatelessWidget {
     );
   }
 }
+
+// Future<LottieComposition?> _customDecoder(List<int> bytes) {
+//   return LottieComposition.decodeZip(
+//     bytes,
+//     filePicker: (files) {
+//       return files.firstWhereOrNull(
+//         (f) => f.name.startsWith('animations/') && f.name.endsWith('.json'),
+//       );
+//     },
+//   );
+// }

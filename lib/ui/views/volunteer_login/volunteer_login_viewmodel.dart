@@ -43,8 +43,13 @@ class VolunteerLoginViewModel extends BaseViewModel {
         password,
       );
 
-      // On successful login, navigate to the volunteer home view
-      _navigationService.replaceWith(Routes.volunteerHomeView);
+      // On successful login, navigate based on volunteer status
+      final currentUser = _authenticationService.currentUser;
+      if (currentUser != null && currentUser.status == 'pending_verification') {
+        _navigationService.clearStackAndShow(Routes.volunteerPendingVerificationView);
+      } else {
+        _navigationService.clearStackAndShow(Routes.volunteerHomeView);
+      }
     } catch (e) {
       String errorMessage = _authenticationService.error ??
           'Login failed. Please check your credentials.';

@@ -212,7 +212,7 @@ class AcademicInfoView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Student ID card uploaded successfully.',
+                        'Student ID (Front) uploaded.',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.crimsonPro(
                           fontSize: 16,
@@ -249,7 +249,7 @@ class AcademicInfoView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Tap Camera icon to upload Student ID.',
+                        'Upload Student ID (Front).',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.crimsonPro(
                           fontSize: 16,
@@ -271,6 +271,101 @@ class AcademicInfoView extends StatelessWidget {
                         child: InkWell(
                           onTap: () => viewModel
                               .showStudentIdImagePickerOptions(context),
+                          child: Padding(
+                            padding: const EdgeInsets.all(7.0),
+                            child: Image.asset(
+                              AppConstants.camera,
+                              color: AppColors.background,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+        Space.verticalSpaceVTiny(context),
+
+        // --- 3. Student Card Photo Upload (Back) ---
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 0, 5, 0),
+          width: double.infinity,
+          height: screenHeight * 0.06,
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.circular(27),
+            border: Border.all(
+              color: AppColors.primary,
+              width: 2,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(27),
+            child: viewModel.selectedStudentIdBackImage != null
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Student ID (Back) uploaded.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 16,
+                          color: AppColors.secondaryLight,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      Container(
+                        width: screenHeight * 0.05,
+                        height: screenHeight * 0.05,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                          border: Border.all(
+                            color: AppColors.primaryDark,
+                            width: 2,
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: () => viewModel
+                              .showStudentIdBackImagePickerOptions(context),
+                          child: Padding(
+                            padding: const EdgeInsets.all(5.0),
+                            child: Image.asset(
+                              AppConstants.done,
+                              color: AppColors.background,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Upload Student ID (Back).',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 16,
+                          color: AppColors.secondaryLight,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      Container(
+                        width: screenHeight * 0.05,
+                        height: screenHeight * 0.05,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                          border: Border.all(
+                            color: AppColors.primaryDark,
+                            width: 2,
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: () => viewModel
+                              .showStudentIdBackImagePickerOptions(context),
                           child: Padding(
                             padding: const EdgeInsets.all(7.0),
                             child: Image.asset(

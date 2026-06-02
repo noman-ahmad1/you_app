@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -69,14 +71,20 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
                         fontStyle: FontStyle.italic,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    const SizedBox(
-                      height: 12,
-                      width: 12,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primaryVeryDark,
+                    // const SizedBox(width: 10),
+                    SizedBox(
+                      height: 70,
+                      width: 70,
+                      child: Lottie.asset(
+                        AppConstants.loading,
+                        decoder: customDecoder,
+                        width: 200,
+                        height: 200,
                       ),
+                      //   CircularProgressIndicator(
+                      //     strokeWidth: 2,
+                      //     color: AppColors.primaryVeryDark,
+                      //   ),
                     )
                   ],
                 ),

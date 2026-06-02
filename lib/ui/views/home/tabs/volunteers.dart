@@ -2,8 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/chat_request_model.dart'; // Import ChatRequest model
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
@@ -36,59 +38,63 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                 title: 'Listeners',
                 subtitle: 'Saturday, May 16',
                 trailingActions: [
-                // Icon 1 (e.g., Notifications)
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        viewModel.markAllNotificationsAsRead();
-                        Scaffold.of(context).openDrawer();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: AppColors.primaryVeryDark.withAlpha(50)),
+                  // Icon 1 (e.g., Notifications)
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          viewModel.markAllNotificationsAsRead();
+                          Scaffold.of(context).openDrawer();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: AppColors.primaryVeryDark.withAlpha(50)),
+                          ),
+                          child: Image.asset(AppConstants.notification,
+                              color: AppColors.secondary,
+                              width: 24,
+                              height: 24),
                         ),
-                        child: Image.asset(AppConstants.notification,
-                            color: AppColors.secondary, width: 24, height: 24),
                       ),
-                    ),
-                    Positioned(
-                      right: -4,
-                      top: -4,
-                      child: IgnorePointer(
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 300),
-                          opacity: viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 18,
-                              minHeight: 18,
-                            ),
-                            child: Text(
-                              '${viewModel.unreadNotificationsCount}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                      Positioned(
+                        right: -4,
+                        top: -4,
+                        child: IgnorePointer(
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 300),
+                            opacity: viewModel.unreadNotificationsCount > 0
+                                ? 1.0
+                                : 0.0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
                               ),
-                              textAlign: TextAlign.center,
+                              constraints: const BoxConstraints(
+                                minWidth: 18,
+                                minHeight: 18,
+                              ),
+                              child: Text(
+                                '${viewModel.unreadNotificationsCount}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                // Icon 2 (e.g., Profile/Flower)
+                    ],
+                  ),
+                  // Icon 2 (e.g., Profile/Flower)
                   // InkWell(
                   //   onTap: () {},
                   //   child: Container(
@@ -126,10 +132,17 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
     if (viewModel.isBusy &&
         !viewModel.hasActiveInteraction &&
         viewModel.volunteers.isEmpty) {
-      return const Center(
-          child: CircularProgressIndicator(
-        color: AppColors.secondary,
-      ));
+      return Center(
+        child: Lottie.asset(
+          AppConstants.loading,
+          decoder: customDecoder,
+          width: 200,
+          height: 200,
+        ),
+        //     CircularProgressIndicator(
+        //   color: AppColors.secondary,
+        // )
+      );
     }
     // Check for active chat first
     else if (viewModel.activeChatRequest != null) {
@@ -142,10 +155,17 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
           context, viewModel, viewModel.pendingRequest!);
     } else if (viewModel.isBusy) {
       // Show loading indicator specifically when fetching volunteers (and no active interaction)
-      return const Center(
-          child: CircularProgressIndicator(
-        color: AppColors.secondary,
-      ));
+      return Center(
+        child: Lottie.asset(
+          AppConstants.loading,
+          decoder: customDecoder,
+          width: 200,
+          height: 200,
+        ),
+        //     CircularProgressIndicator(
+        //   color: AppColors.secondary,
+        // )
+      );
     }
     // Otherwise, show the list of available volunteers
     else {
@@ -178,8 +198,14 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset(AppConstants.done, color: Colors.green),
-                Space.verticalSpaceSmall(context),
+                Lottie.asset(
+                  AppConstants.done2,
+                  decoder: customDecoder,
+                  width: 150,
+                  height: 150,
+                ),
+                // Image.asset(AppConstants.done, color: Colors.green),
+                Space.verticalSpaceTiny(context),
                 Text(
                   "You are connected!",
                   style: GoogleFonts.crimsonPro(
@@ -263,11 +289,11 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              AppConstants.pending,
-              color: AppColors.primaryVeryDark,
-              height: 70,
-              width: 70,
+            Lottie.asset(
+              AppConstants.pending2,
+              decoder: customDecoder,
+              width: 150,
+              height: 150,
             ),
             Space.verticalSpaceSmall(context),
             Text(
@@ -297,13 +323,20 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                     const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
               ),
               child: viewModel.isBusy
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.secondary,
-                      ))
+                  ? SizedBox(
+                      height: 50,
+                      width: 50,
+                      child: Lottie.asset(
+                        AppConstants.loading,
+                        decoder: customDecoder,
+                        width: 200,
+                        height: 200,
+                      ),
+                      // CircularProgressIndicator(
+                      //   strokeWidth: 2,
+                      //   color: AppColors.secondary,
+                      // )
+                    )
                   : const Text(
                       "Cancel Request",
                       style: TextStyle(
@@ -417,13 +450,23 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Text(
-        'No volunteers are available right now.\nPlease check back later.',
-        textAlign: TextAlign.center,
-        style: GoogleFonts.crimsonPro(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: AppColors.secondary.withOpacity(0.7)),
+      child: Column(
+        children: [
+          Lottie.asset(
+            AppConstants.searchVolunteer,
+            decoder: customDecoder,
+            width: 200,
+            height: 200,
+          ),
+          Text(
+            'No volunteers are available right now.\nPlease check back later.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.crimsonPro(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: AppColors.secondary.withOpacity(0.7)),
+          ),
+        ],
       ),
     );
   }

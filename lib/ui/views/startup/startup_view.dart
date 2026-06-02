@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 
 import 'startup_viewmodel.dart';
@@ -32,13 +35,19 @@ class StartupView extends StackedView<StartupViewModel> {
                 Text('Loading ...',
                     style: GoogleFonts.crimsonPro(fontSize: 16)),
                 Space.verticalSpaceTiny(context),
-                const SizedBox(
+                SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(
-                    color: AppColors.secondary,
-                    strokeWidth: 6,
+                  child: Lottie.asset(
+                    AppConstants.loading,
+                    decoder: customDecoder,
+                    width: 200,
+                    height: 200,
                   ),
+                  // CircularProgressIndicator(
+                  //   color: AppColors.secondary,
+                  //   strokeWidth: 6,
+                  // ),
                 )
               ],
             ),

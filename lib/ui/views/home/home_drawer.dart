@@ -114,7 +114,10 @@ class HomeDrawer extends StatelessWidget {
               _buildMenuItem(
                 iconPath: AppConstants.person,
                 title: 'My profile',
-                onTap: () {},
+                onTap: () {
+                  Navigator.pop(context);
+                  viewModel.navigateToProfile();
+                },
               ),
               const SizedBox(height: 24),
               _buildMenuItem(

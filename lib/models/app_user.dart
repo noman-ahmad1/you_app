@@ -22,6 +22,7 @@ class AppUser {
   final DateTime? createdAt;
   final List<String>? permissions;
   final String? fcmToken;
+  final List<String> joinedCommunities;
 
   AppUser({
     required this.uid,
@@ -41,6 +42,7 @@ class AppUser {
     this.createdAt,
     this.permissions,
     this.fcmToken,
+    this.joinedCommunities = const [],
   });
 
   factory AppUser.fromJson(Map<String, dynamic> data) {
@@ -67,6 +69,9 @@ class AppUser {
           ? List<String>.from(data['permissions'])
           : null,
       fcmToken: data['fcmToken'],
+      joinedCommunities: data['joinedCommunities'] != null
+          ? List<String>.from(data['joinedCommunities'])
+          : [],
     );
   }
 
@@ -97,6 +102,7 @@ class AppUser {
     DateTime? createdAt,
     List<String>? permissions,
     String? fcmToken,
+    List<String>? joinedCommunities,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
@@ -112,6 +118,7 @@ class AppUser {
       createdAt: createdAt ?? this.createdAt,
       permissions: permissions ?? this.permissions,
       fcmToken: fcmToken ?? this.fcmToken,
+      joinedCommunities: joinedCommunities ?? this.joinedCommunities,
     );
   }
 }

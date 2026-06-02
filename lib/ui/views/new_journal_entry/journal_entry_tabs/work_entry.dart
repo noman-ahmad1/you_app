@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:you_app/models/journal_model.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/views/journal/journal_card.dart';
 import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
@@ -202,9 +205,15 @@ class NewWorkEntryView extends StatelessWidget {
                             ),
                             child: Center(
                               child: viewModel.isBusy
-                                  ? const CircularProgressIndicator(
-                                      color: AppColors.secondary,
+                                  ? Lottie.asset(
+                                      AppConstants.loading,
+                                      decoder: customDecoder,
+                                      width: 200,
+                                      height: 200,
                                     )
+                                  // CircularProgressIndicator(
+                                  //     color: AppColors.secondary,
+                                  //   )
                                   : Text(
                                       viewModel.isEditing ? 'Update' : 'Save',
                                       textAlign: TextAlign.center,

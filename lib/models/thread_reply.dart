@@ -8,6 +8,8 @@ class ThreadReply {
   final String content;
   final DateTime createdAt;
   final List<String> mentionedUsers;
+  final List<String> likedBy;
+  int likeCount;
 
   ThreadReply({
     required this.id,
@@ -17,6 +19,8 @@ class ThreadReply {
     required this.content,
     required this.createdAt,
     this.mentionedUsers = const [],
+    this.likedBy = const [],
+    this.likeCount = 0,
   });
 
   factory ThreadReply.fromMap(Map<String, dynamic> data, String documentId) {
@@ -28,6 +32,8 @@ class ThreadReply {
       content: data['content'] ?? '',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       mentionedUsers: List<String>.from(data['mentionedUsers'] ?? []),
+      likedBy: List<String>.from(data['likedBy'] ?? []),
+      likeCount: data['likeCount'] ?? 0,
     );
   }
 
@@ -39,6 +45,8 @@ class ThreadReply {
       'content': content,
       'createdAt': FieldValue.serverTimestamp(),
       'mentionedUsers': mentionedUsers,
+      'likedBy': likedBy,
+      'likeCount': likeCount,
     };
   }
 }

@@ -2,12 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/mood_service.dart';
 import 'package:you_app/models/mood_model.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 
 class WeeklyMoodChart extends StatefulWidget {
   const WeeklyMoodChart({super.key});
@@ -241,10 +244,16 @@ class _WeeklyMoodChartState extends State<WeeklyMoodChart> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(
+      return Center(
           child: Padding(
         padding: EdgeInsets.all(24.0),
-        child: CircularProgressIndicator(),
+        child: Lottie.asset(
+          AppConstants.loading,
+          decoder: customDecoder,
+          width: 200,
+          height: 200,
+        ),
+        // CircularProgressIndicator(),
       ));
     }
 

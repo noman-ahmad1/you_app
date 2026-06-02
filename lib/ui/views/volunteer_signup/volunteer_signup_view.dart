@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 import 'package:you_app/app/app.locator.dart'; // Import locator
@@ -126,13 +129,19 @@ class VolunteerSignupView extends StackedView<VolunteerSignupViewModel> {
                                 ),
                                 child: viewModel.isBusy &&
                                         !isPhoneVerified // Only show busy state for the verification button itself
-                                    ? const SizedBox(
+                                    ? SizedBox(
                                         width: 15,
                                         height: 15,
-                                        child: CircularProgressIndicator(
-                                          color: AppColors.secondary,
-                                          strokeWidth: 2,
+                                        child: Lottie.asset(
+                                          AppConstants.loading,
+                                          decoder: customDecoder,
+                                          width: 200,
+                                          height: 200,
                                         ),
+                                        // CircularProgressIndicator(
+                                        //   color: AppColors.secondary,
+                                        //   strokeWidth: 2,
+                                        // ),
                                       )
                                     : Text(
                                         phoneButtonText,
@@ -237,4 +246,7 @@ class VolunteerSignupView extends StackedView<VolunteerSignupViewModel> {
     BuildContext context,
   ) =>
       locator<VolunteerSignupViewModel>();
+
+  @override
+  bool get disposeViewModel => false;
 }

@@ -7,10 +7,10 @@ class CommunityPost {
   final String authorUsername;
   final String content;
   final DateTime createdAt;
-  final int likeCount;
+  int likeCount;
   final int replyCount;
   final List<String> mentionedUsers;
-  final List<String> likedBy;
+  List<String> likedBy;
 
   CommunityPost({
     required this.id,

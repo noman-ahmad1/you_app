@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/chat_messaage_model.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -60,9 +62,9 @@ class ChatView extends StackedView<ChatViewModel> {
       child: Column(
         children: [
           TopBar(
-            leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+            leadingIconAsset: AppConstants.back, // Your 'Y' logo asset
             onLeadingPressed: () {
-              // Handle tap
+              viewModel.back();
             },
             title: 'Hi, ${viewModel.volunteerName}!',
             trailingActions: [
@@ -85,10 +87,17 @@ class ChatView extends StackedView<ChatViewModel> {
           ),
           Expanded(
             child: viewModel.isBusy
-                ? const Center(
-                    child: CircularProgressIndicator(
-                    color: AppColors.secondary,
-                  ))
+                ? Center(
+                    child: Lottie.asset(
+                      AppConstants.loading,
+                      decoder: customDecoder,
+                      width: 200,
+                      height: 200,
+                    ),
+                    //   CircularProgressIndicator(
+                    //   color: AppColors.secondary,
+                    // )
+                  )
                 : viewModel.messages.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
@@ -111,13 +120,19 @@ class ChatView extends StackedView<ChatViewModel> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Text(
-        'No messages yet. Start the conversation!',
-        style: TextStyle(
-          color: Colors.grey[600],
-          fontSize: 16,
-        ),
+      child: Lottie.asset(
+        AppConstants.empty,
+        decoder: customDecoder,
+        width: 200,
+        height: 200,
       ),
+      // Text(
+      //   'No messages yet. Start the conversation!',
+      //   style: TextStyle(
+      //     color: Colors.grey[600],
+      //     fontSize: 16,
+      //   ),
+      // ),
     );
   }
 

@@ -20,12 +20,17 @@ class StartupViewModel extends BaseViewModel {
     print('Startup Logic: Detected User Role: $userRole');
 
     if (userRole == 'volunteer') {
-      _navigationService.replaceWith(Routes.volunteerHomeView);
+      final currentUser = _authenticationService.currentUser;
+      if (currentUser != null && currentUser.status == 'pending_verification') {
+        _navigationService.clearStackAndShow(Routes.volunteerPendingVerificationView);
+      } else {
+        _navigationService.clearStackAndShow(Routes.volunteerHomeView);
+      }
     } else if (userRole == 'user' || userRole == 'admin') {
       // Added 'admin' check for safety
-      _navigationService.replaceWith(Routes.homeView);
+      _navigationService.clearStackAndShow(Routes.homeView);
     } else {
-      _navigationService.replaceWithWelcomeView();
+      _navigationService.clearStackAndShow(Routes.welcomeView);
     }
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart'; // For formatting time ago
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/chat_request_model.dart'; // Import model
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -60,7 +62,8 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
                     child: IgnorePointer(
                       child: AnimatedOpacity(
                         duration: const Duration(milliseconds: 300),
-                        opacity: viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
+                        opacity:
+                            viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: const BoxDecoration(
@@ -105,10 +108,17 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
                       // ✅ Use the correct list: pendingRequests
                       child: viewModel.isBusyRequests &&
                               viewModel.pendingRequests.isEmpty
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                              color: AppColors.secondary,
-                            ))
+                          ? Center(
+                              child: Lottie.asset(
+                              AppConstants.loading,
+                              decoder: customDecoder,
+                              width: 200,
+                              height: 200,
+                            )
+                              //   CircularProgressIndicator(
+                              //   color: AppColors.secondary,
+                              // )
+                              )
                           : viewModel.pendingRequests
                                   .isEmpty // ✅ Use pendingRequests
                               ? Center(

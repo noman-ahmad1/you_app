@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 
@@ -10,6 +12,7 @@ enum SwipeDirection { left, right, both }
 class SwipeButton extends StatefulWidget {
   final String text;
   final String iconAsset;
+  final String lottieAsset;
   final double width;
   final double height;
   final VoidCallback? onSwipe;
@@ -21,6 +24,7 @@ class SwipeButton extends StatefulWidget {
     super.key,
     required this.text,
     required this.iconAsset,
+    required this.lottieAsset,
     this.width = double.infinity,
     this.height = 100,
     this.onSwipe,
@@ -97,11 +101,19 @@ class _SwipeButtonState extends State<SwipeButton>
                   alignment: Alignment.center,
                   child: widget.direction == SwipeDirection.both
                       ? Padding(
-                          padding: EdgeInsets.fromLTRB(
-                              width * 0.05, 0, width * 0.05, 0),
+                          padding: EdgeInsets.symmetric(horizontal: width * 0.05),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              Transform.scale(
+                                scaleX: -1,
+                                child: Lottie.asset(
+                                  decoder: customDecoder,
+                                  widget.lottieAsset,
+                                  width: 40,
+                                  height: 40,
+                                ),
+                              ),
                               Text(
                                 widget.text,
                                 style: GoogleFonts.crimsonPro(
@@ -110,24 +122,56 @@ class _SwipeButtonState extends State<SwipeButton>
                                   color: AppColors.secondary,
                                 ),
                               ),
-                              Space.horizontalSpaceMedium(context),
-                              Text(
-                                widget.text,
-                                style: GoogleFonts.crimsonPro(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.secondary,
-                                ),
+                              Lottie.asset(
+                                decoder: customDecoder,
+                                widget.lottieAsset,
+                                width: 40,
+                                height: 40,
                               ),
                             ],
                           ),
                         )
-                      : Text(
-                          widget.text,
-                          style: GoogleFonts.crimsonPro(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.secondary,
+                      : Padding(
+                          padding: widget.direction == SwipeDirection.left
+                              ? EdgeInsets.only(left: widget.height * 0.8)
+                              : EdgeInsets.only(right: widget.height * 0.8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: widget.direction == SwipeDirection.left
+                                ? [
+                                    Text(
+                                      widget.text,
+                                      style: GoogleFonts.crimsonPro(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.secondary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Lottie.asset(
+                                      decoder: customDecoder,
+                                      widget.lottieAsset,
+                                      width: 40,
+                                      height: 40,
+                                    ),
+                                  ]
+                                : [
+                                    Lottie.asset(
+                                      decoder: customDecoder,
+                                      widget.lottieAsset,
+                                      width: 40,
+                                      height: 40,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      widget.text,
+                                      style: GoogleFonts.crimsonPro(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.secondary,
+                                      ),
+                                    ),
+                                  ],
                           ),
                         )),
             ),

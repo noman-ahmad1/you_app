@@ -62,6 +62,10 @@ class AppConstants {
   static const String heart = 'assets/icons/heart.png';
   static const String group = 'assets/icons/group.png';
   static const String smsRequest = 'assets/icons/smsRequest.png';
+  static const String reply = 'assets/icons/reply.png';
+  static const String email = 'assets/icons/email.png';
+  static const String phone = 'assets/icons/phone.png';
+  static const String gift = 'assets/icons/gift.png';
 
   //images
   static const String register = 'assets/images/1.png';
@@ -84,6 +88,19 @@ class AppConstants {
   static const String drop = 'assets/sounds/drop.mp3';
   static const String page = 'assets/sounds/journal.mp3';
   static const String swipe = 'assets/sounds/swipe.mp3';
+
+  //animations
+  static const String like = 'assets/animations/like.lottie';
+  static const String empty = 'assets/animations/empty.lottie';
+  static const String emptyJournal = 'assets/animations/empty_journal.lottie';
+  static const String loading = 'assets/animations/loading.lottie';
+  static const String done2 = 'assets/animations/done.lottie';
+  static const String pending2 = 'assets/animations/pending.lottie';
+  static const String swipeRight = 'assets/animations/swipe_right.lottie';
+  static const String swipeLeft = 'assets/animations/swipe_left.lottie';
+  static const String write2 = 'assets/animations/write.lottie';
+  static const String searchVolunteer =
+      'assets/animations/search_volunteer.lottie';
 
   // static List<LanguageModel> languages = [
   //   LanguageModel(

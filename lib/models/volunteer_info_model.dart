@@ -5,7 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class VolunteerInfo {
   final String uid;
   final String? idCardUrl;
+  final String? idCardBackUrl;
   final String? studentIdUrl;
+  final String? studentIdBackUrl;
   final String? currentLevelOfStudy;
   final String? institutionName;
   final String? graduationYear;
@@ -19,7 +21,9 @@ class VolunteerInfo {
   VolunteerInfo({
     required this.uid,
     this.idCardUrl,
+    this.idCardBackUrl,
     this.studentIdUrl,
+    this.studentIdBackUrl,
     this.currentLevelOfStudy,
     this.institutionName,
     this.graduationYear,
@@ -35,7 +39,9 @@ class VolunteerInfo {
     return VolunteerInfo(
       uid: data['uid'] as String,
       idCardUrl: data['idCardUrl'] as String?,
+      idCardBackUrl: data['idCardBackUrl'] as String?,
       studentIdUrl: data['studentIdUrl'] as String?,
+      studentIdBackUrl: data['studentIdBackUrl'] as String?,
       currentLevelOfStudy: data['currentLevelOfStudy'] as String?,
       institutionName: data['institutionName'] as String?,
       graduationYear: data['graduationYear'] as String?,
@@ -54,7 +60,9 @@ class VolunteerInfo {
     return {
       'uid': uid,
       'idCardUrl': idCardUrl,
+      'idCardBackUrl': idCardBackUrl,
       'studentIdUrl': studentIdUrl,
+      'studentIdBackUrl': studentIdBackUrl,
       'currentLevelOfStudy': currentLevelOfStudy,
       'institutionName': institutionName,
       'graduationYear': graduationYear,

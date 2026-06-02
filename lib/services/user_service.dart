@@ -10,6 +10,16 @@ class UserService {
     return doc.data();
   }
 
+  // STREAM: Listen to a single user document in real-time
+  Stream<AppUser?> streamUser(String uid) {
+    return _firestore.collection('users').doc(uid).snapshots().map((snapshot) {
+      if (snapshot.exists && snapshot.data() != null) {
+        return AppUser.fromJson(snapshot.data()!);
+      }
+      return null;
+    });
+  }
+
   // SET: Create a new user document (used during signup)
   Future<void> set(String uid, Map<String, dynamic> data) async {
     await _firestore.collection('users').doc(uid).set(data);
@@ -63,5 +73,16 @@ class UserService {
 
     // You'll need an AppUser.fromJson method in your model
     return snapshot.docs.map((doc) => AppUser.fromJson(doc.data())).toList();
+  }
+
+  Stream<List<AppUser>> streamAvailableVolunteers() {
+    return _firestore
+        .collection('users')
+        .where('role', isEqualTo: 'volunteer')
+        .where('status', isEqualTo: 'active')
+        .where('availabilityStatus', isEqualTo: 'online')
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => AppUser.fromJson(doc.data())).toList());
   }
 }

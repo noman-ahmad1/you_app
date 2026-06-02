@@ -53,10 +53,10 @@ class LoginViewModel extends BaseViewModel {
 
       // 4. Navigate based on the user's role.
       if (user.role == UserRole.volunteer) {
-        _navigationService.replaceWith(Routes.volunteerHomeView);
+        _navigationService.clearStackAndShow(Routes.volunteerHomeView);
       } else {
         // Both 'user' and 'admin' roles go to the main home view.
-        _navigationService.replaceWith(Routes.homeView);
+        _navigationService.clearStackAndShow(Routes.homeView);
       }
     } catch (e) {
       String errorMessage = _authenticationService.error ??

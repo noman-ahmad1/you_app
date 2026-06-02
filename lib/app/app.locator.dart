@@ -22,6 +22,7 @@ import '../services/country_code_service.dart';
 import '../services/journal_service.dart';
 import '../services/mood_service.dart';
 import '../services/push_notification_service.dart';
+import '../services/storage_service.dart';
 import '../services/user_service.dart';
 import '../services/volunteer_service.dart';
 import '../ui/views/volunteer_signup/volunteer_signup_viewmodel.dart';
@@ -50,5 +51,6 @@ Future<void> setupLocator(
   locator.registerLazySingleton(() => CommunityService());
   locator.registerLazySingleton(() => ChatbotService());
   locator.registerLazySingleton(() => PushNotificationService());
+  locator.registerLazySingleton(() => StorageService());
   locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }

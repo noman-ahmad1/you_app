@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,9 +10,8 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 // Import the VolunteerInfo model
+import 'package:you_app/services/storage_service.dart';
 // import 'package:you_app/models/volunteer_info.dart';
-// Added missing service imports for storage and database
-// import 'package:you_app/services/storage_service.dart'; // UNCOMMENTED
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -26,14 +26,14 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   // --- Services ---
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
-  // final _storageService =
-  //     locator<StorageService>(); // UNCOMMENTED: Added for Firebase Storage
-
+  final _storageService = locator<StorageService>();
 
   // --- Image States ---
   File? _selectedProfileImage;
   File? _selectedIdCardImage;
+  File? _selectedIdCardBackImage;
   File? _selectedStudentIdImage;
+  File? _selectedStudentIdBackImage;
 
   DateTime? _selectedDate;
   String? _selectedGender;
@@ -67,8 +67,9 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   // --- Getters ---
   File? get selectedProfileImage => _selectedProfileImage;
   File? get selectedIdCardImage => _selectedIdCardImage;
-  // NEW Getter
+  File? get selectedIdCardBackImage => _selectedIdCardBackImage;
   File? get selectedStudentIdImage => _selectedStudentIdImage;
+  File? get selectedStudentIdBackImage => _selectedStudentIdBackImage;
 
   DateTime? get selectedDate => _selectedDate;
   String? get selectedGender => _selectedGender;
@@ -194,8 +195,12 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
           _selectedProfileImage = imageFile;
         } else if (imageType == 'gov_id') {
           _selectedIdCardImage = imageFile;
+        } else if (imageType == 'gov_id_back') {
+          _selectedIdCardBackImage = imageFile;
         } else if (imageType == 'student_id') {
           _selectedStudentIdImage = imageFile;
+        } else if (imageType == 'student_id_back') {
+          _selectedStudentIdBackImage = imageFile;
         }
 
         notifyListeners();
@@ -311,7 +316,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
     );
   }
 
-  // 2. Government ID Card Picker (NEW implementation using modal sheet)
+  // 2. Government ID Card Picker (Front)
   void showIdCardImagePickerOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -326,7 +331,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Upload Government ID Card',
+                'Upload Government ID Card (Front)',
                 style: GoogleFonts.crimsonPro(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -342,14 +347,14 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
                     Icons.camera_alt,
                     'Camera',
                     () => pickImage(ImageSource.camera, context,
-                        imageType: 'gov_id'), // Correct type
+                        imageType: 'gov_id'),
                   ),
                   _buildImagePickerOption(
                     context,
                     Icons.photo_library,
                     'Gallery',
                     () => pickImage(ImageSource.gallery, context,
-                        imageType: 'gov_id'), // Correct type
+                        imageType: 'gov_id'),
                   ),
                 ],
               ),
@@ -361,7 +366,57 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
     );
   }
 
-  // 3. Student ID Card Picker (Kept as single pick for now, but easily updatable)
+  // Government ID Card Picker (Back)
+  void showIdCardBackImagePickerOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Upload Government ID Card (Back)',
+                style: GoogleFonts.crimsonPro(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryVeryDark,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildImagePickerOption(
+                    context,
+                    Icons.camera_alt,
+                    'Camera',
+                    () => pickImage(ImageSource.camera, context,
+                        imageType: 'gov_id_back'),
+                  ),
+                  _buildImagePickerOption(
+                    context,
+                    Icons.photo_library,
+                    'Gallery',
+                    () => pickImage(ImageSource.gallery, context,
+                        imageType: 'gov_id_back'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // 3. Student ID Card Picker (Front)
   void showStudentIdImagePickerOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -376,7 +431,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Upload Student ID Card',
+                'Upload Student ID Card (Front)',
                 style: GoogleFonts.crimsonPro(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -392,14 +447,64 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
                     Icons.camera_alt,
                     'Camera',
                     () => pickImage(ImageSource.camera, context,
-                        imageType: 'student_id'), // Correct type
+                        imageType: 'student_id'),
                   ),
                   _buildImagePickerOption(
                     context,
                     Icons.photo_library,
                     'Gallery',
                     () => pickImage(ImageSource.gallery, context,
-                        imageType: 'student_id'), // Correct type
+                        imageType: 'student_id'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Student ID Card Picker (Back)
+  void showStudentIdBackImagePickerOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Upload Student ID Card (Back)',
+                style: GoogleFonts.crimsonPro(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryVeryDark,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildImagePickerOption(
+                    context,
+                    Icons.camera_alt,
+                    'Camera',
+                    () => pickImage(ImageSource.camera, context,
+                        imageType: 'student_id_back'),
+                  ),
+                  _buildImagePickerOption(
+                    context,
+                    Icons.photo_library,
+                    'Gallery',
+                    () => pickImage(ImageSource.gallery, context,
+                        imageType: 'student_id_back'),
                   ),
                 ],
               ),
@@ -413,16 +518,12 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
 
   // --- Firebase Storage and Firestore ---
 
-  // REAL upload function using _storageService
   Future<String?> _uploadImage(File image, String folderName) async {
     if (image.existsSync()) {
       final storagePath =
           '$folderName/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      // Changed to use the actual storage service (assuming it has a uploadFile method)
-      // final downloadUrl = await _storageService.uploadFile(image, storagePath);
-
-      // return downloadUrl;
+      final downloadUrl = await _storageService.uploadFile(image, storagePath);
+      return downloadUrl;
     }
     return null;
   }
@@ -441,26 +542,26 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
     _validationError = null;
     notifyListeners();
 
-    // 1. Validation (omitted internal content for brevity)
-    // if (_selectedProfileImage == null) {
-    //   _validationError = 'Please upload a Profile Photo.';
-    //   notifyListeners();
-    //   return;
-    // }
+    if (_selectedProfileImage == null) {
+      _validationError = 'Please upload a Profile Photo.';
+      notifyListeners();
+      return;
+    }
 
-    // if (_selectedIdCardImage == null) {
-    //   _validationError =
-    //       'Please upload your Government ID Card for verification.';
-    //   notifyListeners();
-    //   return;
-    // }
+    if (_selectedIdCardImage == null || _selectedIdCardBackImage == null) {
+      _validationError =
+          'Please upload both Front and Back of your Government ID.';
+      notifyListeners();
+      return;
+    }
 
-    // if (_selectedStudentIdImage == null) {
-    //   _validationError =
-    //       'Please upload your Student ID Card for academic verification.';
-    //   notifyListeners();
-    //   return;
-    // }
+    if (_selectedStudentIdImage == null ||
+        _selectedStudentIdBackImage == null) {
+      _validationError =
+          'Please upload both Front and Back of your Student ID.';
+      notifyListeners();
+      return;
+    }
 
     if (firstNameController.text.isEmpty ||
         secondNameController.text.isEmpty ||
@@ -471,7 +572,6 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
       return;
     }
 
-    // Check if academic fields are filled (assuming they are set on page 2/3)
     if (institutionController.text.isEmpty ||
         graduationYearController.text.isEmpty ||
         _selectedLevel == null ||
@@ -481,7 +581,6 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
       return;
     }
 
-    // Final page and agreement check
     if (_currentPage != 2 || !_agreementAccepted) {
       _validationError = 'Please complete all steps and accept the agreement.';
       notifyListeners();
@@ -489,18 +588,43 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
     }
 
     setBusy(true);
+    _validationError = null;
 
     try {
-      // 2. Upload ALL Images to Storage
-      final profileUrl = "profileDemoUrl";
-      // await _uploadImage(_selectedProfileImage!, 'volunteer_profiles');
-      final idCardUrl = "idDemoUrl";
-      // await _uploadImage(_selectedIdCardImage!, 'volunteer_id_cards');
-      final studentIdUrl = "studentIdDemoUrl";
-      // await _uploadImage(_selectedStudentIdImage!, 'volunteer_student_ids');
+      // 1. Validate images
+      if (_selectedProfileImage == null ||
+          _selectedIdCardImage == null ||
+          _selectedIdCardBackImage == null ||
+          _selectedStudentIdImage == null ||
+          _selectedStudentIdBackImage == null) {
+        throw Exception('Please select all required images before submitting.');
+      }
 
-      if (profileUrl == null || idCardUrl == null || studentIdUrl == null) {
-        throw Exception('Failed to upload one or more required images.');
+      // 2. Upload ALL Images to Storage in Parallel
+      // Future.wait executes all these uploads at the exact same time!
+      final uploadResults = await Future.wait([
+        _uploadImage(_selectedProfileImage!, 'volunteer_profiles'),
+        _uploadImage(_selectedIdCardImage!, 'volunteer_id_cards'),
+        _uploadImage(_selectedIdCardBackImage!, 'volunteer_id_cards_back'),
+        _uploadImage(_selectedStudentIdImage!, 'volunteer_student_ids'),
+        _uploadImage(
+            _selectedStudentIdBackImage!, 'volunteer_student_ids_back'),
+      ]);
+
+      // Map the results back to their variables
+      final profileUrl = uploadResults[0];
+      final idCardUrl = uploadResults[1];
+      final idCardBackUrl = uploadResults[2];
+      final studentIdUrl = uploadResults[3];
+      final studentIdBackUrl = uploadResults[4];
+
+      if (profileUrl == null ||
+          idCardUrl == null ||
+          idCardBackUrl == null ||
+          studentIdUrl == null ||
+          studentIdBackUrl == null) {
+        throw Exception(
+            'Image upload failed. Please check your connection or Firebase Storage rules.');
       }
 
       // 3. Save Personal Info to core User Table (AppUser)
@@ -511,7 +635,6 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
         'gender': _selectedGender,
         'profilePictureUrl': profileUrl,
       };
-      print('User ID before update: ${appUserData['uid']}');
       await _updateAppUser(appUserData);
 
       // 4. Create/Set Volunteer Info to separate table (VolunteerInfo)
@@ -519,14 +642,16 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
       final volunteerInfoData = {
         'uid': uid,
         'idCardUrl': idCardUrl,
+        'idCardBackUrl': idCardBackUrl,
         'studentIdUrl': studentIdUrl,
+        'studentIdBackUrl': studentIdBackUrl,
         'currentLevelOfStudy': _selectedLevel,
         'institutionName': institutionController.text.trim(),
         'graduationYear': graduationYearController.text.trim(),
         'specializationCategory': _selectedCategory,
         'agreementAccepted': _agreementAccepted,
         'status': 'pending_verification',
-        'createdAt': DateTime.now(),
+        'createdAt': FieldValue.serverTimestamp(),
       };
       await _saveVolunteerInfo(volunteerInfoData);
 
@@ -536,8 +661,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
           description: 'Volunteer profile submitted for verification!');
       navigateToVolunteerHome();
     } catch (e) {
-      _validationError =
-          'Submission failed: Please check your connection and try again.';
+      _validationError = 'Submission failed: ${e.toString()}';
       await _dialogService.showDialog(
           title: 'Submission Error', description: e.toString());
     } finally {
@@ -547,7 +671,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   }
 
   Future navigateToVolunteerHome() async {
-    _navigationService.navigateToVolunteerHomeView();
+    _navigationService.clearStackAndShow(Routes.volunteerPendingVerificationView);
   }
 
   @override

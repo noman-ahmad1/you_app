@@ -5,7 +5,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/app_theme.dart';
@@ -67,7 +69,9 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                         child: IgnorePointer(
                           child: AnimatedOpacity(
                             duration: const Duration(milliseconds: 300),
-                            opacity: viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
+                            opacity: viewModel.unreadNotificationsCount > 0
+                                ? 1.0
+                                : 0.0,
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: const BoxDecoration(
@@ -421,6 +425,18 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                                             ),
                                                             child: Center(
                                                               child:
+                                                                  //     Lottie.asset(
+                                                                  //   decoder:
+                                                                  //       customDecoder,
+                                                                  //   AppConstants
+                                                                  //       .write2,
+                                                                  //   // width: width *
+                                                                  //   //     0.05,
+                                                                  //   // height: height *
+                                                                  //   //     0.025,
+                                                                  //   fit: BoxFit
+                                                                  //       .contain,
+                                                                  // ),
                                                                   Image.asset(
                                                                 AppConstants
                                                                     .write,
@@ -485,6 +501,15 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                                               color: AppColors
                                                                   .secondary,
                                                             ),
+                                                          ),
+                                                          Lottie.asset(
+                                                            decoder:
+                                                                customDecoder,
+                                                            AppConstants
+                                                                .swipeRight,
+                                                            width: width * 0.1,
+                                                            height:
+                                                                height * 0.05,
                                                           ),
                                                         ],
                                                       ),

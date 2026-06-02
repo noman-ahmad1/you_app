@@ -100,13 +100,13 @@ class CommunityService {
   }
 
   // 6. Toggle like on a post
-  Future<void> toggleLikePost(String postId, List<String> currentLikedBy) async {
+  Future<void> toggleLikePost(String postId, bool isLiked) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
     final postRef = _firestore.collection('posts').doc(postId);
     
-    if (currentLikedBy.contains(uid)) {
+    if (isLiked) {
       // User has already liked it -> unlike
       await postRef.update({
         'likedBy': FieldValue.arrayRemove([uid]),
@@ -119,6 +119,48 @@ class CommunityService {
         'likeCount': FieldValue.increment(1),
       });
     }
+  }
+
+  // 7. Toggle like on a reply
+  Future<void> toggleLikeReply(String postId, String replyId, bool isLiked) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final replyRef = _firestore.collection('posts').doc(postId).collection('replies').doc(replyId);
+    
+    if (isLiked) {
+      await replyRef.update({
+        'likedBy': FieldValue.arrayRemove([uid]),
+        'likeCount': FieldValue.increment(-1),
+      });
+    } else {
+      await replyRef.update({
+        'likedBy': FieldValue.arrayUnion([uid]),
+        'likeCount': FieldValue.increment(1),
+      });
+    }
+  }
+
+  // 8. Join a community
+  Future<void> joinCommunity(String communityId) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final batch = _firestore.batch();
+    
+    // Update the user's joinedCommunities list
+    final userRef = _firestore.collection('users').doc(uid);
+    batch.update(userRef, {
+      'joinedCommunities': FieldValue.arrayUnion([communityId])
+    });
+
+    // Optionally increment the members count in the community doc
+    final communityRef = _firestore.collection('communities').doc(communityId);
+    batch.update(communityRef, {
+      'membersCount': FieldValue.increment(1)
+    });
+
+    await batch.commit();
   }
 }
 

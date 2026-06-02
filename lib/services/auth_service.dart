@@ -86,7 +86,7 @@ class AuthenticationService with ListenableServiceMixin {
     _authSubscription = _auth.authStateChanges().listen(_onAuthStateChanged);
   }
 
-  void _onAuthStateChanged(User? firebaseUser) async {
+  Future<void> _onAuthStateChanged(User? firebaseUser) async {
     if (firebaseUser != null) {
       try {
         // Use the Service Locator to get FirestoreService
@@ -144,7 +144,7 @@ class AuthenticationService with ListenableServiceMixin {
     final firebaseUser = _auth.currentUser;
     if (firebaseUser != null) {
       await firebaseUser.reload();
-      _onAuthStateChanged(firebaseUser);
+      await _onAuthStateChanged(firebaseUser);
     }
   }
 
@@ -191,6 +191,9 @@ class AuthenticationService with ListenableServiceMixin {
       gender: userData?['gender'],
       username: userData?['username'],
       dateOfBirth: (userData?['dateOfBirth'] as Timestamp?)?.toDate(),
+      joinedCommunities: userData?['joinedCommunities'] != null
+          ? List<String>.from(userData!['joinedCommunities'])
+          : [],
     );
   }
 

@@ -119,7 +119,7 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                           // viewModel.navigateToVolunteerSignupInfo();
                         },
                         child: Text(
-                          'Sign Up | Login as Volunteer',
+                          'Sign Up as Volunteer',
                           style: GoogleFonts.crimsonPro(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,

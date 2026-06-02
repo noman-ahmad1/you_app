@@ -2,8 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart'; // Import for date formatting
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/chat_request_model.dart'; // Import ChatRequest
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
@@ -60,7 +62,8 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                     child: IgnorePointer(
                       child: AnimatedOpacity(
                         duration: const Duration(milliseconds: 300),
-                        opacity: viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
+                        opacity:
+                            viewModel.unreadNotificationsCount > 0 ? 1.0 : 0.0,
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: const BoxDecoration(
@@ -148,10 +151,17 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                     Expanded(
                       child: viewModel.isBusyActiveChats &&
                               viewModel.activeChats.isEmpty
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                              color: AppColors.secondary,
-                            ))
+                          ? Center(
+                              child: Lottie.asset(
+                                AppConstants.loading,
+                                decoder: customDecoder,
+                                width: 200,
+                                height: 200,
+                              ),
+                              //   CircularProgressIndicator(
+                              //   color: AppColors.secondary,
+                              // )
+                            )
                           : viewModel.activeChats.isEmpty
                               ? Center(
                                   child: Text(

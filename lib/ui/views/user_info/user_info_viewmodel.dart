@@ -162,7 +162,7 @@ class UserInfoViewModel extends BaseViewModel {
       await _authenticationService.checkCurrentUserStatus();
 
       // 3. Navigate to the main application view
-      _navigationService.replaceWith(Routes.homeView);
+      _navigationService.clearStackAndShow(Routes.homeView);
     } catch (e) {
       _dialogService.showDialog(
         title: 'Profile Update Failed',
