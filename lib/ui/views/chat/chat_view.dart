@@ -66,11 +66,11 @@ class ChatView extends StackedView<ChatViewModel> {
             onLeadingPressed: () {
               viewModel.back();
             },
-            title: 'Hi, ${viewModel.volunteerName}!',
+            title: '${viewModel.volunteerName}',
             trailingActions: [
               InkWell(
                 onTap: () {
-                  viewModel.deleteChat();
+                  viewModel.endChat();
                 },
                 child: Container(
                   padding: const EdgeInsets.all(8),

@@ -80,7 +80,8 @@ class AppConstants {
   static const String dodoCut = 'assets/images/dodo_cut.png';
   static const String dodo = 'assets/images/dodo.png';
   static const String logo = 'assets/images/You.png';
-  static const String soothing = 'assets/images/soothing.jpeg';
+  static const String soothing = 'assets/images/soothing.jpg';
+  static const String breathe = 'assets/images/breathe.jpg';
   static const String soothing2 = 'assets/images/soothing2.jpg';
   static const String lonliness = 'assets/images/lonliness.png';
 
@@ -88,6 +89,9 @@ class AppConstants {
   static const String drop = 'assets/sounds/drop.mp3';
   static const String page = 'assets/sounds/journal.mp3';
   static const String swipe = 'assets/sounds/swipe.mp3';
+  static const String natureWater = 'assets/sounds/nature_water.mp3';
+  static const String calm = 'assets/sounds/calm.mp3';
+  static const String focus = 'assets/sounds/focus.mp3';
 
   //animations
   static const String like = 'assets/animations/like.lottie';
@@ -99,8 +103,42 @@ class AppConstants {
   static const String swipeRight = 'assets/animations/swipe_right.lottie';
   static const String swipeLeft = 'assets/animations/swipe_left.lottie';
   static const String write2 = 'assets/animations/write.lottie';
+  static const String music2 = 'assets/animations/music.lottie';
+  static const String breathe2 = 'assets/animations/breathe.lottie';
   static const String searchVolunteer =
       'assets/animations/search_volunteer.lottie';
+
+  // Volunteer Tags
+  static const List<String> volunteerTags = [
+    'ADHD',
+    'Anxiety',
+    'Depression',
+    'Relationships',
+    'Stress',
+    'Panic',
+    'Phobia',
+    'Dysthymia',
+    'Bipolar',
+    'Autism',
+    'PTSD',
+    'OCD',
+    'Hoarding',
+    'Borderline',
+    'Narcissism',
+    'Anorexia',
+    'Bulimia',
+    'Schizophrenia',
+    'Addiction',
+    'Insomnia',
+    'Delusion',
+    'Trauma',
+    'Clinical Psychology',
+    'Counseling Psychology',
+    'School Psychology',
+    'Social Work',
+    'Psychiatry',
+    'Other'
+  ];
 
   // static List<LanguageModel> languages = [
   //   LanguageModel(

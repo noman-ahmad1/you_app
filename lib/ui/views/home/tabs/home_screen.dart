@@ -13,6 +13,8 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/app_theme.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
+// import 'package:you_app/ui/views/home/volunteer_card.dart';
+import 'package:you_app/ui/views/home/widgets/feature_nav_card.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 
 class HomeScreen extends ViewModelWidget<HomeViewModel> {
@@ -20,6 +22,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
 
   @override
   Widget build(BuildContext context, HomeViewModel viewModel) {
+    final user = viewModel.currentUser;
     final mediaQuery = MediaQuery.of(context);
     final width = mediaQuery.size.width;
     final height = mediaQuery.size.height;
@@ -40,7 +43,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                 onLeadingPressed: () {
                   // Handle tap
                 },
-                title: 'Hi, Friend',
+                title: 'Hi, ${viewModel.currentUser?.firstName ?? "Friend"}',
                 subtitle: 'Saturday, May 16',
                 trailingActions: [
                   // Icon 1 (e.g., Notifications)
@@ -59,8 +62,10 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                             border: Border.all(
                                 color: AppColors.secondary.withAlpha(50)),
                           ),
-                          child: Image.asset('assets/icons/notification.png',
-                              width: 24, height: 24),
+                          child: Image.asset(AppConstants.notification,
+                              color: AppColors.primaryVeryDark,
+                              width: 24,
+                              height: 24),
                         ),
                       ),
                       Positioned(
@@ -109,8 +114,14 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                         border: Border.all(
                             color: AppColors.secondary.withAlpha(50)),
                       ),
-                      child: Image.asset('assets/images/avatar.png',
-                          width: 32, height: 32),
+                      child: ClipOval(
+                        child: user?.profilePictureUrl != null &&
+                                user!.profilePictureUrl!.isNotEmpty
+                            ? Image.network(user.profilePictureUrl!,
+                                width: 34, height: 34, fit: BoxFit.cover)
+                            : Image.asset(AppConstants.avatar,
+                                width: 34, height: 34, fit: BoxFit.cover),
+                      ),
                     ),
                   ),
                 ],
@@ -125,23 +136,6 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            // Text(
-                            //   'Hello Noman',
-                            //   style: GoogleFonts.crimsonPro(
-                            //       fontSize: 25,
-                            //       fontWeight: FontWeight.w700,
-                            //       color: AppColors.secondary),
-                            // ),
-                            // Space.verticalSpaceVTiny(context),
-                            // Text(
-                            //   'Welcome to YOU, a safe space to land',
-                            //   style: GoogleFonts.crimsonPro(
-                            //       fontSize: 17,
-                            //       fontWeight: FontWeight.w700,
-                            //       color: AppColors.secondary),
-                            // ),
-                            // Space.verticalSpaceVTiny(context),
-                            // Space.verticalSpaceTiny(context),
                             ClipRRect(
                               borderRadius: BorderRadius.circular(23),
                               child: BackdropFilter(
@@ -425,18 +419,6 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                                             ),
                                                             child: Center(
                                                               child:
-                                                                  //     Lottie.asset(
-                                                                  //   decoder:
-                                                                  //       customDecoder,
-                                                                  //   AppConstants
-                                                                  //       .write2,
-                                                                  //   // width: width *
-                                                                  //   //     0.05,
-                                                                  //   // height: height *
-                                                                  //   //     0.025,
-                                                                  //   fit: BoxFit
-                                                                  //       .contain,
-                                                                  // ),
                                                                   Image.asset(
                                                                 AppConstants
                                                                     .write,
@@ -462,26 +444,26 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                                         HapticFeedback
                                                             .lightImpact();
                                                         // Play a gentle "swipe start" sound
-                                                        await viewModel
-                                                            .playSwipeSound(
-                                                                isComplete:
-                                                                    false);
+                                                        // await viewModel
+                                                        //     .playSwipeSound(
+                                                        //         isComplete:
+                                                        //             false);
                                                       },
                                                       onSwipe: () async {
                                                         // While swiping, you could loop a soft whoosh sound
-                                                        await viewModel
-                                                            .playSwipeSound(
-                                                                isComplete:
-                                                                    false);
+                                                        // await viewModel
+                                                        //     .playSwipeSound(
+                                                        //         isComplete:
+                                                        //             false);
                                                       },
                                                       onSwipeEnd: () async {
                                                         HapticFeedback
                                                             .mediumImpact();
                                                         // Stop swipe loop and play "completion chime"
-                                                        viewModel
-                                                            .playSwipeSound(
-                                                                isComplete:
-                                                                    true);
+                                                        // viewModel
+                                                        //     .playSwipeSound(
+                                                        //         isComplete:
+                                                        //             true);
                                                         viewModel
                                                             .navigateToJournal();
                                                       },
@@ -669,281 +651,19 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Image.asset(
-                                  AppConstants.back,
-                                  color: AppColors.secondary,
-                                  width: width * 0.08,
-                                  height: height * 0.04,
-                                  fit: BoxFit.cover,
+                                FeatureNavCard(
+                                  title: 'Soothing Sounds',
+                                  subtitle: 'Relax & Listen',
+                                  imageAsset: AppConstants.soothing,
+                                  onTap: viewModel.navigateToSoothingSounds,
                                 ),
-                                Text(
-                                  'Soothing Sounds',
-                                  style: GoogleFonts.crimsonPro(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.secondary),
-                                ),
-                                Image.asset(
-                                  AppConstants.next,
-                                  color: AppColors.secondary,
-                                  width: width * 0.08,
-                                  height: height * 0.04,
-                                  fit: BoxFit.cover,
+                                FeatureNavCard(
+                                  title: 'Breathe',
+                                  subtitle: 'Calm Your Mind',
+                                  imageAsset: AppConstants.breathe,
+                                  onTap: viewModel.navigateToBreathe,
                                 ),
                               ],
-                            ),
-                            Space.verticalSpaceTiny(context),
-                            // Music Card
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(23),
-                                    child: BackdropFilter(
-                                      filter: ImageFilter.blur(
-                                          sigmaX: 200, sigmaY: 200),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        width: width * 0.42,
-                                        height: height * 0.19,
-                                        decoration: BoxDecoration(
-                                          image: const DecorationImage(
-                                            image: AssetImage(
-                                                AppConstants.soothing),
-                                            fit: BoxFit.cover,
-                                          ),
-                                          color: AppColors.secondaryVeryLight
-                                              .withAlpha(102),
-                                          border: Border.all(
-                                              color: AppColors.secondary,
-                                              width: 2),
-                                          borderRadius:
-                                              BorderRadius.circular(23),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withAlpha(25),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            InkWell(
-                                              onTap: () {
-                                                viewModel.skipBackward();
-                                              },
-                                              child: Image.asset(
-                                                AppConstants.backward,
-                                                color: AppColors.background,
-                                                width: width * 0.08,
-                                                height: height * 0.03,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            InkWell(
-                                              onTap: () {
-                                                viewModel.togglePlayPause(
-                                                    0, AppConstants.page);
-                                              },
-                                              child: Image.asset(
-                                                viewModel.isPlayingTrack(0)
-                                                    ? AppConstants.pause
-                                                    : AppConstants.play,
-                                                color: AppColors.background,
-                                                width: width * 0.06,
-                                                height: height * 0.03,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            InkWell(
-                                              onTap: () {
-                                                viewModel.skipForward();
-                                              },
-                                              child: Image.asset(
-                                                AppConstants.forward,
-                                                color: AppColors.background,
-                                                width: width * 0.08,
-                                                height: height * 0.03,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Space.horizontalSpaceTiny(context),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(23),
-                                    child: BackdropFilter(
-                                      filter: ImageFilter.blur(
-                                          sigmaX: 200, sigmaY: 200),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        width: width * 0.42,
-                                        height: height * 0.19,
-                                        decoration: BoxDecoration(
-                                          image: const DecorationImage(
-                                            image: AssetImage(
-                                                AppConstants.soothing2),
-                                            fit: BoxFit.cover,
-                                          ),
-                                          color: AppColors.secondaryVeryLight
-                                              .withAlpha(102),
-                                          border: Border.all(
-                                              color: AppColors.secondary,
-                                              width: 2),
-                                          borderRadius:
-                                              BorderRadius.circular(23),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withAlpha(25),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            InkWell(
-                                              onTap: () {
-                                                viewModel.skipBackward();
-                                              },
-                                              child: Image.asset(
-                                                AppConstants.backward,
-                                                color: AppColors.background,
-                                                width: width * 0.08,
-                                                height: height * 0.03,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            InkWell(
-                                              onTap: () {
-                                                viewModel.togglePlayPause(
-                                                    1, AppConstants.page);
-                                              },
-                                              child: Image.asset(
-                                                viewModel.isPlayingTrack(1)
-                                                    ? AppConstants.pause
-                                                    : AppConstants.play,
-                                                color: AppColors.background,
-                                                width: width * 0.06,
-                                                height: height * 0.03,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            InkWell(
-                                              onTap: () {
-                                                viewModel.skipForward();
-                                              },
-                                              child: Image.asset(
-                                                AppConstants.forward,
-                                                color: AppColors.background,
-                                                width: width * 0.08,
-                                                height: height * 0.03,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Space.horizontalSpaceTiny(context),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(23),
-                                    child: BackdropFilter(
-                                      filter: ImageFilter.blur(
-                                          sigmaX: 200, sigmaY: 200),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        width: width * 0.42,
-                                        height: height * 0.19,
-                                        decoration: BoxDecoration(
-                                          image: const DecorationImage(
-                                            image:
-                                                AssetImage(AppConstants.music),
-                                            fit: BoxFit.cover,
-                                          ),
-                                          color: AppColors.secondaryVeryLight
-                                              .withAlpha(102),
-                                          border: Border.all(
-                                              color: AppColors.secondary,
-                                              width: 2),
-                                          borderRadius:
-                                              BorderRadius.circular(23),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withAlpha(25),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            InkWell(
-                                              onTap: () {
-                                                viewModel.skipBackward();
-                                              },
-                                              child: Image.asset(
-                                                AppConstants.backward,
-                                                color: AppColors.background,
-                                                width: width * 0.08,
-                                                height: height * 0.03,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            InkWell(
-                                              onTap: () {
-                                                viewModel.togglePlayPause(
-                                                    2, AppConstants.page);
-                                              },
-                                              child: Image.asset(
-                                                viewModel.isPlayingTrack(2)
-                                                    ? AppConstants.pause
-                                                    : AppConstants.play,
-                                                color: AppColors.background,
-                                                width: width * 0.06,
-                                                height: height * 0.03,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                            InkWell(
-                                              onTap: () {
-                                                viewModel.skipForward();
-                                              },
-                                              child: Image.asset(
-                                                AppConstants.forward,
-                                                color: AppColors.background,
-                                                width: width * 0.08,
-                                                height: height * 0.03,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
                             ),
                           ],
                         ),

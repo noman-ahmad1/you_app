@@ -81,6 +81,7 @@ class ChatbotViewModel extends BaseViewModel {
       _messages.add({
         'isMe': 'false',
         'text':
+            // 'DEBUG ERROR: $e'
             "I'm sorry, I'm having trouble connecting right now. Can we try again?"
       });
       _saveMessages();

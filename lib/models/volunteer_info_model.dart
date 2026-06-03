@@ -11,12 +11,17 @@ class VolunteerInfo {
   final String? currentLevelOfStudy;
   final String? institutionName;
   final String? graduationYear;
-  final String? specializationCategory;
+  final List<String>? tags;
   final bool agreementAccepted;
   final String status;
 
   /// Timestamp of when the application was created.
   final DateTime? createdAt;
+
+  // Statistics
+  final int completedChats;
+  final double averageRating;
+  final int totalReviews;
 
   VolunteerInfo({
     required this.uid,
@@ -27,10 +32,13 @@ class VolunteerInfo {
     this.currentLevelOfStudy,
     this.institutionName,
     this.graduationYear,
-    this.specializationCategory,
+    this.tags,
     required this.agreementAccepted,
     this.status = 'pending_verification', // Default status
     this.createdAt,
+    this.completedChats = 0,
+    this.averageRating = 0.0,
+    this.totalReviews = 0,
   });
 
   // --- Serialization ---
@@ -45,7 +53,7 @@ class VolunteerInfo {
       currentLevelOfStudy: data['currentLevelOfStudy'] as String?,
       institutionName: data['institutionName'] as String?,
       graduationYear: data['graduationYear'] as String?,
-      specializationCategory: data['specializationCategory'] as String?,
+      tags: data['tags'] != null ? List<String>.from(data['tags']) : null,
       agreementAccepted: data['agreementAccepted'] as bool? ?? false,
       status: data['status'] as String? ?? 'pending_verification',
       createdAt: (data['createdAt'] is Timestamp)
@@ -53,6 +61,9 @@ class VolunteerInfo {
           : data['createdAt'] != null
               ? DateTime.parse(data['createdAt'])
               : null,
+      completedChats: data['completedChats'] as int? ?? 0,
+      averageRating: (data['averageRating'] as num?)?.toDouble() ?? 0.0,
+      totalReviews: data['totalReviews'] as int? ?? 0,
     );
   }
 
@@ -66,10 +77,13 @@ class VolunteerInfo {
       'currentLevelOfStudy': currentLevelOfStudy,
       'institutionName': institutionName,
       'graduationYear': graduationYear,
-      'specializationCategory': specializationCategory,
+      'tags': tags,
       'agreementAccepted': agreementAccepted,
       'status': status,
       'createdAt': createdAt?.toIso8601String(),
+      'completedChats': completedChats,
+      'averageRating': averageRating,
+      'totalReviews': totalReviews,
     };
   }
 }

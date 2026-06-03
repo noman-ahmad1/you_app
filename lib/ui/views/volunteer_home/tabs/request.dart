@@ -33,7 +33,7 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
             onLeadingPressed: () {
               // Handle tap
             },
-            title: 'Hi, Friend',
+            title: 'Requests',
             subtitle: 'Saturday, May 16',
             trailingActions: [
               // Icon 1 (e.g., Notifications)
@@ -52,7 +52,9 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
                         border: Border.all(
                             color: AppColors.primaryVeryDark.withAlpha(50)),
                       ),
-                      child: Icon(Icons.notifications_none,
+                      child: Image.asset(AppConstants.notification,
+                          width: 24,
+                          height: 24,
                           color: AppColors.primaryVeryDark),
                     ),
                   ),
@@ -122,9 +124,20 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
                           : viewModel.pendingRequests
                                   .isEmpty // ✅ Use pendingRequests
                               ? Center(
-                                  child: Text(
-                                  "No pending requests.",
-                                  style: GoogleFonts.crimsonPro(fontSize: 20),
+                                  child: Column(
+                                  children: [
+                                    Lottie.asset(
+                                      AppConstants.empty,
+                                      decoder: customDecoder,
+                                      width: 200,
+                                      height: 200,
+                                    ),
+                                    Text(
+                                      "No pending requests.",
+                                      style:
+                                          GoogleFonts.crimsonPro(fontSize: 20),
+                                    ),
+                                  ],
                                 ))
                               : ListView.builder(
                                   // ✅ Use pendingRequests

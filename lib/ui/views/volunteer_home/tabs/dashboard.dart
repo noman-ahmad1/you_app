@@ -43,8 +43,8 @@ class DashboardScreen extends StatelessWidget {
                     onLeadingPressed: () {
                       // Handle tap
                     },
-                    title: 'Hi, Friend',
-                    subtitle: 'Saturday, May 16',
+                    title: 'Dashboard',
+                    subtitle: _getFormattedDate(),
                     trailingActions: [
                       // Icon 1 (e.g., Notifications)
                       Stack(
@@ -63,10 +63,8 @@ class DashboardScreen extends StatelessWidget {
                                     color: AppColors.primaryVeryDark
                                         .withAlpha(50)),
                               ),
-                              child: Image.asset(
-                                  'assets/icons/notification.png',
-                                  width: 24,
-                                  height: 24),
+                              child: Image.asset(AppConstants.notification,
+                                  width: 24, height: 24),
                             ),
                           ),
                           Positioned(
@@ -104,19 +102,28 @@ class DashboardScreen extends StatelessWidget {
                         ],
                       ),
                       // Icon 2 (e.g., Profile/Flower)
-                      InkWell(
-                        onTap: () {},
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: AppColors.primaryVeryDark.withAlpha(50)),
-                          ),
-                          child: Image.asset('assets/images/avatar.png',
-                              width: 24, height: 24),
-                        ),
-                      ),
+                      // InkWell(
+                      //   onTap: () {},
+                      //   child: Container(
+                      //     padding: const EdgeInsets.all(4),
+                      //     decoration: BoxDecoration(
+                      //       shape: BoxShape.circle,
+                      //       border: Border.all(
+                      //           color: AppColors.primaryVeryDark.withAlpha(50)),
+                      //     ),
+                      //     child: ClipOval(
+                      //       child: viewModel.currentUserProfileUrl != null &&
+                      //               viewModel.currentUserProfileUrl!.isNotEmpty
+                      //           ? Image.network(
+                      //               viewModel.currentUserProfileUrl!,
+                      //               width: 24,
+                      //               height: 24,
+                      //               fit: BoxFit.cover)
+                      //           : Image.asset(AppConstants.avatar,
+                      //               width: 24, height: 24, fit: BoxFit.cover),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                   Expanded(
@@ -130,12 +137,21 @@ class DashboardScreen extends StatelessWidget {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _buildHeader(width, height),
+                                  _buildHeader(width, height, viewModel),
                                   SizedBox(height: height * 0.03),
-                                  _buildStatsRow(width, height),
+                                  Text(
+                                    "Overview",
+                                    style: GoogleFonts.crimsonPro(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primaryVeryDark,
+                                    ),
+                                  ),
+                                  SizedBox(height: height * 0.02),
+                                  _buildStatsRow(width, height, viewModel),
                                   SizedBox(height: height * 0.03),
-                                  _buildQuickActions(context, width, height,
-                                      viewModel), // Pass context and viewModel
+                                  _buildQuickActions(
+                                      context, width, height, viewModel),
                                 ],
                               ),
                             ],
@@ -165,14 +181,15 @@ class DashboardScreen extends StatelessWidget {
   }
 
   /// HEADER SECTION
-  Widget _buildHeader(double width, double height) {
+  Widget _buildHeader(
+      double width, double height, VolunteerHomeViewModel viewModel) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(35),
+            InkWell(
+              onTap: () => viewModel.navigateToVolunteerEditProfile(),
               child: Container(
                 width: width * 0.18,
                 height: width * 0.18,
@@ -181,7 +198,13 @@ class DashboardScreen extends StatelessWidget {
                   border: Border.all(color: AppColors.secondary, width: 2),
                   shape: BoxShape.circle,
                 ),
-                child: Image.asset(AppConstants.avatar, fit: BoxFit.cover),
+                child: ClipOval(
+                  child: viewModel.currentUserProfileUrl != null &&
+                          viewModel.currentUserProfileUrl!.isNotEmpty
+                      ? Image.network(viewModel.currentUserProfileUrl!,
+                          fit: BoxFit.cover)
+                      : Image.asset(AppConstants.avatar, fit: BoxFit.cover),
+                ),
               ),
             ),
             SizedBox(width: width * 0.04),
@@ -189,7 +212,7 @@ class DashboardScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Welcome, Ali",
+                  "Welcome, ${viewModel.currentUserName}",
                   style: GoogleFonts.crimsonPro(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -208,41 +231,25 @@ class DashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.secondary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
-            ),
-            padding: EdgeInsets.symmetric(
-              horizontal: width * 0.04,
-              vertical: height * 0.01,
-            ),
-          ),
-          onPressed: () {
-            print("Edit Profile");
-          },
-          child: Text(
-            "Edit Profile",
-            style: GoogleFonts.crimsonPro(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ),
+        // Removed the "Edit Profile" button from here, moving it to Quick Actions
       ],
     );
   }
 
   /// STATS SECTION
-  Widget _buildStatsRow(double width, double height) {
+  Widget _buildStatsRow(
+      double width, double height, VolunteerHomeViewModel viewModel) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildStatCard("Total Chats", "45", AppConstants.msg, width, height),
         _buildStatCard(
-            "Active Chats", "3", AppConstants.activeChat, width, height),
+            "Pending Requests",
+            viewModel.pendingRequests.length.toString(),
+            AppConstants.pending,
+            width,
+            height),
+        _buildStatCard("Active Chats", viewModel.activeChats.length.toString(),
+            AppConstants.activeChat, width, height),
       ],
     );
   }
@@ -316,9 +323,8 @@ class DashboardScreen extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildActionButton("Notifications", AppConstants.pending, () {
-              viewModel.markAllNotificationsAsRead();
-              Scaffold.of(context).openDrawer();
+            _buildActionButton("Edit Profile", AppConstants.setting, () {
+              viewModel.navigateToVolunteerEditProfile();
             }, width, height),
             _buildActionButton("Completed Chats", AppConstants.done, () {
               print("Completed Chats");
@@ -337,13 +343,41 @@ class DashboardScreen extends StatelessWidget {
               width,
               height,
             ),
-            _buildActionButton("Settings", AppConstants.setting, () {
-              print("Settings");
+            _buildActionButton("Guidelines", AppConstants.write, () {
+              print("Guidelines");
             }, width, height),
           ],
         ),
       ],
     );
+  }
+
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+    const weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+    return '${weekdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
   }
 
   Widget _buildActionButton(String title, String icon, VoidCallback onTap,

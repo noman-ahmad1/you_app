@@ -65,7 +65,7 @@ class SignupView extends StackedView<SignupViewModel> {
                         Space.verticalSpaceVTiny(context),
                         CustomTextField(
                           controller: viewModel.secondNameController,
-                          labelText: 'Second Name',
+                          labelText: 'Last Name',
                           keyboardType: TextInputType.name,
                         ),
                         Space.verticalSpaceVTiny(context),

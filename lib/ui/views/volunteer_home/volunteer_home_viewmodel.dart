@@ -49,6 +49,9 @@ class VolunteerHomeViewModel extends BaseViewModel {
   String get currentUserName =>
       _authenticationService.currentUser?.firstName ?? 'Volunteer';
 
+  String? get currentUserProfileUrl =>
+      _authenticationService.currentUser?.profilePictureUrl;
+
   VolunteerHomeViewModel() {
     _fetchInitialAvailability();
     listenForRequests();
@@ -167,7 +170,8 @@ class VolunteerHomeViewModel extends BaseViewModel {
     // Show loading specifically for this action
     setBusyForObject(request.id, true);
     try {
-      await locator<ChatRequestService>().acceptRequest(request);
+      await locator<ChatRequestService>()
+          .acceptRequest(request, currentUserName, currentUserProfileUrl);
       // Pending list updates automatically via stream.
       // Active chat list updates automatically via stream.
 
@@ -231,6 +235,10 @@ class VolunteerHomeViewModel extends BaseViewModel {
     }
   }
 
+  void navigateToVolunteerEditProfile() {
+    _navigationService.navigateTo(Routes.volunteerEditProfileView);
+  }
+
   void setTab(int index) {
     if (index == 0) {
       markAllNotificationsAsRead();
@@ -249,7 +257,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
     if (volunteerId == null) return;
 
     _notificationsSubscription?.cancel();
-    
+
     bool isInitial = true;
     _notificationsSubscription = FirebaseFirestore.instance
         .collection('users')
@@ -282,7 +290,9 @@ class VolunteerHomeViewModel extends BaseViewModel {
                 if (chatId != null) {
                   onTap = () {
                     final parts = chatId.split('_');
-                    final requesterId = parts.firstWhere((id) => id != volunteerId, orElse: () => '');
+                    final requesterId = parts.firstWhere(
+                        (id) => id != volunteerId,
+                        orElse: () => '');
                     _navigationService.navigateToChatView(
                       volunteerId: requesterId,
                       volunteerName: "User",

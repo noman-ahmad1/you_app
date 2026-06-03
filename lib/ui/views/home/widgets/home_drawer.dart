@@ -11,6 +11,7 @@ class HomeDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = viewModel.currentUser;
     return Drawer(
       backgroundColor:
           AppColors.background, // Soft off-white to match screenshot
@@ -32,7 +33,11 @@ class HomeDrawer extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundImage: const AssetImage(AppConstants.avatar),
+                    backgroundImage: user?.profilePictureUrl != null &&
+                            user!.profilePictureUrl!.isNotEmpty
+                        ? NetworkImage(user!.profilePictureUrl!)
+                        : const AssetImage(AppConstants.avatar)
+                            as ImageProvider,
                     backgroundColor: AppColors.secondaryVeryLight,
                   ),
                   const SizedBox(width: 16),

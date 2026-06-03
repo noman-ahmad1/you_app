@@ -75,14 +75,17 @@ class VolunteerCard extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Left side (Avatar and User Info - unchanged)
-              Row(
-                children: [
-                  _buildAvatar(width, height),
-                  SizedBox(width: width * 0.02),
-                  _buildUserInfo(width, height),
-                ],
+              // Left side (Avatar and User Info)
+              Expanded(
+                child: Row(
+                  children: [
+                    _buildAvatar(width, height),
+                    SizedBox(width: width * 0.02),
+                    Expanded(child: _buildUserInfo(width, height)),
+                  ],
+                ),
               ),
+              SizedBox(width: width * 0.02),
 
               // Right side action button
               GestureDetector(
@@ -127,38 +130,40 @@ class VolunteerCard extends StatelessWidget {
   // --- Helper Widgets (_buildAvatar, _buildUserInfo, _buildCategoryChip) ---
   // These remain unchanged. Paste your existing helper widget code here.
   Widget _buildAvatar(double width, double height) {
-    // ... your existing code ...
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(35),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
-        child: Container(
-          padding: EdgeInsets.all(width * 0.01),
-          width: width * 0.16,
-          height: height * 0.075,
-          decoration: BoxDecoration(
-            color: AppColors.secondaryVeryLight.withAlpha(102),
-            border: Border.all(color: AppColors.secondaryVeryLight, width: 2),
-            borderRadius: BorderRadius.circular(100),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(25),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
+    return Container(
+      width: width * 0.16,
+      height: width * 0.16, // make it perfectly square/round
+      decoration: BoxDecoration(
+        color: AppColors.secondaryVeryLight.withAlpha(102),
+        border: Border.all(color: AppColors.secondaryVeryLight, width: 2),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(25),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: avatarPath.startsWith('http')
+            ? Image.network(
+                avatarPath,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              )
+            : Image.asset(
+                avatarPath,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               ),
-            ],
-          ),
-          child: Image.asset(
-            avatarPath,
-            fit: BoxFit.cover,
-          ),
-        ),
       ),
     );
   }
 
   Widget _buildUserInfo(double width, double height) {
-    // ... your existing code ...
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -170,6 +175,8 @@ class VolunteerCard extends StatelessWidget {
             fontWeight: FontWeight.w700,
             color: AppColors.primaryVeryDark,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         Row(
           children: [
@@ -192,13 +199,16 @@ class VolunteerCard extends StatelessWidget {
           ],
         ),
         SizedBox(height: height * 0.007),
-        Row(
-          children: categories
-              .map((category) => Padding(
-                    padding: EdgeInsets.only(right: width * 0.01),
-                    child: _buildCategoryChip(category, width, height),
-                  ))
-              .toList(),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: categories
+                .map((category) => Padding(
+                      padding: EdgeInsets.only(right: width * 0.01),
+                      child: _buildCategoryChip(category, width, height),
+                    ))
+                .toList(),
+          ),
         )
       ],
     );

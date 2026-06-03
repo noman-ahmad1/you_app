@@ -18,7 +18,9 @@ import 'package:you_app/services/mood_service.dart';
 import 'package:you_app/services/journal_service.dart';
 import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
-import 'package:you_app/services/community_service.dart'; // UNCOMMENTED
+import 'package:you_app/services/community_service.dart';
+import 'package:you_app/ui/common/app_constants.dart'; // UNCOMMENTED
+import 'package:you_app/utils/image_compressor_helper.dart';
 
 class VolunteerSignupInfoViewModel extends BaseViewModel {
   final String uid;
@@ -38,7 +40,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   DateTime? _selectedDate;
   String? _selectedGender;
   String? _selectedLevel;
-  String? _selectedCategory;
+  List<String> _selectedTags = [];
   int _currentPage = 0;
   bool _agreementAccepted = false;
   String? _validationError;
@@ -55,14 +57,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
     'PhD Candidate',
     'Post Doc'
   ];
-  final List<String> _categories = [
-    'Clinical Psychology',
-    'Counseling Psychology',
-    'School Psychology',
-    'Social Work',
-    'Psychiatry',
-    'Other'
-  ];
+  final List<String> _categories = AppConstants.volunteerTags;
 
   // --- Getters ---
   File? get selectedProfileImage => _selectedProfileImage;
@@ -74,7 +69,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   DateTime? get selectedDate => _selectedDate;
   String? get selectedGender => _selectedGender;
   String? get selectedLevel => _selectedLevel;
-  String? get selectedCategory => _selectedCategory;
+  List<String> get selectedTags => _selectedTags;
   int get currentPage => _currentPage;
   bool get agreementAccepted => _agreementAccepted;
   List<String> get genders => _genders;
@@ -111,8 +106,13 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  void setCategory(String? category) {
-    _selectedCategory = category;
+  void toggleTag(String tag) {
+    if (_selectedTags.contains(tag)) {
+      _selectedTags.remove(tag);
+    } else {
+      _selectedTags.add(tag);
+    }
+    notifyListeners();
   }
 
   void toggleAgreement(bool? value) {
@@ -188,19 +188,20 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
       );
 
       if (pickedFile != null) {
-        final imageFile = File(pickedFile.path);
+        final originalFile = File(pickedFile.path);
+        final compressedFile = await ImageCompressorHelper.compressImage(originalFile);
 
         // Updated logic to set the correct state variable
         if (imageType == 'profile') {
-          _selectedProfileImage = imageFile;
+          _selectedProfileImage = compressedFile;
         } else if (imageType == 'gov_id') {
-          _selectedIdCardImage = imageFile;
+          _selectedIdCardImage = compressedFile;
         } else if (imageType == 'gov_id_back') {
-          _selectedIdCardBackImage = imageFile;
+          _selectedIdCardBackImage = compressedFile;
         } else if (imageType == 'student_id') {
-          _selectedStudentIdImage = imageFile;
+          _selectedStudentIdImage = compressedFile;
         } else if (imageType == 'student_id_back') {
-          _selectedStudentIdBackImage = imageFile;
+          _selectedStudentIdBackImage = compressedFile;
         }
 
         notifyListeners();
@@ -575,7 +576,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
     if (institutionController.text.isEmpty ||
         graduationYearController.text.isEmpty ||
         _selectedLevel == null ||
-        _selectedCategory == null) {
+        _selectedTags.isEmpty) {
       _validationError = 'All academic fields must be completed.';
       notifyListeners();
       return;
@@ -648,7 +649,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
         'currentLevelOfStudy': _selectedLevel,
         'institutionName': institutionController.text.trim(),
         'graduationYear': graduationYearController.text.trim(),
-        'specializationCategory': _selectedCategory,
+        'tags': _selectedTags,
         'agreementAccepted': _agreementAccepted,
         'status': 'pending_verification',
         'createdAt': FieldValue.serverTimestamp(),
@@ -671,7 +672,8 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   }
 
   Future navigateToVolunteerHome() async {
-    _navigationService.clearStackAndShow(Routes.volunteerPendingVerificationView);
+    _navigationService
+        .clearStackAndShow(Routes.volunteerPendingVerificationView);
   }
 
   @override

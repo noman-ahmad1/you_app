@@ -136,14 +136,13 @@ class PhoneNumberField extends StatefulWidget {
 }
 
 class _PhoneNumberFieldState extends State<PhoneNumberField> {
-  late String _selectedDialCode;
+  late String _selectedCountryCode;
   late List<Country> _countries;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _selectedDialCode = widget.initialDialCode;
     _loadCountries();
   }
 
@@ -155,22 +154,44 @@ class _PhoneNumberFieldState extends State<PhoneNumberField> {
       _countries = countryService.countries;
       _isLoading = false;
 
-      // Set initial country
-      final Country initialCountry =
-          countryService.getCountryByDialCode(widget.initialDialCode);
-      _selectedDialCode = initialCountry.dialCode;
+      String fullNumber = widget.controller.text.trim();
+      bool foundCode = false;
+
+      if (fullNumber.startsWith('+')) {
+        // Sort by longest dial code first to avoid partial matches (e.g. matching +1 instead of +1242)
+        final sortedCountries = List<Country>.from(_countries)
+          ..sort((a, b) => b.dialCode.length.compareTo(a.dialCode.length));
+
+        for (var country in sortedCountries) {
+          if (fullNumber.startsWith(country.dialCode)) {
+            _selectedCountryCode = country.countryCode;
+            // Update the controller to only contain the local number part
+            widget.controller.text =
+                fullNumber.substring(country.dialCode.length).trim();
+            foundCode = true;
+            break;
+          }
+        }
+      }
+
+      if (!foundCode) {
+        // Fallback to initialDialCode if no country code found in the string
+        final Country initialCountry =
+            countryService.getCountryByDialCode(widget.initialDialCode);
+        _selectedCountryCode = initialCountry.countryCode;
+      }
     });
   }
 
   String get _fullPhoneNumber {
     // Only return the dial code if the input field is not empty, or if we want to include it always.
     // For signup/auth, it's safer to always include it.
-    return '$_selectedDialCode${widget.controller.text}';
+    return '${_selectedCountry.dialCode}${widget.controller.text}';
   }
 
   Country get _selectedCountry {
-    final countryService = locator<CountryService>();
-    return countryService.getCountryByDialCode(_selectedDialCode);
+    return _countries.firstWhere((c) => c.countryCode == _selectedCountryCode,
+        orElse: () => _countries.first);
   }
 
   @override
@@ -294,7 +315,7 @@ class _PhoneNumberFieldState extends State<PhoneNumberField> {
       padding: const EdgeInsets.only(left: 12.0, right: 0.0),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: _selectedDialCode,
+          value: _selectedCountryCode,
           icon: const Icon(
             Icons.arrow_drop_down,
             color: AppColors.primaryVeryDark,
@@ -313,9 +334,9 @@ class _PhoneNumberFieldState extends State<PhoneNumberField> {
           onChanged: (String? newValue) {
             if (newValue != null) {
               setState(() {
-                _selectedDialCode = newValue;
+                _selectedCountryCode = newValue;
               });
-              widget.onCountryCodeChanged?.call(newValue);
+              widget.onCountryCodeChanged?.call(_selectedCountry.dialCode);
               widget.onChanged?.call(_fullPhoneNumber);
             }
           },
@@ -347,7 +368,7 @@ class _PhoneNumberFieldState extends State<PhoneNumberField> {
           },
           items: _countries.map<DropdownMenuItem<String>>((Country country) {
             return DropdownMenuItem<String>(
-              value: country.dialCode,
+              value: country.countryCode,
               // FIX 3: Removed BoxConstraints(minWidth: 100) to allow natural width
               child: Row(
                 children: [

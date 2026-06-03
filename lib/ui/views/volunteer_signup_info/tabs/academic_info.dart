@@ -121,72 +121,62 @@ class AcademicInfoView extends StatelessWidget {
         ),
         Space.verticalSpaceVTiny(context),
 
-        // --- Specialization Category Dropdown ---
-        DropdownButtonFormField<String>(
-          value:
-              viewModel.selectedCategory, // Use value instead of initialValue
-          decoration: InputDecoration(
-            fillColor: AppColors.background,
-            filled: true,
-            contentPadding: EdgeInsets.symmetric(
-              vertical: screenHeight * 0.0177,
-              horizontal: screenWidth * 0.07,
-            ),
-            labelStyle: GoogleFonts.crimsonPro(
-              color: AppColors.secondary,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(27),
-              borderSide: const BorderSide(
-                color: AppColors.primaryDark,
-                width: 2.0,
+        // --- Specialization Tags ---
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Text(
+              'Specialization Tags (Select multiple)',
+              style: GoogleFonts.crimsonPro(
+                color: AppColors.secondary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(27),
-              borderSide: const BorderSide(
-                color: AppColors.primaryDark,
-                width: 2.0,
-              ),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(27),
             ),
           ),
-          items: viewModel.categories.map((String category) {
-            return DropdownMenuItem<String>(
-              value: category,
-              child: Text(
-                category,
-                style: GoogleFonts.crimsonPro(
-                  color: AppColors.secondaryLight,
-                  fontSize: 16,
+        ),
+        Space.verticalSpaceVTiny(context),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(27),
+            border: Border.all(
+              color: AppColors.primaryDark,
+              width: 2.0,
+            ),
+          ),
+          child: Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: viewModel.categories.map((String category) {
+              final isSelected = viewModel.selectedTags.contains(category);
+              return FilterChip(
+                label: Text(
+                  category,
+                  style: GoogleFonts.crimsonPro(
+                    color: isSelected ? Colors.white : AppColors.secondary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
-          onChanged: viewModel.setCategory,
-          style: GoogleFonts.crimsonPro(
-            color: AppColors.secondaryLight,
-            fontSize: 16,
-          ),
-          dropdownColor: AppColors.background,
-          icon: const Icon(
-            Icons.arrow_drop_down,
-            color: AppColors.primaryDark,
-            size: 24,
-          ),
-          iconSize: 24,
-          elevation: 4,
-          borderRadius: BorderRadius.circular(12),
-          menuMaxHeight: 200,
-          isExpanded: true,
-          hint: Text(
-            'Specialization Category',
-            style: GoogleFonts.crimsonPro(
-              color: AppColors.secondaryLight,
-              fontSize: 16,
-            ),
+                selected: isSelected,
+                onSelected: (bool selected) {
+                  viewModel.toggleTag(category);
+                },
+                selectedColor: AppColors.secondary,
+                backgroundColor: AppColors.background,
+                checkmarkColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: const BorderSide(
+                    color: AppColors.secondary,
+                    width: 1,
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
         Space.verticalSpaceVTiny(context),

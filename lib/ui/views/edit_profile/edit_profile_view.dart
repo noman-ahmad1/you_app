@@ -131,9 +131,9 @@ class EditProfileView extends StackedView<EditProfileViewModel> {
                                             errorBuilder:
                                                 (context, error, stackTrace) =>
                                                     Image.asset(
-                                                        AppConstants.person),
+                                                        AppConstants.avatar),
                                           )
-                                        : Image.asset(AppConstants.person)),
+                                        : Image.asset(AppConstants.avatar)),
                               ),
                             ),
                             Positioned(

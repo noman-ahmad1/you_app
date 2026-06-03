@@ -38,6 +38,9 @@ import 'package:you_app/ui/views/community_chat/community_chat_view.dart';
 import 'package:you_app/ui/views/volunteer_pending_verification/volunteer_pending_verification_view.dart';
 import 'package:you_app/ui/views/profile/profile_view.dart';
 import 'package:you_app/ui/views/edit_profile/edit_profile_view.dart';
+import 'package:you_app/ui/views/soothing_sounds/soothing_sounds_view.dart';
+import 'package:you_app/ui/views/breathe/breathe_view.dart';
+import 'package:you_app/ui/views/volunteer_edit_profile/volunteer_edit_profile_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -65,6 +68,9 @@ import 'package:you_app/ui/views/edit_profile/edit_profile_view.dart';
     MaterialRoute(page: VolunteerPendingVerificationView),
     MaterialRoute(page: ProfileView),
     MaterialRoute(page: EditProfileView),
+    MaterialRoute(page: SoothingSoundsView),
+    MaterialRoute(page: BreatheView),
+    MaterialRoute(page: VolunteerEditProfileView),
 // @stacked-route
   ],
   dependencies: [

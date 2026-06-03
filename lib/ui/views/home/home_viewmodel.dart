@@ -29,7 +29,8 @@ class HomeViewModel extends ReactiveViewModel {
   final _authenticationService = locator<AuthenticationService>();
 
   @override
-  List<ListenableServiceMixin> get listenableServices => [_authenticationService];
+  List<ListenableServiceMixin> get listenableServices =>
+      [_authenticationService];
   // Secondary player for short sound effects (e.g., swipe)
   final AudioPlayer _fxPlayer = AudioPlayer();
   // Main player for soothing music audio
@@ -39,6 +40,34 @@ class HomeViewModel extends ReactiveViewModel {
 
   List<AppUser> _volunteers = [];
   List<AppUser> get volunteers => _volunteers;
+  AppUser? get currentUser => _authenticationService.currentUser;
+
+  Map<String, List<String>> _volunteerTags = {};
+  Map<String, List<String>> get volunteerTags => _volunteerTags;
+
+  Map<String, double> _volunteerRatings = {};
+  Map<String, double> get volunteerRatings => _volunteerRatings;
+
+  List<String> _selectedFilterTags = [];
+  List<String> get selectedFilterTags => _selectedFilterTags;
+
+  List<AppUser> get filteredVolunteers {
+    if (_selectedFilterTags.isEmpty) return _volunteers;
+    return _volunteers.where((volunteer) {
+      final tags = _volunteerTags[volunteer.uid] ?? [];
+      // Show volunteer if they have AT LEAST ONE of the selected tags
+      return _selectedFilterTags.any((tag) => tags.contains(tag));
+    }).toList();
+  }
+
+  void toggleFilterTag(String tag) {
+    if (_selectedFilterTags.contains(tag)) {
+      _selectedFilterTags.remove(tag);
+    } else {
+      _selectedFilterTags.add(tag);
+    }
+    notifyListeners();
+  }
 
   StreamSubscription? _sentRequestsSubscription;
   ChatRequest? _pendingRequest; // Holds the user's single pending request
@@ -63,32 +92,13 @@ class HomeViewModel extends ReactiveViewModel {
   String get currentUserEmail =>
       _authenticationService.currentUser?.email ?? 'visitor@you.app';
 
-  bool isPlayingTrack(int trackIndex) {
-    return _currentTrackIndex == trackIndex && _player.playing;
-  }
-
-  int? _currentTrackIndex; // which card is playing
-  int? get currentTrackIndex => _currentTrackIndex;
-
   int _counter = 0;
   int currentIndex = 1;
 
   HomeViewModel() {
-    _initPlayer();
-    _player.playerStateStream.listen((state) {
-      notifyListeners();
-    });
     listenToVolunteers();
     listenForSentRequests();
     listenForNotifications();
-  }
-
-  Future<void> _initFxPlayer() async {
-    _fxPlayer.setLoopMode(LoopMode.off);
-  }
-
-  Future<void> _initPlayer() async {
-    _player.setLoopMode(LoopMode.one);
   }
 
   void onTabTapped(int index) {
@@ -96,56 +106,23 @@ class HomeViewModel extends ReactiveViewModel {
     notifyListeners();
   }
 
-  void incrementCounter() {
+  void navigateToSoothingSounds() {
+    locator<NavigationService>().navigateToSoothingSoundsView();
+  }
+
+  void navigateToBreathe() {
+    locator<NavigationService>().navigateToBreatheView();
+  }
+
+  void setIndex(int value) {
     _counter++;
     rebuildUi();
   }
 
-  Future<void> togglePlayPause(int trackIndex, String assetPath) async {
-    if (_currentTrackIndex == trackIndex && _player.playing) {
-      // Pause if same track is playing
-      await _player.pause();
-      _currentTrackIndex = null;
-    } else {
-      // Load new track if switching
-      if (_currentTrackIndex != trackIndex) {
-        await _player.stop();
-        await _player.setAsset(assetPath);
-        _currentTrackIndex = trackIndex;
-      }
-      await _player.play();
-    }
-    notifyListeners();
+  void incrementCounter() {
+    _counter++;
+    rebuildUi();
   }
-
-  Future<void> skipForward() async {
-    final position = _player.position;
-    final duration = _player.duration ?? Duration.zero;
-    final newPosition = position + const Duration(seconds: 5);
-    await _player.seek(newPosition < duration ? newPosition : duration);
-  }
-
-  Future<void> skipBackward() async {
-    final position = _player.position;
-    final newPosition = position - const Duration(seconds: 5);
-    await _player
-        .seek(newPosition > Duration.zero ? newPosition : Duration.zero);
-  }
-
-  Future<void> playSwipeSound({bool isComplete = false}) async {
-    try {
-      final soundPath = isComplete
-          ? AppConstants.page // ✅ completion sound
-          : AppConstants.page; // ✅ during swipe sound
-      await _fxPlayer.stop(); // Stop any current sound
-      await _fxPlayer.setAsset(soundPath);
-      await _fxPlayer.play();
-    } catch (e) {
-      debugPrint("Error playing sound: $e");
-    }
-  }
-
-  // Inside HomeViewModel...
 
   bool isCommunityJoined(String communityId) {
     final user = _authenticationService.currentUser;
@@ -156,7 +133,8 @@ class HomeViewModel extends ReactiveViewModel {
   Future<void> joinCommunity(String communityId) async {
     try {
       await locator<CommunityService>().joinCommunity(communityId);
-      await _authenticationService.checkCurrentUserStatus(); // Refresh user data locally
+      await _authenticationService
+          .checkCurrentUserStatus(); // Refresh user data locally
       notifyListeners();
       InAppNotificationBanner.show(
         title: 'Joined Community!',
@@ -205,8 +183,6 @@ class HomeViewModel extends ReactiveViewModel {
       setBusy(false);
     }
   }
-
-  // Inside HomeViewModel...
 
   void listenForSentRequests() {
     final userId = _authenticationService.currentUser?.uid;
@@ -270,8 +246,6 @@ class HomeViewModel extends ReactiveViewModel {
     });
   }
 
-  // In HomeViewModel...
-
   Future<void> cancelRequest(ChatRequest request) async {
     if (request.id == null || request.status != 'pending') return;
 
@@ -282,18 +256,12 @@ class HomeViewModel extends ReactiveViewModel {
         cancelTitle: 'No');
 
     if (response?.confirmed == true) {
-      // ✅ Removed setBusy(true)
       try {
         await locator<ChatRequestService>().cancelRequest(request.id!);
-        // The UI will update automatically when the stream listener
-        // receives the empty list and calls notifyListeners.
-        // fetchVolunteers will be triggered by the listener if needed.
       } catch (e) {
-        // ✅ Removed setBusy(false) here - handle error differently if needed
         await _dialogService.showDialog(
             title: 'Error', description: 'Could not cancel request.');
       }
-      // ✅ Removed finally { setBusy(false) }
     }
   }
 
@@ -315,12 +283,6 @@ class HomeViewModel extends ReactiveViewModel {
     );
   }
 
-  // void fetchVolunteers() async {
-  //   setBusy(true);
-  //   _volunteers = await locator<UserService>().getAvailableVolunteers();
-  //   setBusy(false);
-  // }
-
   void listenToVolunteers() {
     // CONDITION ADDED: Only fetch if no pending/active request exists.
     if (hasActiveInteraction) return;
@@ -329,8 +291,24 @@ class HomeViewModel extends ReactiveViewModel {
     _volunteersSubscription?.cancel();
     _volunteersSubscription = locator<UserService>()
         .streamAvailableVolunteers()
-        .listen((volunteersList) {
+        .listen((volunteersList) async {
       _volunteers = volunteersList;
+      
+      // Fetch tags and ratings for these volunteers
+      for (var volunteer in _volunteers) {
+        if (!_volunteerTags.containsKey(volunteer.uid)) {
+          final info = await locator<VolunteerService>().get(volunteer.uid);
+          if (info != null) {
+            _volunteerTags[volunteer.uid] = info.tags ?? [];
+            _volunteerRatings[volunteer.uid] =
+                info.averageRating > 0 ? info.averageRating : 4.0;
+          } else {
+            _volunteerTags[volunteer.uid] = [];
+            _volunteerRatings[volunteer.uid] = 4.0;
+          }
+        }
+      }
+      
       setBusy(false);
       notifyListeners();
     }, onError: (error) {
@@ -428,7 +406,7 @@ class HomeViewModel extends ReactiveViewModel {
     if (userId == null) return;
 
     _notificationsSubscription?.cancel();
-    
+
     bool isInitial = true;
     _notificationsSubscription = FirebaseFirestore.instance
         .collection('users')
@@ -464,7 +442,8 @@ class HomeViewModel extends ReactiveViewModel {
                 if (chatId != null) {
                   onTap = () {
                     final parts = chatId.split('_');
-                    final volunteerId = parts.firstWhere((id) => id != userId, orElse: () => '');
+                    final volunteerId = parts.firstWhere((id) => id != userId,
+                        orElse: () => '');
                     locator<NavigationService>().navigateToChatView(
                       volunteerId: volunteerId,
                       volunteerName: "Volunteer",
@@ -522,7 +501,6 @@ class HomeViewModel extends ReactiveViewModel {
 
   @override
   void dispose() {
-    _player.dispose();
     _sentRequestsSubscription?.cancel();
     _notificationsSubscription?.cancel();
     _volunteersSubscription?.cancel();

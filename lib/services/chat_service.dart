@@ -81,6 +81,56 @@ class ChatService {
     }
   }
 
+  /// Ends a chat instead of deleting it. Marks both the chat and the request as 'completed'.
+  Future<void> endChatAndRequest({
+    required String chatId,
+    required String requestId,
+  }) async {
+    final batch = _firestore.batch();
+    final chatRef = _firestore.collection('chats').doc(chatId);
+    var requestRef = _firestore.collection('chat_requests').doc(requestId);
+
+    // Defensive check to ensure we have the correct request document
+    try {
+      final docSnapshot = await requestRef.get();
+      if (!docSnapshot.exists) {
+        final parts = chatId.split('_');
+        if (parts.length == 2) {
+          final query = await _firestore
+              .collection('chat_requests')
+              .where('requesterId', whereIn: parts)
+              .where('volunteerId', whereIn: parts)
+              .limit(1)
+              .get();
+          if (query.docs.isNotEmpty) {
+            requestRef = query.docs.first.reference;
+          }
+        }
+      }
+    } catch (e) {
+      final parts = chatId.split('_');
+      if (parts.length == 2) {
+        try {
+          final query = await _firestore
+              .collection('chat_requests')
+              .where('requesterId', whereIn: parts)
+              .where('volunteerId', whereIn: parts)
+              .limit(1)
+              .get();
+          if (query.docs.isNotEmpty) {
+            requestRef = query.docs.first.reference;
+          }
+        } catch (_) {}
+      }
+    }
+
+    // Mark as completed
+    batch.update(chatRef, {'status': 'completed'});
+    batch.update(requestRef, {'status': 'completed'});
+
+    await batch.commit();
+  }
+
   Future<void> createChatRoomIfNotExists({
     required String chatId,
     required AppUser user,

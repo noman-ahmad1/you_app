@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,7 +34,7 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
             onLeadingPressed: () {
               // Handle tap
             },
-            title: 'Hi, Friend',
+            title: 'Home',
             subtitle: 'Saturday, May 16',
             trailingActions: [
               // Icon 1 (e.g., Notifications)
@@ -52,7 +53,9 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                         border: Border.all(
                             color: AppColors.primaryVeryDark.withAlpha(50)),
                       ),
-                      child: Icon(Icons.notifications_none,
+                      child: Image.asset(AppConstants.notification,
+                          width: 24,
+                          height: 24,
                           color: AppColors.primaryVeryDark),
                     ),
                   ),
@@ -99,38 +102,9 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Your Status:',
-                          style: GoogleFonts.crimsonPro(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primaryVeryDark),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              viewModel.availabilityStatusString,
-                              style: GoogleFonts.crimsonPro(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: viewModel.isAvailable
-                                      ? Colors.green
-                                      : Colors.grey),
-                            ),
-                            const SizedBox(width: 8),
-                            CupertinoSwitch(
-                              // Or use Switch() for Material style
-                              value: viewModel.isAvailable,
-                              onChanged: viewModel.toggleAvailability,
-                              activeColor: AppColors.secondary,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                    Space.verticalSpaceTiny(context),
+                    _buildAvailabilityCard(MediaQuery.of(context).size.width,
+                        MediaQuery.of(context).size.height, viewModel),
                     const Divider(height: 20),
                     Text(
                       'Welcome ${viewModel.currentUserName}',
@@ -164,9 +138,20 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                             )
                           : viewModel.activeChats.isEmpty
                               ? Center(
-                                  child: Text(
-                                  "No active chats.",
-                                  style: GoogleFonts.crimsonPro(fontSize: 20),
+                                  child: Column(
+                                  children: [
+                                    Lottie.asset(
+                                      AppConstants.empty,
+                                      decoder: customDecoder,
+                                      width: 200,
+                                      height: 200,
+                                    ),
+                                    Text(
+                                      "No active chats.",
+                                      style:
+                                          GoogleFonts.crimsonPro(fontSize: 20),
+                                    ),
+                                  ],
                                 ))
                               : ListView.builder(
                                   // ✅ Use activeChats list
@@ -221,5 +206,92 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
     } else {
       return DateFormat('d MMM').format(dateTime); // e.g., 15 Oct
     }
+  }
+
+  Widget _buildAvailabilityCard(
+      double width, double height, VolunteerHomeViewModel viewModel) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(25),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
+        child: Container(
+          width: width,
+          padding: EdgeInsets.all(width * 0.05),
+          decoration: BoxDecoration(
+            color: viewModel.isAvailable
+                ? const Color(0xFFE8F5E9).withAlpha(150) // Light green
+                : AppColors.secondaryVeryLight.withAlpha(90),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(
+                color:
+                    viewModel.isAvailable ? Colors.green : AppColors.secondary,
+                width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(15),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: viewModel.isAvailable
+                      ? Colors.green.withAlpha(50)
+                      : AppColors.secondary.withAlpha(50),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  viewModel.isAvailable ? Icons.sensors : Icons.sensors_off,
+                  color: viewModel.isAvailable
+                      ? Colors.green[700]
+                      : AppColors.secondary,
+                  size: 28,
+                ),
+              ),
+              SizedBox(width: width * 0.04),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Availability Status",
+                      style: GoogleFonts.crimsonPro(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryVeryDark,
+                      ),
+                    ),
+                    Text(
+                      viewModel.isAvailable
+                          ? "Online - Ready for chats"
+                          : "Offline - Away",
+                      style: GoogleFonts.crimsonPro(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: viewModel.isAvailable
+                            ? Colors.green[800]
+                            : AppColors.secondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: viewModel.isAvailable,
+                activeThumbColor: Colors.green,
+                inactiveThumbColor: AppColors.secondary,
+                onChanged: (val) {
+                  viewModel.toggleAvailability(val);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

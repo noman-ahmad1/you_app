@@ -28,44 +28,6 @@ class JournalDetailsView extends StackedView<JournalDetailsViewModel> {
     final width = mediaQuery.size.width;
     final height = mediaQuery.size.height;
     return Scaffold(
-        appBar: TopBar(
-          leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
-          onLeadingPressed: () {
-            // Handle tap
-          },
-          title: 'Hi, Friend',
-          subtitle: 'Saturday, May 16',
-          trailingActions: [
-            // Icon 1 (e.g., Notifications)
-            InkWell(
-              onTap: () {},
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: AppColors.primaryVeryDark.withAlpha(50)),
-                ),
-                child: Icon(Icons.notifications_none,
-                    color: AppColors.primaryVeryDark),
-              ),
-            ),
-            // Icon 2 (e.g., Profile/Flower)
-            InkWell(
-              onTap: () {},
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: AppColors.primaryVeryDark.withAlpha(50)),
-                ),
-                child: Image.asset('assets/images/avatar.png',
-                    width: 24, height: 24),
-              ),
-            ),
-          ],
-        ),
         body: Container(
             width: double.infinity,
             height: double.infinity,
@@ -76,10 +38,48 @@ class JournalDetailsView extends StackedView<JournalDetailsViewModel> {
               ),
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              // mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Space.verticalSpaceTiny(context),
+                TopBar(
+                  leadingIconAsset: AppConstants.back, // Your 'Y' logo asset
+                  onLeadingPressed: () {
+                    Navigator.pop(context);
+                  },
+                  title: 'Journal Details',
+                  subtitle: 'Saturday, May 16',
+                  trailingActions: [
+                    // Icon 1 (e.g., Notifications)
+                    // InkWell(
+                    //   onTap: () {},
+                    //   child: Container(
+                    //     padding: const EdgeInsets.all(8),
+                    //     decoration: BoxDecoration(
+                    //       shape: BoxShape.circle,
+                    //       border: Border.all(
+                    //           color: AppColors.primaryVeryDark.withAlpha(50)),
+                    //     ),
+                    //     child: Icon(Icons.notifications_none,
+                    //         color: AppColors.primaryVeryDark),
+                    //   ),
+                    // ),
+                    // // Icon 2 (e.g., Profile/Flower)
+                    // InkWell(
+                    //   onTap: () {},
+                    //   child: Container(
+                    //     padding: const EdgeInsets.all(4),
+                    //     decoration: BoxDecoration(
+                    //       shape: BoxShape.circle,
+                    //       border: Border.all(
+                    //           color: AppColors.primaryVeryDark.withAlpha(50)),
+                    //     ),
+                    //     child: Image.asset('assets/images/avatar.png',
+                    //         width: 24, height: 24),
+                    //   ),
+                    // ),
+                  ],
+                ),
+                Space.verticalSpaceSmall(context),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(23),
                   child: BackdropFilter(
@@ -89,9 +89,9 @@ class JournalDetailsView extends StackedView<JournalDetailsViewModel> {
                       width: width * 0.9,
                       height: height * 0.7,
                       decoration: BoxDecoration(
-                        color: AppColors.secondaryVeryLight.withAlpha(102),
+                        color: AppColors.background.withAlpha(200),
                         border:
-                            Border.all(color: AppColors.secondary, width: 2),
+                            Border.all(color: AppColors.background, width: 2),
                         borderRadius: BorderRadius.circular(23),
                         boxShadow: [
                           BoxShadow(

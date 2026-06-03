@@ -11,7 +11,7 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
-import 'package:you_app/ui/views/home/volunteer_card.dart';
+import 'package:you_app/ui/views/home/widgets/volunteer_card.dart';
 
 // This is correct: ViewModelWidget uses the parent's HomeViewModel
 class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
@@ -55,7 +55,7 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                                 color: AppColors.primaryVeryDark.withAlpha(50)),
                           ),
                           child: Image.asset(AppConstants.notification,
-                              color: AppColors.secondary,
+                              color: AppColors.primaryVeryDark,
                               width: 24,
                               height: 24),
                         ),
@@ -419,25 +419,68 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
           //       fontWeight: FontWeight.w500,
           //       color: AppColors.primaryVeryDark),
           // ),
+          Space.verticalSpaceVTiny(context),
+          // --- Tags Filter ---
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: AppConstants.volunteerTags.map((tag) {
+                final isSelected = viewModel.selectedFilterTags.contains(tag);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: FilterChip(
+                    label: Text(
+                      tag,
+                      style: GoogleFonts.crimsonPro(
+                        color: isSelected ? Colors.white : AppColors.secondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    selected: isSelected,
+                    onSelected: (bool selected) {
+                      viewModel.toggleFilterTag(tag);
+                    },
+                    selectedColor: AppColors.secondary,
+                    backgroundColor: AppColors.background,
+                    checkmarkColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: const BorderSide(
+                        color: AppColors.secondary,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
           Space.verticalSpaceTiny(context),
-          viewModel.volunteers.isEmpty
+          viewModel.filteredVolunteers.isEmpty
               ? _buildEmptyState()
               : ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: viewModel.volunteers.length,
+                  itemCount: viewModel.filteredVolunteers.length,
                   itemBuilder: (context, index) {
-                    final volunteer = viewModel.volunteers[index];
+                    final volunteer = viewModel.filteredVolunteers[index];
+                    final volunteerTags =
+                        viewModel.volunteerTags[volunteer.uid];
+                    final volunteerRating =
+                        viewModel.volunteerRatings[volunteer.uid] ?? 4.0;
+                    final displayTags =
+                        (volunteerTags != null && volunteerTags.isNotEmpty)
+                            ? volunteerTags
+                            : const ['Mental Health', 'Support'];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 7.0),
                       child: VolunteerCard(
                         type: VolunteerCardType.availableChat, // Correct type
                         username: volunteer.fullName,
                         avatarPath:
-                            // volunteer.profilePictureUrl ??
-                            AppConstants.avatar,
-                        rating: 4, // Placeholder
-                        categories: const ['Anxiety', 'ADHD'], // Placeholder
+                            volunteer.profilePictureUrl ?? AppConstants.avatar,
+                        rating: volunteerRating.round(),
+                        categories: displayTags,
                         onActionTap: () => viewModel.sendChatRequest(volunteer),
                       ),
                     );

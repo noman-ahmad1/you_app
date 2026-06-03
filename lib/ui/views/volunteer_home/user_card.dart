@@ -121,7 +121,9 @@ class UserCard extends StatelessWidget {
             child: CircleAvatar(
               backgroundColor: AppColors.background,
               radius: width * 0.06,
-              backgroundImage: AssetImage(avatarPath),
+              backgroundImage: avatarPath.startsWith('http')
+                  ? NetworkImage(avatarPath)
+                  : AssetImage(avatarPath) as ImageProvider,
             ),
           ),
         ),

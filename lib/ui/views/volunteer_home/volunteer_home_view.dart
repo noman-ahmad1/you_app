@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-import 'package:you_app/ui/views/home/bottom_bar.dart';
+import 'package:you_app/ui/views/home/widgets/bottom_bar.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/volunteer_home.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/request.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/dashboard.dart';

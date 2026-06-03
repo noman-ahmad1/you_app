@@ -39,7 +39,7 @@ class ChatRequestService {
             .toList());
   }
 
-  Future<void> acceptRequest(ChatRequest request) async {
+  Future<void> acceptRequest(ChatRequest request, String volunteerName, String? volunteerAvatarUrl) async {
     // Use a transaction for atomicity
     await _firestore.runTransaction((transaction) async {
       final requestRef = _firestore.collection('chat_requests').doc(request.id);
@@ -50,9 +50,7 @@ class ChatRequestService {
       final chatId = ids.join('_');
       final chatRef = _firestore.collection('chats').doc(chatId);
 
-      // Fetch volunteer details (replace with actual fetch if needed)
-      final volunteerName = "Volunteer"; // TODO: Get volunteer name
-      final volunteerAvatar = null; // TODO: Get volunteer avatar
+      // Volunteer details are now passed as arguments
 
       // 1. Update the request status
       transaction.update(requestRef, {'status': 'accepted'});
@@ -69,7 +67,7 @@ class ChatRequestService {
               },
               request.volunteerId: {
                 'name': volunteerName,
-                'avatarUrl': volunteerAvatar
+                'avatarUrl': volunteerAvatarUrl
               },
             },
             'createdAt':

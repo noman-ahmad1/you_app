@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:stacked/stacked.dart';
-import 'package:you_app/ui/views/home/bottom_bar.dart';
+import 'package:you_app/ui/views/home/widgets/bottom_bar.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
-import 'package:you_app/ui/views/home/home_drawer.dart';
-import 'package:you_app/ui/views/home/notifications_drawer.dart';
+import 'package:you_app/ui/views/home/widgets/home_drawer.dart';
+import 'package:you_app/ui/views/home/widgets/notifications_drawer.dart';
 import 'package:you_app/ui/views/home/tabs/communities.dart';
 import 'package:you_app/ui/views/home/tabs/home_screen.dart';
 import 'package:you_app/ui/views/home/tabs/volunteers.dart';

@@ -8,7 +8,7 @@ import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
-import 'package:you_app/ui/views/home/community_card.dart';
+import 'package:you_app/ui/views/home/widgets/community_card.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
 // ... your other imports
 
@@ -185,8 +185,9 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                 itemBuilder: (context, index) {
                                   final community = communities[index];
                                   final communityId = community['id'];
-                                  final isJoined = viewModel.isCommunityJoined(communityId);
-                                  
+                                  final isJoined =
+                                      viewModel.isCommunityJoined(communityId);
+
                                   return CommunityCard(
                                     title: community['name'] ?? 'Unknown',
                                     description: community['description'] ??

@@ -10,6 +10,7 @@ import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/storage_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/utils/image_compressor_helper.dart';
 
 class EditProfileViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
@@ -88,7 +89,11 @@ class EditProfileViewModel extends BaseViewModel {
       );
 
       if (pickedFile != null) {
-        _selectedProfileImage = File(pickedFile.path);
+        final originalFile = File(pickedFile.path);
+        // Compress the image before setting it
+        final compressedFile = await ImageCompressorHelper.compressImage(originalFile);
+        
+        _selectedProfileImage = compressedFile;
         notifyListeners();
         Navigator.of(context).pop(); // Close the modal
       }

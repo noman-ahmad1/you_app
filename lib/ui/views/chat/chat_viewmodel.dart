@@ -12,6 +12,7 @@ import 'package:you_app/services/mood_service.dart';
 import 'package:you_app/services/journal_service.dart';
 import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
+import 'package:you_app/ui/views/chat/widgets/review_dialog.dart';
 import 'package:you_app/services/community_service.dart';
 
 class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
@@ -122,32 +123,80 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
       title: 'Delete Chat',
       description:
           'Are you sure you want to permanently delete this chat and the original request? This action cannot be undone.',
-      confirmationTitle: 'Delete', // Text for the confirmation button
-      cancelTitle: 'Cancel', // Text for the cancel button
+      confirmationTitle: 'Delete',
+      cancelTitle: 'Cancel',
     );
 
-    // 2. Check if the user confirmed
     if (response?.confirmed == true) {
-      // 3. Proceed with deletion ONLY if confirmed
-      _isDeleting = true; // Set deleting state to true
+      _isDeleting = true;
       setBusy(true);
       try {
         await locator<ChatService>().deleteChatAndRequest(
           chatId: _chatId!,
           requestId: requestId,
         );
-        _navigationService.back(); // Go back after successful deletion
+        _navigationService.back();
       } catch (e) {
-        setBusy(false); // Make sure busy is false on error
-        // Show error dialog
+        setBusy(false);
         await _dialogService.showDialog(
-            // Use await for dialogs
             title: 'Error',
             description: 'Could not delete chat. Please try again.');
       }
-      // No finally block needed here
     }
-    // If response?.confirmed is false or null, do nothing.
+  }
+
+  Future<void> endChat() async {
+    final isVolunteer = currentUserId == volunteerId;
+
+    final response = await _dialogService.showConfirmationDialog(
+      title: 'End Chat',
+      description: 'Are you sure you want to end this conversation?',
+      confirmationTitle: 'End Chat',
+      cancelTitle: 'Cancel',
+    );
+
+    if (response?.confirmed == true) {
+      // If the current user is NOT the volunteer, prompt for a review
+      if (!isVolunteer && _navigationService.navigatorKey?.currentContext != null) {
+        final context = _navigationService.navigatorKey!.currentContext!;
+        final reviewResult = await showDialog<Map<String, dynamic>>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => ReviewDialog(volunteerName: volunteerName),
+        );
+
+        if (reviewResult != null) {
+          final rating = reviewResult['rating'] as double;
+          final comment = reviewResult['comment'] as String;
+          setBusy(true);
+          try {
+            await locator<VolunteerService>().addReviewAndCompleteChat(
+              volunteerId: volunteerId,
+              userId: currentUserId!,
+              rating: rating,
+              comment: comment,
+            );
+          } catch (e) {
+            debugPrint("Failed to save review: $e");
+          }
+        }
+      }
+
+      _isDeleting = true;
+      setBusy(true);
+      try {
+        await locator<ChatService>().endChatAndRequest(
+          chatId: _chatId!,
+          requestId: requestId,
+        );
+        _navigationService.back();
+      } catch (e) {
+        setBusy(false);
+        await _dialogService.showDialog(
+            title: 'Error',
+            description: 'Could not end chat. Please try again.');
+      }
+    }
   }
 
   void back() {
