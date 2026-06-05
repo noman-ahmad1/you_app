@@ -11,6 +11,7 @@ import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/views/journal/journal_card.dart';
 import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
 import 'package:you_app/ui/views/new_journal_entry/new_journal_entry_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 // WorkEntriesView
 class NewPersonalEntryView extends StatelessWidget {
@@ -205,11 +206,11 @@ class NewPersonalEntryView extends StatelessWidget {
                             ),
                             child: Center(
                               child: viewModel.isBusy
-                                  ? Lottie.asset(
-                                      AppConstants.loading,
-                                      decoder: customDecoder,
-                                      width: 200,
-                                      height: 200,
+                                  ? const CustomLottieLoader(
+                                      width: 50,
+                                      height: 50,
+                                      loaderWidth: 200,
+                                      loaderHeight: 200,
                                     )
                                   // CircularProgressIndicator(
                                   //     color: AppColors.secondary,

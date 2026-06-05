@@ -41,6 +41,7 @@ dependencies:
   http: ^1.2.0
   flutter_image_compress: ^2.4.0
   path_provider: ^2.1.5
+  audio_session: ^0.2.3
 
 dev_dependencies:
   build_runner: ^2.4.5
@@ -49,6 +50,8 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   mockito: ^5.4.1
   stacked_generator: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.1
 
 flutter:
   uses-material-design: true
@@ -59,3 +62,21 @@ flutter:
     - assets/sounds/
     - assets/json/
     - assets/animations/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+
+flutter_native_splash:
+  # The background color of your splash screen (e.g., white or your app's primary color)
+  color: "#A7BABE" 
+  # The path to your logo
+  image: "assets/images/logo_splash.png"
+  
+  android_12:
+    # Android 12+ requires a specific API for splash screens
+    image: "assets/images/logo_splash.png"
+    icon_background_color: "#A7BABE"

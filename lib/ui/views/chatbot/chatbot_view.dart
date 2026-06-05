@@ -9,6 +9,7 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 
 import 'chatbot_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class ChatbotView extends StackedView<ChatbotViewModel> {
   const ChatbotView({Key? key}) : super(key: key);
@@ -72,19 +73,11 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
                       ),
                     ),
                     // const SizedBox(width: 10),
-                    SizedBox(
-                      height: 70,
+                    const CustomLottieLoader(
                       width: 70,
-                      child: Lottie.asset(
-                        AppConstants.loading,
-                        decoder: customDecoder,
-                        width: 200,
-                        height: 200,
-                      ),
-                      //   CircularProgressIndicator(
-                      //     strokeWidth: 2,
-                      //     color: AppColors.primaryVeryDark,
-                      //   ),
+                      height: 70,
+                      loaderWidth: 200,
+                      loaderHeight: 200,
                     )
                   ],
                 ),

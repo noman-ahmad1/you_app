@@ -34,22 +34,26 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
           fit: BoxFit.cover,
         ),
       ),
-      child: SingleChildScrollView(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              TopBar(
-                leadingIconAsset: AppConstants.back, // Your 'Y' logo asset
-                iconColor: AppColors.primaryVeryDark,
-                onLeadingPressed: () {
-                  Navigator.pop(context);
-                },
-                title: 'Mood Tracker',
-                subtitle: 'Saturday, May 16',
-                trailingActions: [],
-              ),
-              Space.verticalSpaceTiny(context),
+      child: Column(
+        children: [
+          TopBar(
+            leadingIconAsset: AppConstants.back, // Your 'Y' logo asset
+            iconColor: AppColors.primaryVeryDark,
+            onLeadingPressed: () {
+              Navigator.pop(context);
+            },
+            title: 'Mood Tracker',
+            subtitle: 'Saturday, May 16',
+            trailingActions: [],
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: SafeArea(
+                top: false, // TopBar handles the top safe area usually, but just in case
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Space.verticalSpaceTiny(context),
               if (viewModel.moodStreak > 0)
                 Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -206,12 +210,16 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               //       fontWeight: FontWeight.w700,
               //       color: AppColors.secondary),
               // ),
-              WeeklyMoodChart(key: viewModel.chartKey)
-            ],
+                  WeeklyMoodChart(key: viewModel.chartKey)
+                ],
+              ),
+            ),
           ),
         ),
+      ],
+        ),
       ),
-    ));
+    );
   }
 
   @override

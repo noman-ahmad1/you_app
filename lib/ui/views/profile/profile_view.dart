@@ -51,7 +51,10 @@ class ProfileView extends StackedView<ProfileViewModel> {
                 ),
               ],
             ),
-            SafeArea(
+            Expanded(
+              child: SingleChildScrollView(
+                child: SafeArea(
+                  top: false,
               child: Padding(
                 padding: const EdgeInsets.all(15.0),
                 child: Column(
@@ -234,6 +237,8 @@ class ProfileView extends StackedView<ProfileViewModel> {
                   ],
                 ),
               ),
+            ),
+            ),
             ),
           ],
         ),

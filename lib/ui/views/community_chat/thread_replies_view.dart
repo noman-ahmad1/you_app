@@ -12,6 +12,7 @@ import 'package:you_app/models/thread_reply.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'thread_replies_viewmodel.dart';
 import 'package:you_app/ui/shared/lottie_like_button.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
   final CommunityPost post;
@@ -52,17 +53,7 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
             ),
             Expanded(
               child: viewModel.isBusy
-                  ? Center(
-                      child: Lottie.asset(
-                        AppConstants.loading,
-                        decoder: customDecoder,
-                        width: 200,
-                        height: 200,
-                      ),
-                      //   CircularProgressIndicator(
-                      //   color: AppColors.secondary,
-                      // )
-                    )
+                  ? const CustomLottieLoader(fullScreen: true)
                   : CustomScrollView(slivers: [
                       SliverToBoxAdapter(
                         child: Padding(
@@ -422,13 +413,13 @@ class _ReplyCard extends StatelessWidget {
             radius: 18,
             backgroundColor: isMe
                 ? AppColors.secondary.withAlpha(50)
-                : AppColors.lightPurple.withAlpha(50),
+                : AppColors.primaryVeryDark.withAlpha(50),
             child: Text(
               reply.authorUsername.isNotEmpty
                   ? reply.authorUsername[0].toUpperCase()
                   : '?',
               style: GoogleFonts.crimsonPro(
-                color: isMe ? AppColors.secondary : AppColors.lightPurple,
+                color: isMe ? AppColors.secondary : AppColors.primaryVeryDark,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),

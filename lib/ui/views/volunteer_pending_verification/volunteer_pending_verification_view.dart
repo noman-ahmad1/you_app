@@ -7,6 +7,7 @@ import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'volunteer_pending_verification_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class VolunteerPendingVerificationView
     extends StackedView<VolunteerPendingVerificationViewModel> {
@@ -74,10 +75,13 @@ class VolunteerPendingVerificationView
                   textAlign: TextAlign.center,
                 ),
                 Space.verticalSpaceSmall(context),
-                // const CircularProgressIndicator(
-                //   valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                // ),
-                // Space.verticalSpaceSmall(context),
+                const CustomLottieLoader(
+                  width: 80,
+                  height: 80,
+                  loaderWidth: 80,
+                  loaderHeight: 80,
+                ),
+                Space.verticalSpaceSmall(context),
                 InkWell(
                   onTap: viewModel.logout,
                   child: Container(

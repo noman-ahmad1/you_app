@@ -49,67 +49,108 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                             fontWeight: FontWeight.w700,
                             color: AppColors.secondary),
                       ),
-                      Space.verticalSpaceTiny(context),
+                      Space.verticalSpaceVTiny(context),
+                      Text(
+                        'Your safe space to land',
+                        style: GoogleFonts.crimsonPro(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.secondary),
+                      ),
+                      Space.verticalSpaceSmall(context),
                       Space.verticalSpaceVTiny(context),
                       Image.asset(
                         AppConstants.logo,
-                        height: screenSize.height * 0.25,
-                        width: screenSize.width * 0.5,
+                        height: 200,
+                        width: 200,
+                        // height: screenSize.height * 0.23,
+                        // width: screenSize.width * 0.5,
                         fit: BoxFit.cover,
                       ),
                       Space.verticalSpaceSmall(context),
-                      ElevatedButton(
-                        style: ButtonStyle(
-                          backgroundColor:
-                              WidgetStateProperty.all(AppColors.primary),
-                          padding: WidgetStateProperty.all(
-                              const EdgeInsets.symmetric(
-                                  vertical: 25, horizontal: 65)),
-                          shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            side: const BorderSide(
-                              color: AppColors.secondary,
-                              width: 2,
-                            ),
-                          )),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.background.withAlpha(100), // Purple
+                              AppColors.secondary, // Blue
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(18),
                         ),
-                        onPressed: () {
-                          viewModel.navigateToLoginView();
-                        },
-                        child: const Text(
-                          'SIGN IN',
-                          style: TextStyle(
+                        padding: const EdgeInsets.all(2), // Border thickness
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            elevation: WidgetStateProperty.all(0),
+                            backgroundColor: WidgetStateProperty.all(
+                              AppColors.background.withAlpha(100),
+                            ),
+                            padding: WidgetStateProperty.all(
+                              const EdgeInsets.symmetric(
+                                vertical: 20,
+                                horizontal: 80,
+                              ),
+                            ),
+                            shape: WidgetStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                          onPressed: () {
+                            viewModel.navigateToLoginView();
+                          },
+                          child: const Text(
+                            'SIGN IN',
+                            style: TextStyle(
                               color: AppColors.secondary,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 18),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 24,
+                            ),
+                          ),
                         ),
                       ),
                       Space.verticalSpaceTiny(context),
-                      ElevatedButton(
-                        style: ButtonStyle(
-                          backgroundColor:
-                              WidgetStateProperty.all(AppColors.primary),
-                          padding: WidgetStateProperty.all(
-                              const EdgeInsets.symmetric(
-                                  vertical: 25, horizontal: 62)),
-                          shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            side: const BorderSide(
-                              color: AppColors.secondary,
-                              width: 2,
-                            ),
-                          )),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.background.withAlpha(100), // Purple
+                              AppColors.secondary, // Blue
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(18),
                         ),
-                        onPressed: () {
-                          viewModel.navigateToSignupView();
-                          // viewModel.userInfo();
-                        },
-                        child: const Text(
-                          'SIGN UP',
-                          style: TextStyle(
+                        padding: const EdgeInsets.all(2), // Border thickness
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            elevation: WidgetStateProperty.all(0),
+                            backgroundColor: WidgetStateProperty.all(
+                              AppColors.background.withAlpha(100),
+                            ),
+                            padding: WidgetStateProperty.all(
+                              const EdgeInsets.symmetric(
+                                vertical: 20,
+                                horizontal: 80,
+                              ),
+                            ),
+                            shape: WidgetStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                          onPressed: () {
+                            viewModel.navigateToSignupView();
+                          },
+                          child: const Text(
+                            'SIGN UP',
+                            style: TextStyle(
                               color: AppColors.secondary,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 18),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 24,
+                            ),
+                          ),
                         ),
                       ),
                       Space.verticalSpaceTiny(context),

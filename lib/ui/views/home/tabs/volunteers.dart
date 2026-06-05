@@ -12,6 +12,7 @@ import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
 import 'package:you_app/ui/views/home/widgets/volunteer_card.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 // This is correct: ViewModelWidget uses the parent's HomeViewModel
 class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
@@ -132,16 +133,8 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
     if (viewModel.isBusy &&
         !viewModel.hasActiveInteraction &&
         viewModel.volunteers.isEmpty) {
-      return Center(
-        child: Lottie.asset(
-          AppConstants.loading,
-          decoder: customDecoder,
-          width: 200,
-          height: 200,
-        ),
-        //     CircularProgressIndicator(
-        //   color: AppColors.secondary,
-        // )
+      return const Center(
+        child: CustomLottieLoader(),
       );
     }
     // Check for active chat first
@@ -155,16 +148,8 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
           context, viewModel, viewModel.pendingRequest!);
     } else if (viewModel.isBusy) {
       // Show loading indicator specifically when fetching volunteers (and no active interaction)
-      return Center(
-        child: Lottie.asset(
-          AppConstants.loading,
-          decoder: customDecoder,
-          width: 200,
-          height: 200,
-        ),
-        //     CircularProgressIndicator(
-        //   color: AppColors.secondary,
-        // )
+      return const Center(
+        child: CustomLottieLoader(),
       );
     }
     // Otherwise, show the list of available volunteers
@@ -323,19 +308,11 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                     const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
               ),
               child: viewModel.isBusy
-                  ? SizedBox(
-                      height: 50,
+                  ? const CustomLottieLoader(
                       width: 50,
-                      child: Lottie.asset(
-                        AppConstants.loading,
-                        decoder: customDecoder,
-                        width: 200,
-                        height: 200,
-                      ),
-                      // CircularProgressIndicator(
-                      //   strokeWidth: 2,
-                      //   color: AppColors.secondary,
-                      // )
+                      height: 50,
+                      loaderWidth: 200,
+                      loaderHeight: 200,
                     )
                   : const Text(
                       "Cancel Request",

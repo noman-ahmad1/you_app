@@ -10,6 +10,7 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/views/volunteer_home/user_card.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_home_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 // Assuming this is a StackedView for a standalone screen displaying PENDING requests.
 class RequestScreen extends StackedView<VolunteerHomeViewModel> {
@@ -110,16 +111,8 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
                       // ✅ Use the correct list: pendingRequests
                       child: viewModel.isBusyRequests &&
                               viewModel.pendingRequests.isEmpty
-                          ? Center(
-                              child: Lottie.asset(
-                              AppConstants.loading,
-                              decoder: customDecoder,
-                              width: 200,
-                              height: 200,
-                            )
-                              //   CircularProgressIndicator(
-                              //   color: AppColors.secondary,
-                              // )
+                          ? const Center(
+                              child: CustomLottieLoader()
                               )
                           : viewModel.pendingRequests
                                   .isEmpty // ✅ Use pendingRequests

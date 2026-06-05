@@ -10,6 +10,7 @@ import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/views/home/widgets/community_card.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 // ... your other imports
 
 class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
@@ -159,14 +160,8 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return Center(
-                                  child: Lottie.asset(
-                                    AppConstants.loading,
-                                    decoder: customDecoder,
-                                    width: 200,
-                                    height: 200,
-                                  ),
-                                  // CircularProgressIndicator()
+                                return const Center(
+                                  child: CustomLottieLoader()
                                 );
                               }
                               if (!snapshot.hasData || snapshot.data!.isEmpty) {

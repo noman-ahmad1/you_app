@@ -9,6 +9,7 @@ import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 
 import 'volunteer_edit_profile_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class VolunteerEditProfileView
     extends StackedView<VolunteerEditProfileViewModel> {
@@ -43,13 +44,7 @@ class VolunteerEditProfileView
             ),
             Expanded(
               child: viewModel.isBusy
-                  ? Center(
-                      child: Lottie.asset(AppConstants.loading,
-                          width: screenSize.width * 0.3,
-                          height: screenSize.width * 0.3,
-                          fit: BoxFit.contain)
-                      // CircularProgressIndicator()
-                      )
+                  ? const CustomLottieLoader(fullScreen: true)
                   : SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 24.0, vertical: 20.0),

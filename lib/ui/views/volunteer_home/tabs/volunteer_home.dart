@@ -13,6 +13,7 @@ import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/views/volunteer_home/user_card.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_home_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 // This is likely a tab, so ViewModelWidget is appropriate
 class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
@@ -125,16 +126,8 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                     Expanded(
                       child: viewModel.isBusyActiveChats &&
                               viewModel.activeChats.isEmpty
-                          ? Center(
-                              child: Lottie.asset(
-                                AppConstants.loading,
-                                decoder: customDecoder,
-                                width: 200,
-                                height: 200,
-                              ),
-                              //   CircularProgressIndicator(
-                              //   color: AppColors.secondary,
-                              // )
+                          ? const Center(
+                              child: CustomLottieLoader()
                             )
                           : viewModel.activeChats.isEmpty
                               ? Center(

@@ -385,7 +385,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                                                   sigmaY: 200),
                                                           child: Container(
                                                             width:
-                                                                width * 0.115,
+                                                                height * 0.05,
                                                             height:
                                                                 height * 0.05,
                                                             decoration:
@@ -424,8 +424,8 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                                                     .write,
                                                                 color: AppColors
                                                                     .secondary,
-                                                                width: width *
-                                                                    0.05,
+                                                                width: height *
+                                                                    0.025,
                                                                 height: height *
                                                                     0.025,
                                                                 fit: BoxFit
@@ -467,33 +467,37 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                                         viewModel
                                                             .navigateToJournal();
                                                       },
-                                                      child: Row(
-                                                        children: [
-                                                          SizedBox(
-                                                              width:
-                                                                  width * 0.14),
-                                                          Text(
-                                                            "Swipe to express",
-                                                            style: GoogleFonts
-                                                                .crimsonPro(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              color: AppColors
-                                                                  .secondary,
+                                                      child: FittedBox(
+                                                        fit: BoxFit.scaleDown,
+                                                        child: Row(
+                                                          children: [
+                                                            SizedBox(
+                                                                width: width *
+                                                                    0.14),
+                                                            Text(
+                                                              "Swipe to express",
+                                                              style: GoogleFonts
+                                                                  .crimsonPro(
+                                                                fontSize: 15,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color: AppColors
+                                                                    .secondary,
+                                                              ),
                                                             ),
-                                                          ),
-                                                          Lottie.asset(
-                                                            decoder:
-                                                                customDecoder,
-                                                            AppConstants
-                                                                .swipeRight,
-                                                            width: width * 0.1,
-                                                            height:
-                                                                height * 0.05,
-                                                          ),
-                                                        ],
+                                                            Lottie.asset(
+                                                              decoder:
+                                                                  customDecoder,
+                                                              AppConstants
+                                                                  .swipeRight,
+                                                              width:
+                                                                  width * 0.1,
+                                                              height:
+                                                                  height * 0.05,
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -502,13 +506,13 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                             ],
                                           ),
                                           Space.horizontalSpaceTiny(context),
-                                          Image.asset(
-                                            AppConstants.journalImg,
-                                            width: width * 0.21,
-                                            height: height * 0.13,
-                                            // width: width * 0.394,
-                                            // height: height * 0.125,
-                                            fit: BoxFit.cover,
+                                          Expanded(
+                                            child: Image.asset(
+                                              AppConstants.journalImg,
+                                              width: width * 0.21,
+                                              height: height * 0.13,
+                                              fit: BoxFit.contain,
+                                            ),
                                           ),
                                         ],
                                       )
@@ -675,45 +679,10 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
             ],
           ),
         ),
-        Align(
-          alignment: Alignment.bottomRight,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 20, 200),
-            child: InkWell(
-              onTap: () async {
-                viewModel.navigateToChatbot();
-              },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(100),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    width: 100,
-                    height: 100,
-                    // width: width * 0.25,
-                    // height: height * 0.115,
-                    decoration: BoxDecoration(
-                      image: const DecorationImage(
-                        image: AssetImage(AppConstants.dodoCut),
-                        fit: BoxFit.scaleDown,
-                      ),
-                      color: AppColors.pink.withAlpha(50),
-                      border: Border.all(color: AppColors.pink, width: 2),
-                      borderRadius: BorderRadius.circular(100),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(25),
-                          blurRadius: 20,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+        _AnimatedDodoIcon(
+          onTap: () async {
+            viewModel.navigateToChatbot();
+          },
         ),
 //             Align(
 //   alignment: Alignment.bottomRight,
@@ -748,6 +717,88 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
 //   ),
 // ),
       ],
+    );
+  }
+}
+
+class _AnimatedDodoIcon extends StatefulWidget {
+  final VoidCallback onTap;
+
+  const _AnimatedDodoIcon({Key? key, required this.onTap}) : super(key: key);
+
+  @override
+  State<_AnimatedDodoIcon> createState() => _AnimatedDodoIconState();
+}
+
+class _AnimatedDodoIconState extends State<_AnimatedDodoIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: -5.0, end: 5.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 0, 20, 200),
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, _animation.value),
+              child: child,
+            );
+          },
+          child: InkWell(
+            onTap: widget.onTap,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(100),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(
+                      image: AssetImage(AppConstants.dodoCut),
+                      fit: BoxFit.scaleDown,
+                    ),
+                    color: AppColors.pink.withAlpha(50),
+                    border: Border.all(color: AppColors.pink, width: 2),
+                    borderRadius: BorderRadius.circular(100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(25),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

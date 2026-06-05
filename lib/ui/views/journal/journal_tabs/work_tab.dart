@@ -32,7 +32,7 @@ class WorkEntriesView extends ViewModelWidget<JournalViewModel> {
           child: entries.isEmpty
               ? Center(
                   child: Lottie.asset(
-                    AppConstants.emptyJournal,
+                    AppConstants.empty,
                     decoder: customDecoder,
                     width: 200,
                     height: 200,

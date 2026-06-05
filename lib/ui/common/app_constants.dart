@@ -66,6 +66,7 @@ class AppConstants {
   static const String email = 'assets/icons/email.png';
   static const String phone = 'assets/icons/phone.png';
   static const String gift = 'assets/icons/gift.png';
+  static const String moon = 'assets/icons/moon.png';
 
   //images
   static const String register = 'assets/images/1.png';
@@ -79,7 +80,7 @@ class AppConstants {
   static const String santa = 'assets/images/santa.png';
   static const String dodoCut = 'assets/images/dodo_cut.png';
   static const String dodo = 'assets/images/dodo.png';
-  static const String logo = 'assets/images/You.png';
+  static const String logo = 'assets/images/logo.png';
   static const String soothing = 'assets/images/soothing.jpg';
   static const String breathe = 'assets/images/breathe.jpg';
   static const String soothing2 = 'assets/images/soothing2.jpg';

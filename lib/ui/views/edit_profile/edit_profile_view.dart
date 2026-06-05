@@ -7,6 +7,7 @@ import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 import 'edit_profile_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class EditProfileView extends StackedView<EditProfileViewModel> {
   const EditProfileView({Key? key}) : super(key: key);
@@ -47,10 +48,11 @@ class EditProfileView extends StackedView<EditProfileViewModel> {
                     child: SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.primaryVeryDark),
+                      child: CustomLottieLoader(
+                        width: 20,
+                        height: 20,
+                        loaderWidth: 40, // Lottie loader might need to be slightly larger to look good within 20x20, or just 20x20.
+                        loaderHeight: 40,
                       ),
                     ),
                   )

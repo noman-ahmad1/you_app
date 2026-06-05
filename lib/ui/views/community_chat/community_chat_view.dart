@@ -10,6 +10,7 @@ import 'package:you_app/models/community_post.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'community_chat_viewmodel.dart';
 import 'package:you_app/ui/shared/lottie_like_button.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class CommunityChatView extends StackedView<CommunityChatViewModel> {
   final String communityId;
@@ -50,17 +51,7 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
             ),
             Expanded(
               child: viewModel.isBusy
-                  ? Center(
-                      child: Lottie.asset(
-                        AppConstants.loading,
-                        decoder: customDecoder,
-                        width: 200,
-                        height: 200,
-                      ),
-                      //   CircularProgressIndicator(
-                      //   color: AppColors.secondary,
-                      // )
-                    )
+                  ? const CustomLottieLoader(fullScreen: true)
                   : viewModel.posts.isEmpty
                       ? _buildEmptyState()
                       : ListView.separated(
@@ -261,13 +252,13 @@ class _CommunityPostCard extends StatelessWidget {
               radius: 20,
               backgroundColor: isMe
                   ? AppColors.secondary.withAlpha(50)
-                  : AppColors.lightPurple.withAlpha(50),
+                  : AppColors.primaryVeryDark.withAlpha(50),
               child: Text(
                 post.authorUsername.isNotEmpty
                     ? post.authorUsername[0].toUpperCase()
                     : '?',
                 style: GoogleFonts.crimsonPro(
-                  color: isMe ? AppColors.secondary : AppColors.lightPurple,
+                  color: isMe ? AppColors.secondary : AppColors.primaryVeryDark,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),

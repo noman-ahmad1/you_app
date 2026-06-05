@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+export 'custom_lottie_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:you_app/app/app.locator.dart';

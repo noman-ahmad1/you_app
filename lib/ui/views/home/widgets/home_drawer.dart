@@ -153,9 +153,11 @@ class HomeDrawer extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               _buildMenuItem(
-                iconPath: AppConstants.star,
+                iconPath: AppConstants.moon,
                 title: 'Breathe',
-                onTap: () {},
+                onTap: () {
+                  viewModel.navigateToBreathe();
+                },
               ),
 
               const Spacer(),

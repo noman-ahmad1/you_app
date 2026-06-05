@@ -13,6 +13,7 @@ import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_home_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -165,14 +166,8 @@ class DashboardScreen extends StatelessWidget {
             ),
             // Show a loading indicator if the ViewModel is busy (e.g., during logout)
             if (viewModel.isBusy)
-              Center(
-                child: Lottie.asset(
-                  AppConstants.loading,
-                  decoder: customDecoder,
-                  width: 200,
-                  height: 200,
-                ),
-                // CircularProgressIndicator(color: AppColors.secondary),
+              const Center(
+                child: CustomLottieLoader()
               ),
           ],
         );

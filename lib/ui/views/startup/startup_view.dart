@@ -7,8 +7,9 @@ import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
-
+import 'package:you_app/ui/shared/widgets.dart';
 import 'startup_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class StartupView extends StackedView<StartupViewModel> {
   const StartupView({Key? key}) : super(key: key);
@@ -20,37 +21,12 @@ class StartupView extends StackedView<StartupViewModel> {
     Widget? child,
   ) {
     return Scaffold(
+      backgroundColor: AppColors.primary,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'STACKED',
-              style: GoogleFonts.crimsonPro(
-                  fontSize: 40, fontWeight: FontWeight.w900),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Loading ...',
-                    style: GoogleFonts.crimsonPro(fontSize: 16)),
-                Space.verticalSpaceTiny(context),
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: Lottie.asset(
-                    AppConstants.loading,
-                    decoder: customDecoder,
-                    width: 200,
-                    height: 200,
-                  ),
-                  // CircularProgressIndicator(
-                  //   color: AppColors.secondary,
-                  //   strokeWidth: 6,
-                  // ),
-                )
-              ],
-            ),
+            const CustomLottieLoader()
           ],
         ),
       ),

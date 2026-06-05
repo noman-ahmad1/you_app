@@ -11,6 +11,7 @@ import 'package:you_app/models/mood_model.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class WeeklyMoodChart extends StatefulWidget {
   const WeeklyMoodChart({super.key});
@@ -244,16 +245,13 @@ class _WeeklyMoodChartState extends State<WeeklyMoodChart> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Center(
+      return const Center(
           child: Padding(
         padding: EdgeInsets.all(24.0),
-        child: Lottie.asset(
-          AppConstants.loading,
-          decoder: customDecoder,
+        child: CustomLottieLoader(
           width: 200,
           height: 200,
         ),
-        // CircularProgressIndicator(),
       ));
     }
 

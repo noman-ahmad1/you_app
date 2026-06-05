@@ -10,6 +10,7 @@ import 'package:you_app/ui/shared/widgets.dart';
 import 'package:you_app/app/app.locator.dart'; // Import locator
 
 import 'volunteer_signup_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class VolunteerSignupView extends StackedView<VolunteerSignupViewModel> {
   const VolunteerSignupView({Key? key}) : super(key: key);
@@ -129,19 +130,11 @@ class VolunteerSignupView extends StackedView<VolunteerSignupViewModel> {
                                 ),
                                 child: viewModel.isBusy &&
                                         !isPhoneVerified // Only show busy state for the verification button itself
-                                    ? SizedBox(
+                                    ? const CustomLottieLoader(
                                         width: 15,
                                         height: 15,
-                                        child: Lottie.asset(
-                                          AppConstants.loading,
-                                          decoder: customDecoder,
-                                          width: 200,
-                                          height: 200,
-                                        ),
-                                        // CircularProgressIndicator(
-                                        //   color: AppColors.secondary,
-                                        //   strokeWidth: 2,
-                                        // ),
+                                        loaderWidth: 200,
+                                        loaderHeight: 200,
                                       )
                                     : Text(
                                         phoneButtonText,

@@ -9,6 +9,7 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 
 import 'chat_viewmodel.dart';
+import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class ChatView extends StackedView<ChatViewModel> {
   final String volunteerId;
@@ -87,17 +88,7 @@ class ChatView extends StackedView<ChatViewModel> {
           ),
           Expanded(
             child: viewModel.isBusy
-                ? Center(
-                    child: Lottie.asset(
-                      AppConstants.loading,
-                      decoder: customDecoder,
-                      width: 200,
-                      height: 200,
-                    ),
-                    //   CircularProgressIndicator(
-                    //   color: AppColors.secondary,
-                    // )
-                  )
+                ? const CustomLottieLoader(fullScreen: true)
                 : viewModel.messages.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
