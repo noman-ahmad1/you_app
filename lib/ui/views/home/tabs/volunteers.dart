@@ -1,5 +1,5 @@
 import 'dart:ui';
-
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -37,7 +37,7 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                   // Handle tap
                 },
                 title: 'Listeners',
-                subtitle: 'Saturday, May 16',
+                subtitle: DateFormat('EEEE, MMMM d').format(DateTime.now()),
                 trailingActions: [
                   // Icon 1 (e.g., Notifications)
                   Stack(
@@ -455,7 +455,7 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                         type: VolunteerCardType.availableChat, // Correct type
                         username: volunteer.fullName,
                         avatarPath:
-                            volunteer.profilePictureUrl ?? AppConstants.avatar,
+                            volunteer.profilePictureUrl ?? volunteer.defaultAvatar,
                         rating: volunteerRating.round(),
                         categories: displayTags,
                         onActionTap: () => viewModel.sendChatRequest(volunteer),
@@ -463,6 +463,7 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                     );
                   },
                 ),
+          const SizedBox(height: 120),
         ],
       ),
     );

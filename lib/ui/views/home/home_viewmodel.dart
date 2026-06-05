@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
 
@@ -95,10 +97,29 @@ class HomeViewModel extends ReactiveViewModel {
   int _counter = 0;
   int currentIndex = 1;
 
+  String _todayWhisper = 'Some days, surviving is a form of bravery';
+  String get todayWhisper => _todayWhisper;
+
   HomeViewModel() {
     listenToVolunteers();
     listenForSentRequests();
     listenForNotifications();
+    fetchTodayWhisper();
+  }
+
+  Future<void> fetchTodayWhisper() async {
+    try {
+      final response = await http.get(Uri.parse('https://zenquotes.io/api/today'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data.isNotEmpty && data[0]['q'] != null) {
+          _todayWhisper = data[0]['q'];
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to fetch today's whisper: $e");
+    }
   }
 
   void onTabTapped(int index) {

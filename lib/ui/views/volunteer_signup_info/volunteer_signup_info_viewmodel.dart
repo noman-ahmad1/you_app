@@ -635,6 +635,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
         'dateOfBirth': _selectedDate,
         'gender': _selectedGender,
         'profilePictureUrl': profileUrl,
+        'status': 'pending_verification',
       };
       await _updateAppUser(appUserData);
 

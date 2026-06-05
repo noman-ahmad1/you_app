@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -45,7 +46,7 @@ class DashboardScreen extends StatelessWidget {
                       // Handle tap
                     },
                     title: 'Dashboard',
-                    subtitle: _getFormattedDate(),
+                    subtitle: DateFormat('EEEE, MMMM d').format(DateTime.now()),
                     trailingActions: [
                       // Icon 1 (e.g., Notifications)
                       Stack(
@@ -153,6 +154,7 @@ class DashboardScreen extends StatelessWidget {
                                   SizedBox(height: height * 0.03),
                                   _buildQuickActions(
                                       context, width, height, viewModel),
+                                  const SizedBox(height: 120),
                                 ],
                               ),
                             ],
@@ -165,10 +167,7 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
             // Show a loading indicator if the ViewModel is busy (e.g., during logout)
-            if (viewModel.isBusy)
-              const Center(
-                child: CustomLottieLoader()
-              ),
+            if (viewModel.isBusy) const Center(child: CustomLottieLoader()),
           ],
         );
       },
@@ -198,7 +197,10 @@ class DashboardScreen extends StatelessWidget {
                           viewModel.currentUserProfileUrl!.isNotEmpty
                       ? Image.network(viewModel.currentUserProfileUrl!,
                           fit: BoxFit.cover)
-                      : Image.asset(AppConstants.avatar, fit: BoxFit.cover),
+                      : Image.asset(
+                          viewModel.currentUser?.defaultAvatar ??
+                              AppConstants.avatarBinary,
+                          fit: BoxFit.cover),
                 ),
               ),
             ),

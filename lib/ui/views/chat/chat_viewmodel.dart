@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/app/app.router.dart';
 
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -37,6 +39,9 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   String? _chatId;
 
   static bool isActive = false;
+  static String? activeChatId;
+
+  StreamSubscription<DocumentSnapshot>? _chatStatusSubscription;
 
   ChatViewModel({
     required this.volunteerId,
@@ -72,6 +77,9 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
     final ids = [userId, volunteerId];
     ids.sort();
     _chatId = ids.join('_');
+    activeChatId = _chatId;
+
+    _listenToChatStatus();
 
     return locator<ChatService>().getChatMessagesStream(_chatId!);
   }
@@ -87,6 +95,40 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
     setBusy(false);
     _snackbarService.showSnackbar(
         message: "Error fetching chat messages: $error");
+  }
+
+  void _listenToChatStatus() {
+    if (_chatId == null || _chatStatusSubscription != null) return;
+    _chatStatusSubscription = FirebaseFirestore.instance
+        .collection('chats')
+        .doc(_chatId)
+        .snapshots()
+        .listen((snapshot) {
+      if (!snapshot.exists) {
+        _handleChatEndedRemotely();
+        return;
+      }
+      final data = snapshot.data();
+      if (data != null && data['status'] == 'completed') {
+        _handleChatEndedRemotely();
+      }
+    });
+  }
+
+  void _handleChatEndedRemotely() {
+    if (_isDeleting) return;
+    _isDeleting = true;
+    _snackbarService.showSnackbar(message: "This chat has been ended.");
+    _navigateAway();
+  }
+
+  void _navigateAway() {
+    final isVolunteer = currentUserId == volunteerId;
+    if (isVolunteer) {
+      _navigationService.clearStackAndShow(Routes.volunteerHomeView);
+    } else {
+      _navigationService.clearStackAndShow(Routes.homeView, arguments: const HomeViewArguments(initialIndex: 2));
+    }
   }
 
   /// Sends a message to Firestore.
@@ -135,7 +177,7 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
           chatId: _chatId!,
           requestId: requestId,
         );
-        _navigationService.back();
+        _navigateAway();
       } catch (e) {
         setBusy(false);
         await _dialogService.showDialog(
@@ -189,7 +231,7 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
           chatId: _chatId!,
           requestId: requestId,
         );
-        _navigationService.back();
+        _navigateAway();
       } catch (e) {
         setBusy(false);
         await _dialogService.showDialog(
@@ -205,7 +247,9 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
 
   @override
   void dispose() {
+    _chatStatusSubscription?.cancel();
     isActive = false;
+    activeChatId = null;
     if (_chatId != null && currentUserId != null) {
       locator<ChatService>().setChatPresence(_chatId!, currentUserId!, false);
     }

@@ -5,6 +5,7 @@ import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'signup_viewmodel.dart';
 
@@ -100,22 +101,60 @@ class SignupView extends StackedView<SignupViewModel> {
                             ),
                           ),
                         CustomButton(
-                            text:
-                                viewModel.isBusy ? 'Signing Up...' : 'Sign Up',
-                            onPressed: () {
-                              viewModel.isBusy
-                                  ? null // Disable button when busy
-                                  : viewModel.signUp();
-                            }),
+                          text: viewModel.isBusy ? 'Signing Up...' : 'Sign Up',
+                          onPressed: viewModel.isBusy
+                              ? null // Disable button when busy
+                              : viewModel.signUp,
+                        ),
+                        Space.verticalSpaceTiny(context),
+                        Align(
+                          alignment: Alignment.center,
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                'By signing up, you agree to our Terms of Service and ',
+                                style: GoogleFonts.crimsonPro(
+                                  fontSize: 13,
+                                  color: AppColors.background,
+                                ),
+                              ),
+                              InkWell(
+                                onTap: () async {
+                                  final url = Uri.parse(
+                                      'https://docs.google.com/document/d/e/2PACX-1vSDGJL4MTkP1PsD1oCYf8AgJ4zeDt2dLnaUSTNMWKS191RE_F_gVjS6BegGQWC2jhexp9udbW40j5oh/pub');
+                                  try {
+                                    await launchUrl(url,
+                                        mode: LaunchMode.externalApplication);
+                                  } catch (e) {
+                                    debugPrint('Could not launch $url: $e');
+                                  }
+                                },
+                                child: Container(
+                                  child: Text(
+                                    'Privacy Policy.',
+                                    style: GoogleFonts.crimsonPro(
+                                      fontSize: 13,
+                                      color: AppColors.background,
+                                      fontWeight: FontWeight.w700,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         Space.verticalSpaceTiny(context),
                         InkWell(
                           splashColor: AppColors.peachDark,
                           onTap: () {
                             viewModel.navigateToResetPasswordView();
                           },
-                          child: const Text(
+                          child: Text(
                             'Forgot the password?',
-                            style: TextStyle(
+                            style: GoogleFonts.crimsonPro(
                                 decoration: TextDecoration.underline,
                                 decorationColor: AppColors.background,
                                 color: AppColors.background,
@@ -133,11 +172,9 @@ class SignupView extends StackedView<SignupViewModel> {
                         Space.verticalSpaceTiny(context),
                         Space.horizontalSpaceVTiny(context),
                         InkWell(
-                          onTap: () {
-                            viewModel.isBusy
-                                ? null
-                                : viewModel.signInWithGoogle();
-                          },
+                          onTap: viewModel.isBusy
+                              ? null
+                              : viewModel.signInWithGoogle,
                           child: PaddedImageContainer(
                             image: AssetImage(AppConstants.google),
                             containerWidth: screenSize.width * 0.28,

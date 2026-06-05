@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 
 enum UserRole { user, volunteer, admin }
 
@@ -87,6 +88,17 @@ class AppUser {
       isAdmin && (permissions?.contains('manage_content') ?? true);
   bool get canViewAnalytics =>
       isAdmin && (permissions?.contains('view_analytics') ?? true);
+
+  String get defaultAvatar {
+    final g = gender?.toLowerCase();
+    if (g == 'female') {
+      return AppConstants.avatarFemale;
+    } else if (g == 'male') {
+      return AppConstants.avatar;
+    } else {
+      return AppConstants.avatarBinary;
+    }
+  }
 
   AppUser copyWith({
     String? uid,

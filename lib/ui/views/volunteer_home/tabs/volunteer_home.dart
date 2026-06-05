@@ -36,7 +36,7 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
               // Handle tap
             },
             title: 'Home',
-            subtitle: 'Saturday, May 16',
+            subtitle: DateFormat('EEEE, MMMM d').format(DateTime.now()),
             trailingActions: [
               // Icon 1 (e.g., Notifications)
               Stack(
@@ -161,7 +161,7 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                                         username: chatRequest.requesterName,
                                         avatarPath:
                                             chatRequest.requesterAvatarUrl ??
-                                                AppConstants.avatar,
+                                                AppConstants.avatarBinary,
                                         lastMessage:
                                             "Tap to chat", // Placeholder or fetch last message
                                         timeAgo: _formatTimeAgo(chatRequest

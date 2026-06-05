@@ -3,6 +3,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/push_notification_service.dart';
 
 class StartupViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
@@ -21,16 +22,31 @@ class StartupViewModel extends BaseViewModel {
 
     if (userRole == 'volunteer') {
       final currentUser = _authenticationService.currentUser;
-      if (currentUser != null && currentUser.status == 'pending_verification') {
-        _navigationService.clearStackAndShow(Routes.volunteerPendingVerificationView);
+      if (currentUser != null && currentUser.status == 'profile_incomplete') {
+        await _navigationService.clearStackAndShow(
+          Routes.volunteerSignupInfoView,
+          arguments: VolunteerSignupInfoViewArguments(uid: currentUser.uid),
+        );
+      } else if (currentUser != null && currentUser.status == 'pending_verification') {
+        await _navigationService.clearStackAndShow(Routes.volunteerPendingVerificationView);
       } else {
-        _navigationService.clearStackAndShow(Routes.volunteerHomeView);
+        await _navigationService.clearStackAndShow(Routes.volunteerHomeView);
       }
     } else if (userRole == 'user' || userRole == 'admin') {
       // Added 'admin' check for safety
-      _navigationService.clearStackAndShow(Routes.homeView);
+      await _navigationService.clearStackAndShow(Routes.homeView);
     } else {
-      _navigationService.clearStackAndShow(Routes.welcomeView);
+      await _navigationService.clearStackAndShow(Routes.welcomeView);
+    }
+
+    // Process any push notification that woke up the app from a terminated state
+    final pushService = locator<PushNotificationService>();
+    final pendingMsg = pushService.pendingNotification;
+    if (pendingMsg != null) {
+      pushService.pendingNotification = null;
+      // Allow a brief moment for the root route to settle
+      await Future.delayed(const Duration(milliseconds: 300));
+      pushService.handleNotificationClick(pendingMsg);
     }
   }
 }

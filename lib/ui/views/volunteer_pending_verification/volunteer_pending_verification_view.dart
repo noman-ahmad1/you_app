@@ -75,12 +75,12 @@ class VolunteerPendingVerificationView
                   textAlign: TextAlign.center,
                 ),
                 Space.verticalSpaceSmall(context),
-                const CustomLottieLoader(
-                  width: 80,
-                  height: 80,
-                  loaderWidth: 80,
-                  loaderHeight: 80,
-                ),
+                // const CustomLottieLoader(
+                //   width: 80,
+                //   height: 80,
+                //   loaderWidth: 80,
+                //   loaderHeight: 80,
+                // ),
                 Space.verticalSpaceSmall(context),
                 InkWell(
                   onTap: viewModel.logout,

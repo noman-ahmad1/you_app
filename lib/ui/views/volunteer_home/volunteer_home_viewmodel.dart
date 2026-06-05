@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:stacked/stacked.dart';
+import 'package:you_app/models/app_user.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
@@ -51,6 +52,8 @@ class VolunteerHomeViewModel extends BaseViewModel {
 
   String? get currentUserProfileUrl =>
       _authenticationService.currentUser?.profilePictureUrl;
+
+  AppUser? get currentUser => _authenticationService.currentUser;
 
   VolunteerHomeViewModel() {
     _fetchInitialAvailability();

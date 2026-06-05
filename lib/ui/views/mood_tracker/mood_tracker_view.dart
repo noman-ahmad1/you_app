@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -43,7 +44,7 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
               Navigator.pop(context);
             },
             title: 'Mood Tracker',
-            subtitle: 'Saturday, May 16',
+            subtitle: DateFormat('EEEE, MMMM d').format(DateTime.now()),
             trailingActions: [],
           ),
           Expanded(

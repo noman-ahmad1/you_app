@@ -1,5 +1,5 @@
 import 'dart:ui';
-
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
@@ -47,7 +47,7 @@ class JournalDetailsView extends StackedView<JournalDetailsViewModel> {
                     Navigator.pop(context);
                   },
                   title: 'Journal Details',
-                  subtitle: 'Saturday, May 16',
+                  subtitle: DateFormat('EEEE, MMMM d').format(DateTime.now()),
                   trailingActions: [
                     // Icon 1 (e.g., Notifications)
                     // InkWell(

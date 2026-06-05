@@ -67,6 +67,10 @@ class AppConstants {
   static const String phone = 'assets/icons/phone.png';
   static const String gift = 'assets/icons/gift.png';
   static const String moon = 'assets/icons/moon.png';
+  static const String brain = 'assets/icons/brain.png';
+  static const String community2 = 'assets/icons/community2.png';
+  static const String avatarFemale = 'assets/icons/avatar_female.png';
+  static const String avatarBinary = 'assets/icons/avatar_binary.png';
 
   //images
   static const String register = 'assets/images/1.png';
@@ -106,6 +110,8 @@ class AppConstants {
   static const String write2 = 'assets/animations/write.lottie';
   static const String music2 = 'assets/animations/music.lottie';
   static const String breathe2 = 'assets/animations/breathe.lottie';
+  // static const String community2 = 'assets/animations/community.lottie';
+  // static const String volunteer2 = 'assets/animations/volunteer.lottie';
   static const String searchVolunteer =
       'assets/animations/search_volunteer.lottie';
 

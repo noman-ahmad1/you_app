@@ -5,6 +5,7 @@ import 'package:provider/provider.dart'; // Required for accessing parent's View
 import 'package:google_fonts/google_fonts.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_viewmodel.dart';
 
 // FIX: Changed from StackedView back to StatelessWidget.
@@ -92,12 +93,38 @@ class AgreementInfoView extends StatelessWidget {
               checkColor: AppColors.secondary,
             ),
             Expanded(
-              child: Text(
-                'I have read and agree to the terms and conditions',
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 14,
-                  color: AppColors.secondary,
-                ),
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'I have read and agree to the terms and ',
+                    style: GoogleFonts.crimsonPro(
+                      fontSize: 14,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () async {
+                      final url = Uri.parse(
+                          'https://docs.google.com/document/d/e/2PACX-1vSDGJL4MTkP1PsD1oCYf8AgJ4zeDt2dLnaUSTNMWKS191RE_F_gVjS6BegGQWC2jhexp9udbW40j5oh/pub');
+                      try {
+                        await launchUrl(url,
+                            mode: LaunchMode.externalApplication);
+                      } catch (e) {
+                        debugPrint('Could not launch $url: $e');
+                      }
+                    },
+                    child: Text(
+                      'Privacy Policy',
+                      style: GoogleFonts.crimsonPro(
+                        fontSize: 14,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

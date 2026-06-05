@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/storage_service.dart';
 import 'package:you_app/services/user_service.dart';
@@ -58,6 +59,7 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
   String? get selectedGender => _selectedGender;
   String? get selectedLevel => _selectedLevel;
   List<String> get selectedTags => _selectedTags;
+  AppUser? get currentUser => _authenticationService.currentUser;
 
   Future<void> initialize() async {
     setBusy(true);
@@ -166,8 +168,9 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
 
       if (pickedFile != null) {
         final originalFile = File(pickedFile.path);
-        final compressedFile = await ImageCompressorHelper.compressImage(originalFile);
-        
+        final compressedFile =
+            await ImageCompressorHelper.compressImage(originalFile);
+
         _selectedProfileImage = compressedFile;
         notifyListeners();
         Navigator.of(context).pop();

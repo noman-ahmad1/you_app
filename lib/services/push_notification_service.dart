@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
+import 'package:you_app/ui/views/chat/chat_viewmodel.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -21,6 +22,7 @@ class PushNotificationService {
   // final NavigationService _navigationService = locator<NavigationService>();
 
   bool _initialized = false;
+  RemoteMessage? pendingNotification;
 
   /// Initializes FCM and configures foreground/background/clicked listeners
   Future<void> initialise() async {
@@ -73,7 +75,7 @@ class PushNotificationService {
       RemoteMessage? initialMessage = await _fcm.getInitialMessage();
       if (initialMessage != null) {
         debugPrint('App opened from terminated notification!');
-        _handleNotificationClick(initialMessage);
+        pendingNotification = initialMessage;
       }
 
       // 6. Token management: Get initial token and watch for refreshes
@@ -122,15 +124,26 @@ class PushNotificationService {
   }
 
   /// Handles custom navigation/actions when a notification is tapped
+  void handleNotificationClick(RemoteMessage message) {
+    _handleNotificationClick(message);
+  }
+
   void _handleNotificationClick(RemoteMessage message) {
     debugPrint('Handling notification click: ${message.data}');
     final type = message.data['type'] as String?;
     final navigationService = locator<NavigationService>();
     if (type == 'request_accepted') {
-      navigationService.replaceWithHomeView(initialIndex: 2);
+      navigationService.clearStackAndShow(Routes.homeView, arguments: const HomeViewArguments(initialIndex: 2));
     } else if (type == 'new_message') {
       final chatId = message.data['chatId'] as String?;
       if (chatId != null) {
+        // Prevent routing if already in the exact same chat
+        if (type == 'new_message') {
+           if (ChatViewModel.isActive && ChatViewModel.activeChatId == chatId) {
+             return; // Already in this chat
+           }
+        }
+
         final currentUserId = FirebaseAuth.instance.currentUser?.uid;
         if (currentUserId != null) {
           final parts = chatId.split('_');
@@ -144,7 +157,7 @@ class PushNotificationService {
         }
       }
     } else if (type == 'request_received' || type == 'chat_request') {
-      navigationService.replaceWithVolunteerHomeView();
+      navigationService.clearStackAndShow(Routes.volunteerHomeView);
     }
   }
 }

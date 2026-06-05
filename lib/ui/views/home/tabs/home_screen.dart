@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -44,7 +45,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                   // Handle tap
                 },
                 title: 'Hi, ${viewModel.currentUser?.firstName ?? "Friend"}',
-                subtitle: 'Saturday, May 16',
+                subtitle: DateFormat('EEEE, MMMM d').format(DateTime.now()),
                 trailingActions: [
                   // Icon 1 (e.g., Notifications)
                   Stack(
@@ -119,8 +120,12 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                 user!.profilePictureUrl!.isNotEmpty
                             ? Image.network(user.profilePictureUrl!,
                                 width: 34, height: 34, fit: BoxFit.cover)
-                            : Image.asset(AppConstants.avatar,
-                                width: 34, height: 34, fit: BoxFit.cover),
+                            : Image.asset(
+                                user?.defaultAvatar ??
+                                    AppConstants.avatarBinary,
+                                width: 34,
+                                height: 34,
+                                fit: BoxFit.cover),
                       ),
                     ),
                   ),
@@ -169,18 +174,19 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                       Text(
                                         'Today\'s Whisper',
                                         style: GoogleFonts.crimsonPro(
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             fontWeight: FontWeight.w500,
                                             color: AppColors.secondary),
                                       ),
                                       Text(
-                                        'Some days, surviving is a form of bravery too',
+                                        viewModel.todayWhisper,
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.crimsonPro(
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             fontWeight: FontWeight.w600,
                                             color: AppColors.primaryVeryDark),
                                       ),
+                                      Space.verticalSpaceVTiny(context),
                                     ],
                                   ),
                                 ),
@@ -222,7 +228,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                         'Feeling happy, meh, or down?\n Lock it in!',
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.crimsonPro(
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             fontWeight: FontWeight.w500,
                                             color: AppColors.secondary),
                                       ),
@@ -323,7 +329,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                         'Today\'s Journal',
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.crimsonPro(
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             fontWeight: FontWeight.w500,
                                             color: AppColors.secondary),
                                       ),
@@ -333,14 +339,15 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                           Column(
                                             children: [
                                               Text(
-                                                'Your safe space to\n write',
+                                                'Your safe space to write',
                                                 textAlign: TextAlign.center,
                                                 style: GoogleFonts.crimsonPro(
-                                                    fontSize: 18,
+                                                    fontSize: 16,
                                                     fontWeight: FontWeight.w600,
                                                     color: AppColors
                                                         .primaryVeryDark),
                                               ),
+                                              Space.verticalSpaceTiny(context),
                                               ClipRRect(
                                                 borderRadius:
                                                     BorderRadius.circular(35),
@@ -478,7 +485,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                                               "Swipe to express",
                                                               style: GoogleFonts
                                                                   .crimsonPro(
-                                                                fontSize: 15,
+                                                                fontSize: 14,
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .w600,
@@ -555,20 +562,22 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                           ],
                                         ),
                                         child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.center,
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Image.asset(
-                                              AppConstants.community,
-                                              color: AppColors.secondary,
-                                              width: width * 0.1,
-                                              height: height * 0.04,
+                                              AppConstants.community2,
+                                              // color: AppColors.secondary,
+                                              width: width * 0.135,
+                                              height: height * 0.05,
                                               fit: BoxFit.cover,
                                             ),
                                             Text(
                                               'Communities',
                                               style: GoogleFonts.crimsonPro(
-                                                  fontSize: 20,
+                                                  fontSize: 18,
                                                   fontWeight: FontWeight.w500,
                                                   color: AppColors.secondary),
                                             ),
@@ -576,7 +585,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                               'Find your people',
                                               textAlign: TextAlign.center,
                                               style: GoogleFonts.crimsonPro(
-                                                  fontSize: 15,
+                                                  fontSize: 14,
                                                   fontWeight: FontWeight.w300,
                                                   color: AppColors
                                                       .primaryVeryDark),
@@ -617,20 +626,22 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                           ],
                                         ),
                                         child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.center,
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Image.asset(
-                                              AppConstants.chat,
-                                              color: AppColors.secondary,
-                                              width: width * 0.1,
-                                              height: height * 0.04,
+                                              AppConstants.brain,
+                                              // color: AppColors.secondary,
+                                              width: width * 0.12,
+                                              height: height * 0.05,
                                               fit: BoxFit.cover,
                                             ),
                                             Text(
                                               'Volunteers',
                                               style: GoogleFonts.crimsonPro(
-                                                  fontSize: 20,
+                                                  fontSize: 18,
                                                   fontWeight: FontWeight.w500,
                                                   color: AppColors.secondary),
                                             ),
@@ -638,7 +649,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                               'Caring Listeners',
                                               textAlign: TextAlign.center,
                                               style: GoogleFonts.crimsonPro(
-                                                  fontSize: 15,
+                                                  fontSize: 14,
                                                   fontWeight: FontWeight.w300,
                                                   color: AppColors
                                                       .primaryVeryDark),
@@ -669,6 +680,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                 ),
                               ],
                             ),
+                            // const SizedBox(height: 120),
                           ],
                         ),
                       ),

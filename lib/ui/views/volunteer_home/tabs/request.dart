@@ -35,7 +35,7 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
               // Handle tap
             },
             title: 'Requests',
-            subtitle: 'Saturday, May 16',
+            subtitle: DateFormat('EEEE, MMMM d').format(DateTime.now()),
             trailingActions: [
               // Icon 1 (e.g., Notifications)
               Stack(
@@ -133,6 +133,7 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
                                   ],
                                 ))
                               : ListView.builder(
+                                  padding: const EdgeInsets.only(bottom: 120),
                                   // ✅ Use pendingRequests
                                   itemCount: viewModel.pendingRequests.length,
                                   itemBuilder: (context, index) {
@@ -146,7 +147,7 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
                                         username: request.requesterName,
                                         avatarPath:
                                             request.requesterAvatarUrl ??
-                                                AppConstants.avatar,
+                                                AppConstants.avatarBinary,
                                         lastMessage: "Wants to connect",
                                         timeAgo:
                                             _formatTimeAgo(request.createdAt),

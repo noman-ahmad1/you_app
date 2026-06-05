@@ -130,7 +130,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                           backgroundImage: user.profilePictureUrl != null &&
                                   user.profilePictureUrl!.isNotEmpty
                               ? NetworkImage(user.profilePictureUrl!)
-                              : const AssetImage(AppConstants.avatar)
+                              : AssetImage(user.defaultAvatar)
                                   as ImageProvider,
                         ),
                       ),

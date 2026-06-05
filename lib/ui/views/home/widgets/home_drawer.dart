@@ -36,7 +36,7 @@ class HomeDrawer extends StatelessWidget {
                     backgroundImage: user?.profilePictureUrl != null &&
                             user!.profilePictureUrl!.isNotEmpty
                         ? NetworkImage(user!.profilePictureUrl!)
-                        : const AssetImage(AppConstants.avatar)
+                        : AssetImage(user?.defaultAvatar ?? AppConstants.avatarBinary)
                             as ImageProvider,
                     backgroundColor: AppColors.secondaryVeryLight,
                   ),

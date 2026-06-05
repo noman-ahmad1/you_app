@@ -161,8 +161,7 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
                                 return const Center(
-                                  child: CustomLottieLoader()
-                                );
+                                    child: CustomLottieLoader());
                               }
                               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                                 return const Center(
@@ -210,7 +209,9 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                 },
                               );
                             }),
-                        Space.verticalSpaceSmall(context),
+                        // Space.verticalSpaceSmall(context),
+                        // Space.verticalSpaceTiny(context),
+                        const SizedBox(height: 120),
                       ],
                     ),
                   ),

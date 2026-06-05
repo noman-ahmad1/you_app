@@ -60,6 +60,7 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
   late Animation<Offset> _offsetAnimation;
   late Animation<double> _fadeAnimation;
   Timer? _dismissTimer;
+  bool _isDismissing = false;
 
   @override
   void initState() {
@@ -94,9 +95,11 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
   }
 
   void _dismiss() {
-    if (!mounted) return;
+    if (!mounted || _isDismissing) return;
+    _isDismissing = true;
+    _dismissTimer?.cancel();
     _controller.reverse().then((_) {
-      widget.onDismiss();
+      if (mounted) widget.onDismiss();
     });
   }
 

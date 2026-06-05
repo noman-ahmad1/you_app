@@ -507,7 +507,7 @@ class AuthenticationService with ListenableServiceMixin {
         'lastName': null,
         'phoneNumber': _pendingPhoneNumber.value, // Use verified phone number
         'role': 'volunteer',
-        'status': 'pending_verification',
+        'status': 'profile_incomplete',
         'emailVerified': false,
         'phoneVerified': true, // Mark as verified since we just verified it
         'createdAt': FieldValue.serverTimestamp(),
@@ -579,7 +579,7 @@ class AuthenticationService with ListenableServiceMixin {
 
       // Create Firebase credential
       final AuthCredential credential = GoogleAuthProvider.credential(
-        // accessToken: googleAuth.accessToken,
+        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
