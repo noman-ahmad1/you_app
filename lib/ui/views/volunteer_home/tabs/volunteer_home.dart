@@ -31,7 +31,7 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
       child: Column(
         children: [
           TopBar(
-            leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+            leadingIconAsset: AppConstants.logoRound, // Your 'Y' logo asset
             onLeadingPressed: () {
               // Handle tap
             },
@@ -126,9 +126,7 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                     Expanded(
                       child: viewModel.isBusyActiveChats &&
                               viewModel.activeChats.isEmpty
-                          ? const Center(
-                              child: CustomLottieLoader()
-                            )
+                          ? const Center(child: CustomLottieLoader())
                           : viewModel.activeChats.isEmpty
                               ? Center(
                                   child: Column(

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
 
 import 'package:collection/collection.dart';
@@ -99,6 +101,33 @@ class HomeViewModel extends ReactiveViewModel {
 
   String _todayWhisper = 'Some days, surviving is a form of bravery';
   String get todayWhisper => _todayWhisper;
+
+  final GlobalKey moodKey = GlobalKey();
+  final GlobalKey journalKey = GlobalKey();
+  final GlobalKey communitiesKey = GlobalKey();
+  final GlobalKey volunteersKey = GlobalKey();
+  final GlobalKey soothingSoundsKey = GlobalKey();
+  final GlobalKey breatheKey = GlobalKey();
+  final GlobalKey dodoKey = GlobalKey();
+
+  Future<void> checkAndStartShowcase(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeen = prefs.getBool('hasSeenHomeShowcase') ?? false;
+    if (!hasSeen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowCaseWidget.of(context).startShowCase([
+          moodKey,
+          journalKey,
+          communitiesKey,
+          volunteersKey,
+          soothingSoundsKey,
+          breatheKey,
+          dodoKey,
+        ]);
+      });
+      await prefs.setBool('hasSeenHomeShowcase', true);
+    }
+  }
 
   HomeViewModel() {
     listenToVolunteers();

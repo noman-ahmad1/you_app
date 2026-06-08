@@ -139,8 +139,10 @@ class VolunteerEditProfileView
                           Space.verticalSpaceVTiny(context),
                           PhoneNumberField(
                             controller: viewModel.phoneController,
+                            initialDialCode: '+92',
                             labelText: 'Phone Number',
                             hintText: 'Enter phone number',
+                            onChanged: viewModel.setPhoneNumber,
                           ),
                           Space.verticalSpaceVTiny(context),
                           GestureDetector(

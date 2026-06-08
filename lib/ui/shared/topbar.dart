@@ -28,7 +28,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
     this.iconColor,
     this.titleColor,
     this.backgroundColor,
-    this.height = kToolbarHeight + 20,
+    this.height = kToolbarHeight + 5,
     this.isCenterTitle = true, // Defaults to true for all other screens!
     this.isDodo = true, // Defaults to false for all other screens!
   }) : super(key: key);

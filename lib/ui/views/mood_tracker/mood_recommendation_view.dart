@@ -37,7 +37,7 @@ class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             TopBar(
-              leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+              leadingIconAsset: AppConstants.logoRound, // Your 'Y' logo asset
               onLeadingPressed: () {
                 // Handle tap
               },

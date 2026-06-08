@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:you_app/ui/views/home/widgets/bottom_bar.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/volunteer_home.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/request.dart';
@@ -18,34 +19,42 @@ class VolunteerHomeView extends StackedView<VolunteerHomeViewModel> {
     VolunteerHomeViewModel viewModel,
     Widget? child,
   ) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      drawer: VolunteerNotificationsDrawer(viewModel: viewModel),
-      body: Stack(
-        children: [
-          // Screens
-          _buildTabNavigator(0, viewModel),
-          _buildTabNavigator(1, viewModel),
-          _buildTabNavigator(2, viewModel),
+    return ShowCaseWidget(
+      builder: (context) {
+        viewModel.checkAndStartShowcase(context);
+        return Scaffold(
+          backgroundColor: Colors.white,
+          drawer: VolunteerNotificationsDrawer(viewModel: viewModel),
+          body: Stack(
+            children: [
+              // Screens
+              _buildTabNavigator(0, viewModel),
+              _buildTabNavigator(1, viewModel),
+              _buildTabNavigator(2, viewModel),
 
-          // Floating Bottom Bar
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: FractionallySizedBox(
-                widthFactor: 0.9, // 90% of screen width
-                heightFactor: 0.07,
-                child: VolunteerBottomBar(
-                  currentIndex: viewModel.currentIndex,
-                  onTap: viewModel.setTab,
-                  unreadNotificationsCount: viewModel.pendingRequests.length,
+              // Floating Bottom Bar
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: FractionallySizedBox(
+                    widthFactor: 0.9, // 90% of screen width
+                    heightFactor: 0.07,
+                    child: VolunteerBottomBar(
+                      currentIndex: viewModel.currentIndex,
+                      onTap: viewModel.setTab,
+                      unreadNotificationsCount: viewModel.pendingRequests.length,
+                      requestsKey: viewModel.requestsKey,
+                      homeFeedKey: viewModel.homeFeedKey,
+                      dashboardKey: viewModel.dashboardKey,
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

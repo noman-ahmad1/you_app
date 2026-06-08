@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
@@ -54,6 +56,25 @@ class VolunteerHomeViewModel extends BaseViewModel {
       _authenticationService.currentUser?.profilePictureUrl;
 
   AppUser? get currentUser => _authenticationService.currentUser;
+
+  final GlobalKey requestsKey = GlobalKey();
+  final GlobalKey homeFeedKey = GlobalKey();
+  final GlobalKey dashboardKey = GlobalKey();
+
+  Future<void> checkAndStartShowcase(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeen = prefs.getBool('hasSeenVolunteerShowcase') ?? false;
+    if (!hasSeen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowCaseWidget.of(context).startShowCase([
+          requestsKey,
+          homeFeedKey,
+          dashboardKey,
+        ]);
+      });
+      await prefs.setBool('hasSeenVolunteerShowcase', true);
+    }
+  }
 
   VolunteerHomeViewModel() {
     _fetchInitialAvailability();

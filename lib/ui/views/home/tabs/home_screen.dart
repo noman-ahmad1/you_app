@@ -7,6 +7,7 @@ import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:lottie/lottie.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
@@ -23,6 +24,20 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
 
   @override
   Widget build(BuildContext context, HomeViewModel viewModel) {
+    Widget _buildShowcase({required GlobalKey key, required String title, required String description, required Widget child}) {
+      return Showcase(
+        key: key,
+        title: title,
+        description: description,
+        targetBorderRadius: BorderRadius.circular(23),
+        tooltipBackgroundColor: AppColors.background.withAlpha(220),
+        textColor: AppColors.secondary,
+        descTextStyle: GoogleFonts.crimsonPro(fontSize: 16, color: AppColors.primaryVeryDark),
+        titleTextStyle: GoogleFonts.crimsonPro(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.secondary),
+        child: child,
+      );
+    }
+
     final user = viewModel.currentUser;
     final mediaQuery = MediaQuery.of(context);
     final width = mediaQuery.size.width;
@@ -40,7 +55,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
             children: [
               TopBar(
                 isCenterTitle: false,
-                leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+                leadingIconAsset: AppConstants.logoRound, // Your 'Y' logo asset
                 onLeadingPressed: () {
                   // Handle tap
                 },
@@ -142,7 +157,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             ClipRRect(
-                              borderRadius: BorderRadius.circular(23),
+                                borderRadius: BorderRadius.circular(23),
                               child: BackdropFilter(
                                 filter:
                                     ImageFilter.blur(sigmaX: 200, sigmaY: 200),
@@ -190,12 +205,16 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                     ],
                                   ),
                                 ),
+                                ),
                               ),
-                            ),
                             Space.verticalSpaceTiny(context),
                             // Mood Card
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(23),
+                            _buildShowcase(
+                              key: viewModel.moodKey,
+                              title: 'Mood Tracker',
+                              description: 'Log how you feel and track your emotional journey.',
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(23),
                               child: BackdropFilter(
                                 filter:
                                     ImageFilter.blur(sigmaX: 200, sigmaY: 200),
@@ -290,12 +309,17 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                     ],
                                   ),
                                 ),
+                                ),
                               ),
                             ),
                             Space.verticalSpaceTiny(context),
                             // Journal Card
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(23),
+                            _buildShowcase(
+                              key: viewModel.journalKey,
+                              title: 'Journaling',
+                              description: 'Swipe to express your thoughts in a safe space.',
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(23),
                               child: BackdropFilter(
                                 filter:
                                     ImageFilter.blur(sigmaX: 200, sigmaY: 200),
@@ -526,18 +550,23 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                     ],
                                   ),
                                 ),
+                                ),
                               ),
                             ),
                             Space.verticalSpaceTiny(context),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                InkWell(
-                                  onTap: () {
-                                    viewModel.setTab(0);
-                                  },
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(23),
+                                _buildShowcase(
+                                  key: viewModel.communitiesKey,
+                                  title: 'Communities',
+                                  description: 'Find your people and connect with others.',
+                                  child: InkWell(
+                                    onTap: () {
+                                      viewModel.setTab(0);
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(23),
                                     child: BackdropFilter(
                                       filter: ImageFilter.blur(
                                           sigmaX: 200, sigmaY: 200),
@@ -596,65 +625,71 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                     ),
                                   ),
                                 ),
-                                InkWell(
-                                  onTap: () {
-                                    viewModel.setTab(2);
-                                  },
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(23),
-                                    child: BackdropFilter(
-                                      filter: ImageFilter.blur(
-                                          sigmaX: 200, sigmaY: 200),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(15),
-                                        width: width * 0.42,
-                                        height: height * 0.14,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.background
-                                              .withAlpha(200),
-                                          border: Border.all(
-                                              color: AppColors.background,
-                                              width: 2),
-                                          borderRadius:
-                                              BorderRadius.circular(23),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withAlpha(25),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Image.asset(
-                                              AppConstants.brain,
-                                              // color: AppColors.secondary,
-                                              width: width * 0.12,
-                                              height: height * 0.05,
-                                              fit: BoxFit.cover,
-                                            ),
-                                            Text(
-                                              'Volunteers',
-                                              style: GoogleFonts.crimsonPro(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: AppColors.secondary),
-                                            ),
-                                            Text(
-                                              'Caring Listeners',
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.crimsonPro(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w300,
-                                                  color: AppColors
-                                                      .primaryVeryDark),
-                                            ),
-                                          ],
+                                ),
+                                _buildShowcase(
+                                  key: viewModel.volunteersKey,
+                                  title: 'Volunteers',
+                                  description: 'Caring listeners available to chat.',
+                                  child: InkWell(
+                                    onTap: () {
+                                      viewModel.setTab(2);
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(23),
+                                      child: BackdropFilter(
+                                        filter: ImageFilter.blur(
+                                            sigmaX: 200, sigmaY: 200),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(15),
+                                          width: width * 0.42,
+                                          height: height * 0.14,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.background
+                                                .withAlpha(200),
+                                            border: Border.all(
+                                                color: AppColors.background,
+                                                width: 2),
+                                            borderRadius:
+                                                BorderRadius.circular(23),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withAlpha(25),
+                                                blurRadius: 20,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Image.asset(
+                                                AppConstants.brain,
+                                                // color: AppColors.secondary,
+                                                width: width * 0.12,
+                                                height: height * 0.05,
+                                                fit: BoxFit.cover,
+                                              ),
+                                              Text(
+                                                'Volunteers',
+                                                style: GoogleFonts.crimsonPro(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: AppColors.secondary),
+                                              ),
+                                              Text(
+                                                'Caring Listeners',
+                                                textAlign: TextAlign.center,
+                                                style: GoogleFonts.crimsonPro(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w300,
+                                                    color: AppColors
+                                                        .primaryVeryDark),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -666,17 +701,27 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                FeatureNavCard(
+                                _buildShowcase(
+                                  key: viewModel.soothingSoundsKey,
                                   title: 'Soothing Sounds',
-                                  subtitle: 'Relax & Listen',
-                                  imageAsset: AppConstants.soothing,
-                                  onTap: viewModel.navigateToSoothingSounds,
+                                  description: 'Relax your mind with calming audio.',
+                                  child: FeatureNavCard(
+                                    title: 'Soothing Sounds',
+                                    subtitle: 'Relax & Listen',
+                                    imageAsset: AppConstants.soothing,
+                                    onTap: viewModel.navigateToSoothingSounds,
+                                  ),
                                 ),
-                                FeatureNavCard(
+                                _buildShowcase(
+                                  key: viewModel.breatheKey,
                                   title: 'Breathe',
-                                  subtitle: 'Calm Your Mind',
-                                  imageAsset: AppConstants.breathe,
-                                  onTap: viewModel.navigateToBreathe,
+                                  description: 'Follow guided breathing exercises.',
+                                  child: FeatureNavCard(
+                                    title: 'Breathe',
+                                    subtitle: 'Calm Your Mind',
+                                    imageAsset: AppConstants.breathe,
+                                    onTap: viewModel.navigateToBreathe,
+                                  ),
                                 ),
                               ],
                             ),
@@ -691,10 +736,21 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
             ],
           ),
         ),
-        _AnimatedDodoIcon(
-          onTap: () async {
-            viewModel.navigateToChatbot();
-          },
+        Align(
+          alignment: Alignment.bottomRight,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 0, 20, 200),
+            child: _buildShowcase(
+              key: viewModel.dodoKey,
+              title: 'AI Dodo',
+              description: 'Tap here to chat with your compassionate AI companion.',
+              child: _AnimatedDodoIcon(
+                onTap: () async {
+                  viewModel.navigateToChatbot();
+                },
+              ),
+            ),
+          ),
         ),
 //             Align(
 //   alignment: Alignment.bottomRight,
@@ -767,17 +823,13 @@ class _AnimatedDodoIconState extends State<_AnimatedDodoIcon>
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, 20, 200),
-        child: AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, _animation.value),
-              child: child,
-            );
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _animation.value),
+          child: child,
+        );
           },
           child: InkWell(
             onTap: widget.onTap,
@@ -809,8 +861,6 @@ class _AnimatedDodoIconState extends State<_AnimatedDodoIcon>
               ),
             ),
           ),
-        ),
-      ),
     );
   }
 }

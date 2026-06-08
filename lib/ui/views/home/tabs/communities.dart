@@ -30,7 +30,7 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
         child: Column(
           children: [
             TopBar(
-              leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+              leadingIconAsset: AppConstants.logoRound, // Your 'Y' logo asset
               onLeadingPressed: () {
                 // Handle tap
               },

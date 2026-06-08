@@ -42,6 +42,7 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
   String? _selectedGender;
   String? _selectedLevel;
   List<String> _selectedTags = [];
+  String _fullPhoneNumber = '';
 
   // Options
   final List<String> genders = ['Male', 'Female', 'Other', 'Prefer not to say'];
@@ -74,7 +75,15 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
       // Pre-fill Personal Info
       firstNameController.text = appUser.firstName ?? '';
       lastNameController.text = appUser.lastName ?? '';
-      phoneController.text = appUser.phoneNumber ?? '';
+      
+      String phone = appUser.phoneNumber ?? '';
+      _fullPhoneNumber = phone;
+      if (phone.startsWith('+92')) {
+        phoneController.text = phone.substring(3);
+      } else {
+        phoneController.text = phone;
+      }
+      
       _selectedGender = appUser.gender;
       _currentProfileImageUrl = appUser.profilePictureUrl;
 
@@ -109,6 +118,10 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
   void setLevel(String? level) {
     _selectedLevel = level;
     notifyListeners();
+  }
+
+  void setPhoneNumber(String phone) {
+    _fullPhoneNumber = phone;
   }
 
   void toggleTag(String tag) {
@@ -286,6 +299,13 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
     try {
       String? profileUrl = _currentProfileImageUrl;
       if (_selectedProfileImage != null) {
+        if (profileUrl != null && profileUrl.isNotEmpty) {
+          try {
+            await _storageService.deleteFileByUrl(profileUrl);
+          } catch (e) {
+            print('Failed to delete old profile image: $e');
+          }
+        }
         final storagePath =
             'volunteer_profiles/${appUser.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg';
         final uploadedUrl = await _storageService.uploadFile(
@@ -301,10 +321,11 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
         'lastName': lastNameController.text.trim(),
         'dateOfBirth': _selectedDate,
         'gender': _selectedGender,
-        'phoneNumber': phoneController.text.trim(),
+        'phoneNumber': phoneController.text.trim().isEmpty ? '' : _fullPhoneNumber.trim(),
         'profilePictureUrl': profileUrl,
       };
       await _userService.update(appUser.uid, appUserData);
+      await _authenticationService.checkCurrentUserStatus();
 
       // Update VolunteerInfo
       final volunteerInfoData = {

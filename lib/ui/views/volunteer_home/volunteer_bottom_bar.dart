@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
@@ -7,12 +9,18 @@ class VolunteerBottomBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
   final int unreadNotificationsCount;
+  final GlobalKey? requestsKey;
+  final GlobalKey? homeFeedKey;
+  final GlobalKey? dashboardKey;
 
   const VolunteerBottomBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
     this.unreadNotificationsCount = 0,
+    this.requestsKey,
+    this.homeFeedKey,
+    this.dashboardKey,
   });
 
   @override
@@ -66,22 +74,31 @@ class VolunteerBottomBar extends StatelessWidget {
                 children: [
                   _TabItem(
                     assetPath: AppConstants.notification,
-                    label: 'Pending Chat',
+                    label: 'Requests',
                     isSelected: currentIndex == 0,
                     onTap: () => onTap(0),
                     unreadNotificationsCount: unreadNotificationsCount,
+                    showcaseKey: requestsKey,
+                    showcaseTitle: 'Requests',
+                    showcaseDescription: 'Find users needing your support here.',
                   ),
                   _TabItem(
                     assetPath: AppConstants.chat,
-                    label: 'Active Chat',
+                    label: 'Home Feed',
                     isSelected: currentIndex == 1,
                     onTap: () => onTap(1),
+                    showcaseKey: homeFeedKey,
+                    showcaseTitle: 'Home Feed',
+                    showcaseDescription: 'Reply anonymously to community threads.',
                   ),
                   _TabItem(
                     assetPath: AppConstants.stat,
                     label: 'Dashboard',
                     isSelected: currentIndex == 2,
                     onTap: () => onTap(2),
+                    showcaseKey: dashboardKey,
+                    showcaseTitle: 'Dashboard',
+                    showcaseDescription: 'Track your positive impact over time.',
                   ),
                 ],
               ),
@@ -112,6 +129,9 @@ class _TabItem extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final int unreadNotificationsCount;
+  final GlobalKey? showcaseKey;
+  final String? showcaseTitle;
+  final String? showcaseDescription;
 
   const _TabItem({
     required this.assetPath,
@@ -119,6 +139,9 @@ class _TabItem extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     this.unreadNotificationsCount = 0,
+    this.showcaseKey,
+    this.showcaseTitle,
+    this.showcaseDescription,
   });
 
   @override
@@ -126,11 +149,11 @@ class _TabItem extends StatelessWidget {
     final barHeight =
         MediaQuery.of(context).size.height * 0.06; // match BottomBar height
     final iconSize = barHeight * 0.6; // 60% of bar height
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
+    
+    Widget content = GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
           alignment: Alignment.center,
           child: Stack(
             clipBehavior: Clip.none,
@@ -175,7 +198,22 @@ class _TabItem extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
+
+    if (showcaseKey != null && showcaseTitle != null && showcaseDescription != null) {
+      content = Showcase(
+        key: showcaseKey!,
+        title: showcaseTitle,
+        description: showcaseDescription,
+        targetBorderRadius: BorderRadius.circular(23),
+        tooltipBackgroundColor: AppColors.background.withAlpha(220),
+        textColor: AppColors.secondary,
+        descTextStyle: GoogleFonts.crimsonPro(fontSize: 16, color: AppColors.primaryVeryDark),
+        titleTextStyle: GoogleFonts.crimsonPro(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.secondary),
+        child: content,
+      );
+    }
+
+    return Expanded(child: content);
   }
 }

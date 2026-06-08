@@ -84,7 +84,9 @@ class AppConstants {
   static const String santa = 'assets/images/santa.png';
   static const String dodoCut = 'assets/images/dodo_cut.png';
   static const String dodo = 'assets/images/dodo.png';
-  static const String logo = 'assets/images/logo.png';
+  static const String logoRounded = 'assets/images/logo_rounded.png';
+  static const String logoRound = 'assets/images/logo_round.png';
+  static const String logoSquare = 'assets/images/logo_square.png';
   static const String soothing = 'assets/images/soothing.jpg';
   static const String breathe = 'assets/images/breathe.jpg';
   static const String soothing2 = 'assets/images/soothing2.jpg';
@@ -120,8 +122,8 @@ class AppConstants {
     'ADHD',
     'Anxiety',
     'Depression',
-    'Relationships',
     'Stress',
+    'Relationships',
     'Panic',
     'Phobia',
     'Dysthymia',

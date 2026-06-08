@@ -39,7 +39,7 @@ class JournalCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(10),
             width: width * 0.9,
-            height: height * 0.19,
+            height: height * 0.195,
             decoration: BoxDecoration(
               color: AppColors.background.withAlpha(200),
               border: Border.all(color: AppColors.background, width: 2),
@@ -105,7 +105,7 @@ class JournalCard extends StatelessWidget {
                     color: AppColors.primaryVeryDark,
                   ),
                 ),
-
+                SizedBox(height: 5),
                 // Date chip
                 Expanded(
                   child: Align(

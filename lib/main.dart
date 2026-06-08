@@ -45,6 +45,7 @@ class MainApp extends StatelessWidget {
       initialRoute: Routes.startupView,
       onGenerateRoute: StackedRouter().onGenerateRoute,
       navigatorKey: StackedService.navigatorKey,
+      debugShowCheckedModeBanner: false,
       navigatorObservers: [
         StackedService.routeObserver,
       ],

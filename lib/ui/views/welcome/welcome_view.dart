@@ -60,7 +60,7 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
                       Space.verticalSpaceSmall(context),
                       Space.verticalSpaceVTiny(context),
                       Image.asset(
-                        AppConstants.logo,
+                        AppConstants.logoRound,
                         height: 200,
                         width: 200,
                         // height: screenSize.height * 0.23,

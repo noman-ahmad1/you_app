@@ -32,7 +32,7 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
           child: Column(
             children: [
               TopBar(
-                leadingIconAsset: AppConstants.logo, // Your 'Y' logo asset
+                leadingIconAsset: AppConstants.logoRound, // Your 'Y' logo asset
                 onLeadingPressed: () {
                   // Handle tap
                 },
@@ -454,8 +454,8 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                       child: VolunteerCard(
                         type: VolunteerCardType.availableChat, // Correct type
                         username: volunteer.fullName,
-                        avatarPath:
-                            volunteer.profilePictureUrl ?? volunteer.defaultAvatar,
+                        avatarPath: volunteer.profilePictureUrl ??
+                            volunteer.defaultAvatar,
                         rating: volunteerRating.round(),
                         categories: displayTags,
                         onActionTap: () => viewModel.sendChatRequest(volunteer),
