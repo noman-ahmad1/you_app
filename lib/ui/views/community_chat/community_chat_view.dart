@@ -152,39 +152,46 @@ class _PostComposer extends ViewModelWidget<CommunityChatViewModel> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(10.0),
-        child: TextField(
-          controller: viewModel.messageController,
-          keyboardType: TextInputType.multiline,
-          maxLines: null,
-          cursorColor: AppColors.secondary,
-          style: GoogleFonts.crimsonPro(
-            color: AppColors.secondary,
-          ),
-          decoration: InputDecoration(
-            hintText: "Start a new thread... (@ to mention)",
-            hintStyle: GoogleFonts.crimsonPro(
-              color: AppColors.secondary.withAlpha(150),
+        child: Stack(
+          children: [
+            TextField(
+              controller: viewModel.messageController,
+              keyboardType: TextInputType.multiline,
+              maxLines: 5,
+              minLines: 1,
+              cursorColor: AppColors.secondary,
+              style: GoogleFonts.crimsonPro(
+                color: AppColors.secondary,
+              ),
+              decoration: InputDecoration(
+                hintText: "Start a new thread... (@ to mention)",
+                hintStyle: GoogleFonts.crimsonPro(
+                  color: AppColors.secondary.withAlpha(150),
+                ),
+                filled: true,
+                fillColor: AppColors.secondaryVeryLight.withAlpha(75),
+                contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide:
+                      const BorderSide(color: AppColors.secondary, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide:
+                      const BorderSide(color: AppColors.secondary, width: 2),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide:
+                      const BorderSide(color: AppColors.secondary, width: 2),
+                ),
+              ),
+              onSubmitted: (_) => viewModel.sendPost(),
             ),
-            filled: true,
-            fillColor: AppColors.secondaryVeryLight.withAlpha(75),
-            contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25),
-              borderSide:
-                  const BorderSide(color: AppColors.secondary, width: 2),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25),
-              borderSide:
-                  const BorderSide(color: AppColors.secondary, width: 2),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25),
-              borderSide:
-                  const BorderSide(color: AppColors.secondary, width: 2),
-            ),
-            suffixIcon: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
+            Positioned(
+              right: 8.0,
+              bottom: 5.5,
               child: GestureDetector(
                 onTap: viewModel.sendPost,
                 child: Container(
@@ -202,8 +209,7 @@ class _PostComposer extends ViewModelWidget<CommunityChatViewModel> {
                 ),
               ),
             ),
-          ),
-          onSubmitted: (_) => viewModel.sendPost(),
+          ],
         ),
       ),
     );

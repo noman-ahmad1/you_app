@@ -53,13 +53,39 @@ class ProfileViewModel extends ReactiveViewModel {
     if (currentUser!.dateOfBirth != null) completedFields++;
     if (currentUser!.gender != null && currentUser!.gender!.isNotEmpty)
       completedFields++;
-    if (currentUser!.profilePictureUrl != null && currentUser!.profilePictureUrl!.isNotEmpty)
-      completedFields++;
+    if (currentUser!.profilePictureUrl != null &&
+        currentUser!.profilePictureUrl!.isNotEmpty) completedFields++;
 
     return completedFields / totalFields;
   }
 
   void navigateToEditProfile() {
     _navigationService.navigateToEditProfileView();
+  }
+
+  Future<void> deleteAccount() async {
+    final dialogService = locator<DialogService>();
+    final response = await dialogService.showConfirmationDialog(
+      title: 'Delete Account',
+      description:
+          'Are you sure you want to completely delete your account? This action cannot be undone and all your data will be permanently removed.',
+      confirmationTitle: 'Delete',
+      cancelTitle: 'Cancel',
+    );
+
+    if (response?.confirmed == true) {
+      setBusy(true);
+      try {
+        await _authService.deleteCurrentAccount();
+        _navigationService.clearStackAndShow(Routes.welcomeView);
+      } catch (e) {
+        dialogService.showDialog(
+          title: 'Error',
+          description: 'Failed to delete account: $e',
+        );
+      } finally {
+        setBusy(false);
+      }
+    }
   }
 }

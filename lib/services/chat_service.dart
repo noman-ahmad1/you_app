@@ -139,6 +139,7 @@ class ChatService {
     final docRef = _firestore.collection('chats').doc(chatId);
 
     final chatRoomData = {
+      'status': 'active',
       'participants': [user.uid, volunteer.uid],
       'participantInfo': {
         user.uid: {'name': user.fullName, 'avatarUrl': user.profilePictureUrl},
@@ -223,6 +224,59 @@ class ChatService {
           },
         });
       }
+    }
+  }
+
+  /// Deletes all chats and chat requests where the given user is a participant.
+  Future<void> deleteAllUserChats(String userId) async {
+    final batch = _firestore.batch();
+
+    // 1. Delete all chat requests where the user is either the requester or volunteer
+    try {
+      final requesterQuery = await _firestore
+          .collection('chat_requests')
+          .where('requesterId', isEqualTo: userId)
+          .get();
+      for (var doc in requesterQuery.docs) {
+        batch.delete(doc.reference);
+      }
+
+      final volunteerQuery = await _firestore
+          .collection('chat_requests')
+          .where('volunteerId', isEqualTo: userId)
+          .get();
+      for (var doc in volunteerQuery.docs) {
+        batch.delete(doc.reference);
+      }
+    } catch (e) {
+      debugPrint("Error querying chat requests for deletion: $e");
+    }
+
+    // 2. Delete all chats where the user is in the participants array
+    try {
+      final chatsQuery = await _firestore
+          .collection('chats')
+          .where('participants', arrayContains: userId)
+          .get();
+
+      for (var doc in chatsQuery.docs) {
+        // Also need to delete messages subcollection for each chat
+        final messagesQuery = await doc.reference.collection('messages').get();
+        for (var msgDoc in messagesQuery.docs) {
+          batch.delete(msgDoc.reference);
+        }
+        batch.delete(doc.reference);
+      }
+    } catch (e) {
+      debugPrint("Error querying chats for deletion: $e");
+    }
+
+    try {
+      await batch.commit();
+      debugPrint("Successfully deleted all chats and requests for user $userId");
+    } catch (e) {
+      debugPrint("Error committing batch delete for user chats: $e");
+      rethrow;
     }
   }
 }

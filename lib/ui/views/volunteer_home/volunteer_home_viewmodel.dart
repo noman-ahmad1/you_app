@@ -259,6 +259,31 @@ class VolunteerHomeViewModel extends BaseViewModel {
     }
   }
 
+  Future<void> deleteAccount() async {
+    final response = await _dialogService.showConfirmationDialog(
+      title: 'Delete Account',
+      description:
+          'Are you sure you want to completely delete your account? This action cannot be undone and all your volunteer data will be permanently removed.',
+      confirmationTitle: 'Delete',
+      cancelTitle: 'Cancel',
+    );
+
+    if (response?.confirmed == true) {
+      setBusy(true);
+      try {
+        await _authenticationService.deleteCurrentAccount();
+        _navigationService.clearStackAndShow(Routes.welcomeView);
+      } catch (e) {
+        _dialogService.showDialog(
+          title: 'Error',
+          description: 'Failed to delete account: $e',
+        );
+      } finally {
+        setBusy(false);
+      }
+    }
+  }
+
   void navigateToVolunteerEditProfile() {
     _navigationService.navigateTo(Routes.volunteerEditProfileView);
   }

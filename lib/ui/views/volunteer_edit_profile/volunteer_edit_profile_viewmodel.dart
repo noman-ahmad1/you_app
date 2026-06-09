@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/storage_service.dart';
@@ -75,7 +76,7 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
       // Pre-fill Personal Info
       firstNameController.text = appUser.firstName ?? '';
       lastNameController.text = appUser.lastName ?? '';
-      
+
       String phone = appUser.phoneNumber ?? '';
       _fullPhoneNumber = phone;
       if (phone.startsWith('+92')) {
@@ -83,7 +84,7 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
       } else {
         phoneController.text = phone;
       }
-      
+
       _selectedGender = appUser.gender;
       _currentProfileImageUrl = appUser.profilePictureUrl;
 
@@ -321,7 +322,8 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
         'lastName': lastNameController.text.trim(),
         'dateOfBirth': _selectedDate,
         'gender': _selectedGender,
-        'phoneNumber': phoneController.text.trim().isEmpty ? '' : _fullPhoneNumber.trim(),
+        'phoneNumber':
+            phoneController.text.trim().isEmpty ? '' : _fullPhoneNumber.trim(),
         'profilePictureUrl': profileUrl,
       };
       await _userService.update(appUser.uid, appUserData);

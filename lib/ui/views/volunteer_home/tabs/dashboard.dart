@@ -229,7 +229,19 @@ class DashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-        // Removed the "Edit Profile" button from here, moving it to Quick Actions
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.secondaryVeryLight.withAlpha(102),
+            border: Border.all(color: AppColors.secondary, width: 2),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: Image.asset(AppConstants.delete,
+                color: Colors.red, height: 28, width: 28),
+            onPressed: viewModel.isBusy ? null : viewModel.deleteAccount,
+            tooltip: 'Delete Account',
+          ),
+        ),
       ],
     );
   }

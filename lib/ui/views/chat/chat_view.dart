@@ -147,54 +147,59 @@ class _MessageInputField extends ViewModelWidget<ChatViewModel> {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(10.0),
-          child: TextField(
-            controller: viewModel.messageController,
-            // --- Properties for Multiline Expansion ---
-            keyboardType: TextInputType.multiline,
-            maxLines: null, // Allows the TextField to grow vertically
-            // -----------------------------------------
-            cursorColor: AppColors.secondary,
-            style: GoogleFonts.crimsonPro(
-              color: AppColors.secondary,
-            ),
-            decoration: InputDecoration(
-              hintText: "Type a message...",
-              hintStyle: GoogleFonts.crimsonPro(
-                color: AppColors.secondary.withAlpha(150),
-              ),
-              filled: true,
-              fillColor: AppColors.secondaryVeryLight.withAlpha(75),
-              contentPadding: const EdgeInsets.fromLTRB(
-                  16, 16, 60, 16), // Increased right padding
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: const BorderSide(
+          child: Stack(
+            children: [
+              TextField(
+                controller: viewModel.messageController,
+                // --- Properties for Multiline Expansion ---
+                keyboardType: TextInputType.multiline,
+                maxLines:
+                    5, // Restrict maximum lines to prevent infinite expansion
+                minLines: 1,
+                // -----------------------------------------
+                cursorColor: AppColors.secondary,
+                style: GoogleFonts.crimsonPro(
                   color: AppColors.secondary,
-                  width: 2,
                 ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(50),
-                borderSide: const BorderSide(
-                  color: AppColors.secondary,
-                  width: 2,
+                decoration: InputDecoration(
+                  hintText: "Type a message...",
+                  hintStyle: GoogleFonts.crimsonPro(
+                    color: AppColors.secondary.withAlpha(150),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.secondaryVeryLight.withAlpha(75),
+                  contentPadding: const EdgeInsets.fromLTRB(
+                      16, 16, 60, 16), // Increased right padding
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: const BorderSide(
+                      color: AppColors.secondary,
+                      width: 2,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: const BorderSide(
+                      color: AppColors.secondary,
+                      width: 2,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: const BorderSide(
+                      color: AppColors.secondary,
+                      width: 2,
+                    ),
+                  ),
                 ),
+                onSubmitted: (_) => viewModel.sendMessage(),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(50),
-                borderSide: const BorderSide(
-                  color: AppColors.secondary,
-                  width: 2,
-                ),
-              ),
-              // --- THIS IS THE KEY CHANGE ---
-              suffixIcon: Padding(
-                padding: const EdgeInsets.only(
-                    right: 8.0), // Adds some space from the edge
+              Positioned(
+                right: 8.0,
+                bottom: 5.5,
                 child: GestureDetector(
                   onTap: viewModel.sendMessage,
                   child: Container(
-                    // Removed fixed height/width to let the icon size itself
                     decoration: BoxDecoration(
                       color: AppColors.secondaryVeryLight.withAlpha(75),
                       shape: BoxShape.circle,
@@ -203,19 +208,16 @@ class _MessageInputField extends ViewModelWidget<ChatViewModel> {
                         width: 2,
                       ),
                     ),
-                    padding:
-                        const EdgeInsets.all(8), // Padding inside the circle
+                    padding: const EdgeInsets.all(8),
                     child: Image.asset(
                       AppConstants.send,
                       color: AppColors.secondary,
-                      width: 25, // Use a fixed size for the icon
+                      width: 25,
                     ),
                   ),
                 ),
               ),
-              // -----------------------------
-            ),
-            onSubmitted: (_) => viewModel.sendMessage(),
+            ],
           ),
         ),
       ),

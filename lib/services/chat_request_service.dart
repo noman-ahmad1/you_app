@@ -59,6 +59,7 @@ class ChatRequestService {
       transaction.set(
           chatRef,
           {
+            'status': 'active',
             'participants': [request.requesterId, request.volunteerId],
             'participantInfo': {
               request.requesterId: {

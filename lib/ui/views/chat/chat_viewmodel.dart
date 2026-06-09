@@ -105,11 +105,13 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
         .snapshots()
         .listen((snapshot) {
       if (!snapshot.exists) {
+        if (snapshot.metadata.isFromCache) return;
         _handleChatEndedRemotely();
         return;
       }
       final data = snapshot.data();
       if (data != null && data['status'] == 'completed') {
+        if (snapshot.metadata.isFromCache) return;
         _handleChatEndedRemotely();
       }
     });
@@ -123,7 +125,7 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   }
 
   void _navigateAway() {
-    final isVolunteer = currentUserId == volunteerId;
+    final isVolunteer = _authenticationService.currentUser?.isVolunteer ?? false;
     if (isVolunteer) {
       _navigationService.clearStackAndShow(Routes.volunteerHomeView);
     } else {
@@ -188,7 +190,7 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   }
 
   Future<void> endChat() async {
-    final isVolunteer = currentUserId == volunteerId;
+    final isVolunteer = _authenticationService.currentUser?.isVolunteer ?? false;
 
     final response = await _dialogService.showConfirmationDialog(
       title: 'End Chat',

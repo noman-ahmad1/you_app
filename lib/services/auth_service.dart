@@ -653,6 +653,95 @@ class AuthenticationService with ListenableServiceMixin {
     }
   }
 
+  Future<void> deleteCurrentAccount() async {
+    final user = _currentUser.value;
+    final firebaseUser = _auth.currentUser;
+
+    if (user == null || firebaseUser == null) {
+      throw Exception('No user is currently signed in.');
+    }
+
+    final lastSignInTime = firebaseUser.metadata.lastSignInTime;
+    if (lastSignInTime == null || DateTime.now().difference(lastSignInTime) > const Duration(minutes: 5)) {
+      throw Exception(
+        'For security reasons, this sensitive operation requires a recent login. Please log out and log back in, then try again.',
+      );
+    }
+
+    try {
+      _isLoading.value = true;
+      _error.value = null;
+      notifyListeners();
+
+      final uid = user.uid;
+      final firestore = FirebaseFirestore.instance;
+      final batch = firestore.batch();
+
+      // 1. Delete journal subcollection
+      final journalDocs = await firestore.collection('users').doc(uid).collection('journal').get();
+      for (var doc in journalDocs.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // 2. Delete notifications subcollection
+      final notificationDocs = await firestore.collection('users').doc(uid).collection('notifications').get();
+      for (var doc in notificationDocs.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // 3. If volunteer, delete volunteer_info and its reviews subcollection
+      if (user.isVolunteer) {
+        final volunteerRef = firestore.collection('volunteer_info').doc(uid);
+        final reviews = await volunteerRef.collection('reviews').get();
+        for (var doc in reviews.docs) {
+          batch.delete(doc.reference);
+        }
+        batch.delete(volunteerRef);
+      }
+
+      // 4. Delete community posts
+      final postDocs = await firestore.collection('posts').where('authorId', isEqualTo: uid).get();
+      for (var doc in postDocs.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // 5. Delete user document
+      final userRef = firestore.collection('users').doc(uid);
+      batch.delete(userRef);
+
+      // Commit batch
+      await batch.commit();
+
+      // 6. Delete mood docs (not batched as they can be large and are separate)
+      final moodDocs = await firestore.collection('mood').where('userId', isEqualTo: uid).get();
+      for (var doc in moodDocs.docs) {
+        await doc.reference.delete();
+      }
+
+      // 7. Delete chats
+      try {
+        await locator<ChatService>().deleteAllUserChats(uid);
+      } catch (e) {
+        print('Error deleting chats during account deletion: $e');
+      }
+
+      // 8. Delete FirebaseAuth user
+      await firebaseUser.delete();
+
+      // Clear local state
+      _currentUser.value = null;
+      _authStatus.value = AuthStatus.unauthenticated;
+      notifyListeners();
+
+    } catch (e) {
+      _error.value = 'Failed to delete account: $e';
+      throw Exception(_error.value);
+    } finally {
+      _isLoading.value = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> checkEmailVerification() async {
     if (_currentUser.value != null) {
       await _auth.currentUser!.reload();
