@@ -9,6 +9,7 @@ class CommunityCard extends StatelessWidget {
   final String membersCount;
   final String postsToday;
   final String assetPath;
+  final String? coverPhotoUrl;
   final bool isJoined;
   final VoidCallback onTap;
   final VoidCallback onJoin;
@@ -20,6 +21,7 @@ class CommunityCard extends StatelessWidget {
     required this.membersCount,
     required this.postsToday,
     required this.assetPath,
+    this.coverPhotoUrl,
     this.isJoined = true,
     required this.onTap,
     required this.onJoin,
@@ -56,12 +58,28 @@ class CommunityCard extends StatelessWidget {
                 // color: _getIconBackgroundColor(title),
               ),
               child: Center(
-                child: Image.asset(
-                  assetPath,
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.contain,
-                ),
+                child: coverPhotoUrl != null && coverPhotoUrl!.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          coverPhotoUrl!,
+                          width: 56,
+                          height: 56,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Image.asset(
+                            assetPath,
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      )
+                    : Image.asset(
+                        assetPath,
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.contain,
+                      ),
               ),
             ),
             const SizedBox(width: 16),

@@ -8,7 +8,7 @@ class CommunityService {
 
   // 1. Fetch all available communities
   Stream<List<Map<String, dynamic>>> getCommunities() {
-    return _firestore.collection('communities').snapshots().map((snapshot) {
+    return _firestore.collection('communities').orderBy('membersCount', descending: true).snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
         data['id'] = doc.id;

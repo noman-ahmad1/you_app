@@ -194,6 +194,7 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                             '128',
                                     assetPath: community['imageAsset'] ??
                                         AppConstants.lonliness,
+                                    coverPhotoUrl: community['cover_photo'],
                                     isJoined: isJoined,
                                     onJoin: () {
                                       viewModel.joinCommunity(communityId);

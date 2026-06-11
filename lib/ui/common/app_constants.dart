@@ -103,17 +103,11 @@ class AppConstants {
   //animations
   static const String like = 'assets/animations/like.lottie';
   static const String empty = 'assets/animations/empty.lottie';
-  static const String emptyJournal = 'assets/animations/empty_journal.lottie';
   static const String loading = 'assets/animations/loading.lottie';
   static const String done2 = 'assets/animations/done.lottie';
   static const String pending2 = 'assets/animations/pending.lottie';
   static const String swipeRight = 'assets/animations/swipe_right.lottie';
   static const String swipeLeft = 'assets/animations/swipe_left.lottie';
-  static const String write2 = 'assets/animations/write.lottie';
-  static const String music2 = 'assets/animations/music.lottie';
-  static const String breathe2 = 'assets/animations/breathe.lottie';
-  // static const String community2 = 'assets/animations/community.lottie';
-  // static const String volunteer2 = 'assets/animations/volunteer.lottie';
   static const String searchVolunteer =
       'assets/animations/search_volunteer.lottie';
 
