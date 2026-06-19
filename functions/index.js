@@ -1,6 +1,10 @@
 // Import the v2 trigger for Firestore
 const { onDocumentDeleted, onDocumentCreated } = require("firebase-functions/v2/firestore");
 
+// Import the v2 scheduler + https triggers (for daily analytics aggregation)
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const { onRequest } = require("firebase-functions/v2/https");
+
 // Import the Firebase Admin SDK
 const admin = require("firebase-admin");
 
@@ -198,5 +202,140 @@ exports.onReplyMention = onDocumentCreated("posts/{postId}/replies/{replyId}", a
         await handleMentions(snap.data(), event.params.postId, "reply");
     } catch (error) {
         logger.error(`Error in onReplyMention:`, error);
+    }
+});
+
+// ============================================================================
+// Daily analytics aggregation (for the Angular admin dashboard)
+// Writes pre-aggregated counters to daily_analytics/{YYYY-MM-DD}, one doc per
+// calendar day. Uses Firestore aggregation count() queries (no full reads).
+// Karachi (PKT) is a fixed UTC+5 with no DST, so a constant offset is safe and
+// keeps the doc-id date and day-window boundaries stable.
+// ============================================================================
+
+const KARACHI_OFFSET_MS = 5 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function pad2(n) {
+    return n < 10 ? `0${n}` : `${n}`;
+}
+
+/**
+ * Computes the dashboard counters for the Karachi calendar day that contains
+ * `referenceInstant` and writes them to daily_analytics/{YYYY-MM-DD}.
+ * Idempotent (set with merge). Returns the written payload.
+ * @param {Date} referenceInstant Any instant within the target day.
+ * @return {Promise<Object>} The dateId and the six computed counts.
+ */
+async function aggregateForDay(referenceInstant) {
+    // Read the Karachi wall-clock date via a UTC-shifted view of the instant.
+    const shifted = new Date(referenceInstant.getTime() + KARACHI_OFFSET_MS);
+    const y = shifted.getUTCFullYear();
+    const m = shifted.getUTCMonth(); // 0-based
+    const d = shifted.getUTCDate();
+    const dateId = `${y}-${pad2(m + 1)}-${pad2(d)}`;
+
+    // Day window in real UTC: [start of Karachi day, start of next Karachi day).
+    const startMs = Date.UTC(y, m, d) - KARACHI_OFFSET_MS;
+    const startTs = admin.firestore.Timestamp.fromMillis(startMs);
+    const nextTs = admin.firestore.Timestamp.fromMillis(startMs + DAY_MS);
+
+    const usersRef = db.collection("users");
+    const postsRef = db.collection("posts");
+
+    // Aggregation count(): returns just the number, not the documents.
+    const countOf = async (query) => (await query.count().get()).data().count;
+
+    const [
+        totalUsers,
+        totalVolunteers,
+        activeVolunteers,
+        pendingVolunteers,
+        newUsers,
+        postsToday,
+    ] = await Promise.all([
+        countOf(usersRef),
+        countOf(usersRef.where("role", "==", "volunteer")),
+        countOf(usersRef
+            .where("role", "==", "volunteer")
+            .where("status", "==", "active")),
+        countOf(usersRef
+            .where("role", "==", "volunteer")
+            .where("status", "==", "pending_verification")),
+        countOf(usersRef
+            .where("createdAt", ">=", startTs)
+            .where("createdAt", "<", nextTs)),
+        countOf(postsRef
+            .where("createdAt", ">=", startTs)
+            .where("createdAt", "<", nextTs)),
+    ]);
+
+    const counts = {
+        totalUsers,
+        totalVolunteers,
+        activeVolunteers,
+        pendingVolunteers,
+        newUsers,
+        postsToday,
+    };
+
+    await db.collection("daily_analytics").doc(dateId).set(
+        {
+            ...counts,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+    );
+
+    logger.log(`daily_analytics written for ${dateId}: ${JSON.stringify(counts)}`);
+    return { dateId, ...counts };
+}
+
+/**
+ * Scheduled daily at 00:05 Asia/Karachi. Writes the JUST-FINISHED day's doc so
+ * newUsers/postsToday reflect a complete calendar day. Combined with the manual
+ * seed below, every calendar day ends up with exactly one daily_analytics doc.
+ */
+exports.aggregateDailyAnalytics = onSchedule(
+    { schedule: "5 0 * * *", timeZone: "Asia/Karachi" },
+    async () => {
+        // 1s before the start of today (Karachi) falls inside yesterday.
+        const nowShifted = new Date(Date.now() + KARACHI_OFFSET_MS);
+        const startTodayMs = Date.UTC(
+            nowShifted.getUTCFullYear(),
+            nowShifted.getUTCMonth(),
+            nowShifted.getUTCDate(),
+        ) - KARACHI_OFFSET_MS;
+        const yesterdayRef = new Date(startTodayMs - 1000);
+        try {
+            await aggregateForDay(yesterdayRef);
+        } catch (error) {
+            logger.error("aggregateDailyAnalytics failed:", error);
+            throw error;
+        }
+    },
+);
+
+// Shared secret guarding the manual trigger. Override in production via the
+// ANALYTICS_SEED_SECRET environment variable / functions config.
+const SEED_SECRET = process.env.ANALYTICS_SEED_SECRET || "CHANGE_ME_SEED_SECRET";
+
+/**
+ * Manual trigger that recomputes TODAY's (Asia/Karachi) doc immediately. Used
+ * once right after deploy to seed the dashboard so its trend isn't empty until
+ * the scheduler first runs. Guarded by a shared-secret token.
+ * Usage: GET /runDailyAnalyticsNow?token=<secret>
+ */
+exports.runDailyAnalyticsNow = onRequest(async (req, res) => {
+    if (!SEED_SECRET || req.query.token !== SEED_SECRET) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+    }
+    try {
+        const written = await aggregateForDay(new Date());
+        res.status(200).json({ ok: true, written });
+    } catch (error) {
+        logger.error("runDailyAnalyticsNow failed:", error);
+        res.status(500).json({ ok: false, error: String(error) });
     }
 });
