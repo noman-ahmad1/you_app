@@ -10,6 +10,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 // Import the VolunteerInfo model
+import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/storage_service.dart';
 // import 'package:you_app/models/volunteer_info.dart';
 import 'package:you_app/services/user_service.dart';
@@ -211,7 +212,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
         }
       }
     } catch (e) {
-      print('Error picking image: $e');
+      AppLog.error('VolunteerSignupInfoViewModel.pickImage', e);
       await _dialogService.showDialog(
           title: 'Error', description: 'Failed to pick image: $e');
     }

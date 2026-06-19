@@ -3,7 +3,9 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/push_notification_service.dart';
+import 'package:you_app/services/monetization_service.dart';
 
 class StartupViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
@@ -11,6 +13,9 @@ class StartupViewModel extends BaseViewModel {
 
   // Place anything here that needs to happen before we get into the application
   Future runStartupLogic() async {
+    // Initialize MonetizationService silently in the background
+    locator<MonetizationService>();
+
     // You can keep a short delay for a splash screen effect
     await Future.delayed(const Duration(seconds: 2));
 
@@ -18,7 +23,7 @@ class StartupViewModel extends BaseViewModel {
 
     // Assuming AuthenticationService provides a simple way to check the current user's role
     final userRole = await _authenticationService.getCurrentUserRole();
-    print('Startup Logic: Detected User Role: $userRole');
+    AppLog.info('StartupViewModel', 'Detected user role: $userRole');
 
     if (userRole == 'volunteer') {
       final currentUser = _authenticationService.currentUser;

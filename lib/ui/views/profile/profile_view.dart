@@ -237,6 +237,28 @@ class ProfileView extends StackedView<ProfileViewModel> {
                               viewModel.navigateToEditProfile();
                             }),
                         Space.verticalSpaceTiny(context),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          activeThumbColor: AppColors.secondary,
+                          title: Text(
+                            'Share anonymous usage data',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryVeryDark,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Helps us improve the app. Your journal, mood, and chat content is never collected.',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: AppColors.primaryVeryDark.withAlpha(160),
+                            ),
+                          ),
+                          value: viewModel.analyticsEnabled,
+                          onChanged: viewModel.setAnalyticsEnabled,
+                        ),
+                        Space.verticalSpaceTiny(context),
                         viewModel.isBusy
                             ? CustomLottieLoader(
                                 width: 50,

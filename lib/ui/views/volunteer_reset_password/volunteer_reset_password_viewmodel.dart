@@ -119,7 +119,7 @@ class VolunteerResetPasswordViewModel extends BaseViewModel {
             'Your volunteer password has been reset successfully. You can now log in.',
       );
 
-      navigateToVolunteerLogin();
+      navigateToLogin();
     } catch (e) {
       String errorMessage = e.toString().replaceFirst('Exception: ', '');
       await _dialogService.showDialog(
@@ -129,8 +129,7 @@ class VolunteerResetPasswordViewModel extends BaseViewModel {
     }
   }
 
-  Future navigateToVolunteerLogin() async {
-    _navigationService
-        .navigateToVolunteerLoginView(); // Assuming this is the correct route
+  Future navigateToLogin() async {
+    _navigationService.navigateToLoginView();
   }
 }

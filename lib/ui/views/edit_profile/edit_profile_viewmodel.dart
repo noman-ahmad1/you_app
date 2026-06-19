@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/storage_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
@@ -98,7 +99,7 @@ class EditProfileViewModel extends BaseViewModel {
         Navigator.of(context).pop(); // Close the modal
       }
     } catch (e) {
-      print('Error picking image: $e');
+      AppLog.error('EditProfileViewModel.pickImage', e);
       await _dialogService.showDialog(
           title: 'Error', description: 'Failed to pick image: $e');
     }

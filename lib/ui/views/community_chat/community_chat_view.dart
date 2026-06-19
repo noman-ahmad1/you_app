@@ -50,30 +50,54 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
               trailingActions: [],
             ),
             Expanded(
-              child: viewModel.isBusy
+              child: (viewModel.isBusy && viewModel.posts.isEmpty)
                   ? const CustomLottieLoader(fullScreen: true)
                   : viewModel.posts.isEmpty
                       ? _buildEmptyState()
-                      : ListView.separated(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 16),
-                          itemCount: viewModel.posts.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final post = viewModel.posts[index];
-                            final isMe =
-                                post.authorId == viewModel.currentUserId;
-
-                            return _CommunityPostCard(
-                              post: post,
-                              isMe: isMe,
-                              isLiked: post.likedBy
-                                  .contains(viewModel.currentUserId),
-                              onTap: () => viewModel.navigateToThread(post),
-                              onLike: () => viewModel.toggleLike(post),
-                            );
+                      : NotificationListener<ScrollNotification>(
+                          onNotification: (notification) {
+                            // Trigger load-more as the user nears the bottom.
+                            if (notification.metrics.pixels >=
+                                notification.metrics.maxScrollExtent - 200) {
+                              viewModel.loadMore();
+                            }
+                            return false;
                           },
+                          child: ListView.separated(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 16),
+                            itemCount: viewModel.posts.length +
+                                (viewModel.canLoadMore ? 1 : 0),
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              if (index >= viewModel.posts.length) {
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child:
+                                          CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                  ),
+                                );
+                              }
+                              final post = viewModel.posts[index];
+                              final isMe =
+                                  post.authorId == viewModel.currentUserId;
+
+                              return _CommunityPostCard(
+                                post: post,
+                                isMe: isMe,
+                                isLiked: post.likedBy
+                                    .contains(viewModel.currentUserId),
+                                onTap: () => viewModel.navigateToThread(post),
+                                onLike: () => viewModel.toggleLike(post),
+                              );
+                            },
+                          ),
                         ),
             ),
             if (viewModel.isMember)

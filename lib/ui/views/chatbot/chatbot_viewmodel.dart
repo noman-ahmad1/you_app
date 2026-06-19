@@ -3,11 +3,13 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/chatbot_service.dart';
 
 class ChatbotViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _chatbotService = locator<ChatbotService>();
+  final _analytics = locator<AnalyticsService>();
   final Box _box = Hive.box('chatbot_history');
 
   final TextEditingController messageController = TextEditingController();
@@ -65,9 +67,11 @@ class ChatbotViewModel extends BaseViewModel {
     _saveMessages();
     messageController.clear();
     notifyListeners();
+    _analytics.logChatbotMessageSent(); // metadata only, never the text
 
     // Set busy state to show loading indicator for Dodo's typing
     setBusy(true);
+    final stopwatch = Stopwatch()..start();
 
     try {
       // 2. Fetch response from Gemini via Service Layer
@@ -76,6 +80,7 @@ class ChatbotViewModel extends BaseViewModel {
       // 3. Add AI response to UI
       _messages.add({'isMe': 'false', 'text': response});
       _saveMessages();
+      _analytics.logChatbotResponse(latencyMs: stopwatch.elapsedMilliseconds);
     } catch (e) {
       // Setup error response if fetch fails
       _messages.add({

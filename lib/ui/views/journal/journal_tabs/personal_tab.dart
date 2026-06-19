@@ -69,7 +69,6 @@ class PersonalEntriesView extends ViewModelWidget<JournalViewModel> {
                         showEdit: true,
                         onEditTap: () {
                           viewModel.navigateToEditJournalEntry(entry);
-                          print("Edit tapped!");
                         },
                       ),
                     );

@@ -51,13 +51,8 @@ class LoginViewModel extends BaseViewModel {
         throw Exception('Failed to load user data after login.');
       }
 
-      // 4. Navigate based on the user's role.
-      if (user.role == UserRole.volunteer) {
-        _navigationService.clearStackAndShow(Routes.volunteerHomeView);
-      } else {
-        // Both 'user' and 'admin' roles go to the main home view.
-        _navigationService.clearStackAndShow(Routes.homeView);
-      }
+      // 4. Navigate based on the user's actual role/status (not the screen used).
+      _navigateByRole(user);
     } catch (e) {
       String errorMessage = _authenticationService.error ??
           'Login failed. Please check your email and password.';
@@ -78,8 +73,13 @@ class LoginViewModel extends BaseViewModel {
       // 2. Calls the AuthService for Google Sign-In
       await _authenticationService.signInWithGoogle();
 
-      // On successful login, navigate to the home view
-      _navigationService.replaceWith(Routes.homeView);
+      final user = _authenticationService.currentUser;
+      if (user == null) {
+        throw Exception('Failed to load user data after Google sign-in.');
+      }
+
+      // On successful login, clear stack and navigate based on role/status
+      _navigateByRole(user);
     } catch (e) {
       String errorMessage = _authenticationService.error ??
           'Google Sign-In failed. Please try again.';
@@ -88,6 +88,27 @@ class LoginViewModel extends BaseViewModel {
     } finally {
       setBusy(false);
       notifyListeners();
+    }
+  }
+
+  /// Routes by the user's actual role/status (mirrors StartupViewModel), so a
+  /// single login handles users, admins, and volunteers in every state.
+  void _navigateByRole(AppUser user) {
+    if (user.role == UserRole.volunteer) {
+      if (user.status == 'profile_incomplete') {
+        _navigationService.clearStackAndShow(
+          Routes.volunteerSignupInfoView,
+          arguments: VolunteerSignupInfoViewArguments(uid: user.uid),
+        );
+      } else if (user.status == 'pending_verification') {
+        _navigationService
+            .clearStackAndShow(Routes.volunteerPendingVerificationView);
+      } else {
+        _navigationService.clearStackAndShow(Routes.volunteerHomeView);
+      }
+    } else {
+      // Both 'user' and 'admin' roles go to the main home view.
+      _navigationService.clearStackAndShow(Routes.homeView);
     }
   }
 

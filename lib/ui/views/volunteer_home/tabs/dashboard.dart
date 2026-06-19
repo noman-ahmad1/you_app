@@ -336,9 +336,7 @@ class DashboardScreen extends StatelessWidget {
             _buildActionButton("Edit Profile", AppConstants.setting, () {
               viewModel.navigateToVolunteerEditProfile();
             }, width, height),
-            _buildActionButton("Completed Chats", AppConstants.done, () {
-              print("Completed Chats");
-            }, width, height),
+            _buildActionButton("Completed Chats", AppConstants.done, () {}, width, height),
           ],
         ),
         SizedBox(height: height * 0.02),
@@ -353,9 +351,7 @@ class DashboardScreen extends StatelessWidget {
               width,
               height,
             ),
-            _buildActionButton("Guidelines", AppConstants.write, () {
-              print("Guidelines");
-            }, width, height),
+            _buildActionButton("Guidelines", AppConstants.write, () {}, width, height),
           ],
         ),
       ],

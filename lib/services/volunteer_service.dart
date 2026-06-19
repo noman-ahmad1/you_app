@@ -1,26 +1,80 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/models/volunteer_info_model.dart';
+import 'package:you_app/services/base/ttl_cache.dart';
+import 'package:you_app/services/base/firestore_base.dart';
 
-class VolunteerService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class VolunteerService with FirestoreServiceMixin {
+  // Short-lived cache so the home screen's volunteer stream doesn't re-read
+  // every volunteer's profile on each tick. Invalidated on writes / sign-out.
+  final TtlCache<String, VolunteerInfo> _cache =
+      TtlCache<String, VolunteerInfo>(ttl: const Duration(minutes: 5));
+
+  VolunteerInfo? _fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    if (data == null) return null;
+    // volunteer_info doc id == user uid; backfill if the field is absent.
+    data['uid'] ??= doc.id;
+    return VolunteerInfo.fromJson(data);
+  }
 
   Future<VolunteerInfo?> get(String uid) async {
-    final doc = await _firestore.collection('volunteer_info').doc(uid).get();
-    if (!doc.exists || doc.data() == null) return null;
+    final cached = _cache.get(uid);
+    if (cached != null) return cached;
 
-    // Convert the Firestore Map to the VolunteerInfo model
-    return VolunteerInfo.fromJson(doc.data()!);
+    final doc = await db.collection('volunteer_info').doc(uid).get();
+    final info = _fromDoc(doc);
+    if (info != null) _cache.put(uid, info);
+    return info;
+  }
+
+  /// Batch-fetches volunteer info for many uids in one round of queries.
+  /// Reads only the uids not already cached, chunked to respect Firestore's
+  /// `whereIn` limit (30). Replaces the previous one-query-per-volunteer loop.
+  Future<Map<String, VolunteerInfo>> getMany(List<String> uids) async {
+    final result = <String, VolunteerInfo>{};
+    final missing = <String>[];
+
+    for (final uid in uids) {
+      final cached = _cache.get(uid);
+      if (cached != null) {
+        result[uid] = cached;
+      } else {
+        missing.add(uid);
+      }
+    }
+
+    for (final chunk in FirestoreServiceMixin.chunk(missing, 30)) {
+      if (chunk.isEmpty) continue;
+      final snap = await db
+          .collection('volunteer_info')
+          .where(FieldPath.documentId, whereIn: chunk)
+          .get();
+      for (final doc in snap.docs) {
+        final info = _fromDoc(doc);
+        if (info != null) {
+          _cache.put(doc.id, info);
+          result[doc.id] = info;
+        }
+      }
+    }
+
+    return result;
   }
 
   // SET/CREATE: Save or overwrite the volunteer info document
   Future<void> saveInfo(String uid, Map<String, dynamic> data) async {
-    await _firestore.collection('volunteer_info').doc(uid).set(data);
+    await db.collection('volunteer_info').doc(uid).set(data);
+    _cache.invalidate(uid);
   }
 
   // UPDATE: Generic update for the volunteer info document
   Future<void> update(String uid, Map<String, dynamic> data) async {
-    await _firestore.collection('volunteer_info').doc(uid).update(data);
+    await db.collection('volunteer_info').doc(uid).update(data);
+    _cache.invalidate(uid);
   }
+
+  /// Clears all cached volunteer info (call on sign-out).
+  void clearCache() => _cache.clear();
 
   /// Adds a review for a volunteer and updates their overall statistics.
   Future<void> addReviewAndCompleteChat({
@@ -29,11 +83,10 @@ class VolunteerService {
     required double rating,
     required String comment,
   }) async {
-    final volunteerRef =
-        _firestore.collection('volunteer_info').doc(volunteerId);
+    final volunteerRef = db.collection('volunteer_info').doc(volunteerId);
     final reviewsRef = volunteerRef.collection('reviews').doc();
 
-    await _firestore.runTransaction((transaction) async {
+    await db.runTransaction((transaction) async {
       final volunteerDoc = await transaction.get(volunteerRef);
 
       if (!volunteerDoc.exists) {
@@ -64,5 +117,8 @@ class VolunteerService {
         'createdAt': FieldValue.serverTimestamp(),
       });
     });
+
+    // Stats changed — drop the stale cache entry so the next read is fresh.
+    _cache.invalidate(volunteerId);
   }
 }

@@ -21,6 +21,25 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
 
   List<CommunityPost> get posts => data ?? [];
 
+  // --- Pagination (growing-limit) ---
+  static const int _pageSize = 20;
+  int _postLimit = _pageSize;
+  bool _isLoadingMore = false;
+  bool get isLoadingMore => _isLoadingMore;
+
+  /// There may be more posts if the current page filled up to the limit.
+  bool get canLoadMore => posts.length >= _postLimit;
+
+  /// Grows the page size and re-subscribes to the stream. Old data is kept
+  /// (clearOldData: false) so the visible list never flickers.
+  void loadMore() {
+    if (_isLoadingMore || !canLoadMore) return;
+    _isLoadingMore = true;
+    _postLimit += _pageSize;
+    notifyListeners();
+    notifySourceChanged();
+  }
+
   String get currentUserId => _authService.currentUser?.uid ?? '';
   String get currentUserName => _authService.currentUser?.fullName ?? 'Anonymous';
 
@@ -55,10 +74,11 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
 
   @override
   Stream<List<CommunityPost>> get stream =>
-      locator<CommunityService>().getCommunityPosts(communityId);
+      locator<CommunityService>().getCommunityPosts(communityId, limit: _postLimit);
 
   @override
   void onData(List<CommunityPost>? data) {
+    _isLoadingMore = false;
     setBusy(false);
   }
 

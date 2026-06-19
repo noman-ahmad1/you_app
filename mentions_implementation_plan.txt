@@ -1,0 +1,44 @@
+# Implement @Mentions Autocomplete in Community Threads
+
+## Goal
+Enable users to type `@` to mention other community members in threads and replies, showing an autocomplete suggestion list. Mentions should trigger push notifications to the mentioned users.
+
+## Background Check
+The backend is already perfectly configured! The `functions/index.js` script contains triggers for `onPostMention` and `onReplyMention` which extract `userIds` from `mentionedUsers` and automatically send push notifications. All we need to do is correctly map `@usernames` to their respective `uid` and send the IDs to the `CommunityService`.
+
+## Proposed Changes
+
+### 1. `lib/services/user_service.dart`
+- **[MODIFY]**: Add a method `Future<List<AppUser>> getCommunityMembers(String communityId)` to fetch all users where `joinedCommunities` array contains the `communityId`.
+
+### 2. `lib/ui/views/community_chat/mention_viewmodel_mixin.dart`
+- **[NEW]**: Create a mixin `MentionViewModelMixin` to share logic between top-level threads and thread replies.
+- Include state variables: `List<AppUser> communityMembers`, `List<AppUser> filteredMembers`, `bool showMentionsList`, and `Map<String, String> resolvedMentions`.
+- Implement `initMentions(String communityId)` to load members.
+- Implement `onMessageChanged(TextEditingController controller)` to detect if the user is typing a mention (e.g., looking backward from the cursor position for an `@`).
+- Implement `onMentionSelected(AppUser user, TextEditingController controller)` to inject the full username into the text and store the mapping of `@username` to `uid` in `resolvedMentions`.
+- Implement `extractMentionedUserIds(String text)` to return a list of `uid`s by cross-referencing the words in the text with `resolvedMentions`.
+
+### 3. `lib/ui/views/community_chat/community_chat_viewmodel.dart`
+- **[MODIFY]**: Apply `MentionViewModelMixin`.
+- In constructor, call `initMentions(communityId)` and add a listener to `messageController`.
+- In `sendPost()`, call `extractMentionedUserIds` and pass the resolved user IDs to the `CommunityService.createPost` instead of an empty list.
+
+### 4. `lib/ui/views/community_chat/thread_replies_viewmodel.dart`
+- **[MODIFY]**: Apply `MentionViewModelMixin`.
+- Similar to above: fetch members, listen to `replyController`, and pass resolved user IDs to `CommunityService.createReply`.
+
+### 5. `lib/ui/views/community_chat/mentions_list.dart`
+- **[NEW]**: Create a reusable UI component `MentionsList` that renders a list of `AppUser` suggestions. It will be constrained in height and styled to match the chat theme.
+
+### 6. `lib/ui/views/community_chat/community_chat_view.dart` & `thread_replies_view.dart`
+- **[MODIFY]**: Wrap the `Stack` containing the `TextField` inside a `Column`.
+- Place the `MentionsList` widget directly above the text input, conditionally rendered when `viewModel.showMentionsList` is true.
+
+## Open Questions
+- The `getCommunityMembers` query assumes the community isn't excessively large (e.g., tens of thousands of members) as it fetches all members upfront. For a scalable long-term approach, backend search pagination might be needed. Is loading all members upfront acceptable for the MVP phase?
+
+## Verification Plan
+1. Type `@` in a community thread. Ensure the autocomplete list appears.
+2. Select a user. Ensure the username is injected into the text field correctly.
+3. Post the message. The backend Cloud Function should trigger and log the mention, issuing an FCM push notification.

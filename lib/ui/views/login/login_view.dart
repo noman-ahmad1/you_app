@@ -67,7 +67,7 @@ class LoginView extends StackedView<LoginViewModel> {
                         ),
                         SizedBox(height: screenSize.height * 0.045),
                         CustomButton(
-                          text: viewModel.isBusy ? 'Logging Inn...' : 'Login',
+                          text: viewModel.isBusy ? 'Logging In...' : 'Login',
                           onPressed: viewModel.isBusy
                               ? null
                               : viewModel.signInWithEmail,

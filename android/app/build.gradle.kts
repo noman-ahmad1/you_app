@@ -6,6 +6,7 @@ plugins {
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
     // END: FlutterFire Configuration
+    id("com.google.firebase.crashlytics") // ADDED FOR CRASHLYTICS
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
@@ -72,6 +73,8 @@ dependencies {
     
     // 3. Dependency for Google Sign-In is also passed as a string argument.
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+    // 4. Dependency for Crashlytics is also passed as a string argument.
+    implementation("com.google.firebase:firebase-crashlytics")
 }
 
 flutter {

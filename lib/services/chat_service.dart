@@ -1,23 +1,30 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/models/chat_messaage_model.dart';
 import 'package:flutter/material.dart';
+import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/base/app_log.dart';
+import 'package:you_app/services/base/firestore_base.dart';
 
-class ChatService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class ChatService with FirestoreServiceMixin {
+  AnalyticsService get _analytics => locator<AnalyticsService>();
+
 
   Future<void> deleteChatAndRequest({
     required String chatId,
     required String requestId, // The ID of the document in 'chat_requests'
   }) async {
     // Use a batch write for atomicity (both deletions succeed or fail together)
-    final batch = _firestore.batch();
+    final batch = db.batch();
 
     // 1. Get reference to the chat room document
-    final chatRef = _firestore.collection('chats').doc(chatId);
+    final chatRef = db.collection('chats').doc(chatId);
 
     // 2. Get reference to the chat request document
-    var requestRef = _firestore.collection('chat_requests').doc(requestId);
+    var requestRef = db.collection('chat_requests').doc(requestId);
 
     // Defensive check: If the requestId is a placeholder or doesn't exist,
     // look up the real request document using the participants' IDs.
@@ -26,7 +33,7 @@ class ChatService {
       if (!docSnapshot.exists) {
         final parts = chatId.split('_');
         if (parts.length == 2) {
-          final query = await _firestore
+          final query = await db
               .collection('chat_requests')
               .where('requesterId', whereIn: parts)
               .where('volunteerId', whereIn: parts)
@@ -43,7 +50,7 @@ class ChatService {
       final parts = chatId.split('_');
       if (parts.length == 2) {
         try {
-          final query = await _firestore
+          final query = await db
               .collection('chat_requests')
               .where('requesterId', whereIn: parts)
               .where('volunteerId', whereIn: parts)
@@ -86,9 +93,9 @@ class ChatService {
     required String chatId,
     required String requestId,
   }) async {
-    final batch = _firestore.batch();
-    final chatRef = _firestore.collection('chats').doc(chatId);
-    var requestRef = _firestore.collection('chat_requests').doc(requestId);
+    final batch = db.batch();
+    final chatRef = db.collection('chats').doc(chatId);
+    var requestRef = db.collection('chat_requests').doc(requestId);
 
     // Defensive check to ensure we have the correct request document
     try {
@@ -96,7 +103,7 @@ class ChatService {
       if (!docSnapshot.exists) {
         final parts = chatId.split('_');
         if (parts.length == 2) {
-          final query = await _firestore
+          final query = await db
               .collection('chat_requests')
               .where('requesterId', whereIn: parts)
               .where('volunteerId', whereIn: parts)
@@ -111,7 +118,7 @@ class ChatService {
       final parts = chatId.split('_');
       if (parts.length == 2) {
         try {
-          final query = await _firestore
+          final query = await db
               .collection('chat_requests')
               .where('requesterId', whereIn: parts)
               .where('volunteerId', whereIn: parts)
@@ -129,6 +136,7 @@ class ChatService {
     batch.update(requestRef, {'status': 'completed'});
 
     await batch.commit();
+    _analytics.logChatEnded();
   }
 
   Future<void> createChatRoomIfNotExists({
@@ -136,7 +144,7 @@ class ChatService {
     required AppUser user,
     required AppUser volunteer,
   }) async {
-    final docRef = _firestore.collection('chats').doc(chatId);
+    final docRef = db.collection('chats').doc(chatId);
 
     final chatRoomData = {
       'status': 'active',
@@ -157,7 +165,7 @@ class ChatService {
 
   // Gets a real-time stream of messages for a specific chat room
   Stream<List<ChatMessage>> getChatMessagesStream(String chatId) {
-    return _firestore
+    return db
         .collection('chats')
         .doc(chatId)
         .collection('messages')
@@ -170,7 +178,7 @@ class ChatService {
 
   /// Sets whether a user is currently active in a chat room.
   Future<void> setChatPresence(String chatId, String userId, bool isActive) async {
-    await _firestore.collection('chats').doc(chatId).set({
+    await db.collection('chats').doc(chatId).set({
       'participantsActivity': {
         userId: isActive,
       }
@@ -179,61 +187,74 @@ class ChatService {
 
   // Sends a new message
   Future<void> sendMessage(String chatId, ChatMessage message) async {
-    // Add message to subcollection
-    await _firestore
-        .collection('chats')
-        .doc(chatId)
-        .collection('messages')
-        .add(message.toJson());
+    final chatRef = db.collection('chats').doc(chatId);
+    final messageRef = chatRef.collection('messages').doc();
 
-    // Also update the 'lastMessage' on the parent chat document
-    await _firestore.collection('chats').doc(chatId).update({
+    // Atomically add the message and update the parent's lastMessage in a
+    // single commit (was two sequential round-trips).
+    final batch = db.batch();
+    batch.set(messageRef, message.toJson());
+    batch.update(chatRef, {
       'lastMessage': {
         'text': message.text,
         'senderId': message.senderId,
         'timestamp': message.timestamp,
       }
     });
+    await batch.commit();
+    _analytics.logChatMessageSent();
 
-    // Create an In-App Notification document for the other participant inside their notifications subcollection
-    final parts = chatId.split('_');
-    final recipientId = parts.firstWhere((id) => id != message.senderId, orElse: () => '');
-    
-    if (recipientId.isNotEmpty) {
+    // Notify the recipient off the critical path so a notification failure
+    // (or the presence-check read) never blocks or fails the message send.
+    unawaited(_notifyRecipientOfMessage(chatId, message));
+  }
+
+  /// Creates an in-app notification for the message recipient, unless they are
+  /// currently active in the chat. Best-effort: errors are logged, not thrown.
+  Future<void> _notifyRecipientOfMessage(String chatId, ChatMessage message) async {
+    try {
+      final parts = chatId.split('_');
+      final recipientId =
+          parts.firstWhere((id) => id != message.senderId, orElse: () => '');
+      if (recipientId.isEmpty) return;
+
       // Check if recipient is currently active in the chat
-      final chatDoc = await _firestore.collection('chats').doc(chatId).get();
+      final chatDoc = await db.collection('chats').doc(chatId).get();
       final data = chatDoc.data();
-      final participantsActivity = data?['participantsActivity'] as Map<String, dynamic>? ?? {};
+      final participantsActivity =
+          data?['participantsActivity'] as Map<String, dynamic>? ?? {};
       final isRecipientActive = participantsActivity[recipientId] == true;
 
       // Skip sending notification if recipient is active in the chat
-      if (!isRecipientActive) {
-        await _firestore
-            .collection('users')
-            .doc(recipientId)
-            .collection('notifications')
-            .add({
-          'title': 'New Message 💬',
-          'body': message.text,
-          'type': 'new_message',
-          'isRead': false,
-          'createdAt': FieldValue.serverTimestamp(),
-          'data': {
-            'chatId': chatId,
-            'route': 'chat_view',
-          },
-        });
-      }
+      if (isRecipientActive) return;
+
+      await db
+          .collection('users')
+          .doc(recipientId)
+          .collection('notifications')
+          .add({
+        'title': 'New Message 💬',
+        'body': message.text,
+        'type': 'new_message',
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'data': {
+          'chatId': chatId,
+          'route': 'chat_view',
+        },
+      });
+    } catch (e) {
+      AppLog.error('ChatService._notifyRecipientOfMessage', e);
     }
   }
 
   /// Deletes all chats and chat requests where the given user is a participant.
   Future<void> deleteAllUserChats(String userId) async {
-    final batch = _firestore.batch();
+    final batch = db.batch();
 
     // 1. Delete all chat requests where the user is either the requester or volunteer
     try {
-      final requesterQuery = await _firestore
+      final requesterQuery = await db
           .collection('chat_requests')
           .where('requesterId', isEqualTo: userId)
           .get();
@@ -241,7 +262,7 @@ class ChatService {
         batch.delete(doc.reference);
       }
 
-      final volunteerQuery = await _firestore
+      final volunteerQuery = await db
           .collection('chat_requests')
           .where('volunteerId', isEqualTo: userId)
           .get();
@@ -254,7 +275,7 @@ class ChatService {
 
     // 2. Delete all chats where the user is in the participants array
     try {
-      final chatsQuery = await _firestore
+      final chatsQuery = await db
           .collection('chats')
           .where('participants', arrayContains: userId)
           .get();

@@ -9,6 +9,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/storage_service.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
@@ -304,7 +305,7 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
           try {
             await _storageService.deleteFileByUrl(profileUrl);
           } catch (e) {
-            print('Failed to delete old profile image: $e');
+            AppLog.error('VolunteerEditProfileViewModel.deleteOldImage', e);
           }
         }
         final storagePath =

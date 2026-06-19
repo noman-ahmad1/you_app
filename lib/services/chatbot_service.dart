@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:you_app/env.dart';
+import 'package:you_app/services/base/app_log.dart';
 
 class ChatbotService {
-  final String _apiKey = Environments.dodoAPIKey;
+  final String _apiKey = Secrets.groqApiKey;
 
   Future<String> generateResponse(List<Map<String, String>> history) async {
     final url = Uri.parse('https://api.groq.com/openai/v1/chat/completions');
@@ -53,12 +54,12 @@ class ChatbotService {
           return "I'm having a little trouble focusing right now. Could you repeat that?";
         }
       } else {
-        print("Groq API Error: ${response.body}");
+        AppLog.error('ChatbotService.generateResponse', 'Groq API ${response.statusCode}: ${response.body}');
         throw Exception(
             "Failed to contact Groq API. Status code: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error in ChatbotService: $e");
+      AppLog.error('ChatbotService.generateResponse', e);
       throw Exception("Network error occurred.");
     }
   }

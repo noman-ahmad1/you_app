@@ -15,7 +15,9 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/models/chat_request_model.dart';
+import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -109,6 +111,10 @@ class HomeViewModel extends ReactiveViewModel {
   final GlobalKey soothingSoundsKey = GlobalKey();
   final GlobalKey breatheKey = GlobalKey();
   final GlobalKey dodoKey = GlobalKey();
+
+  /// Called when the first-run feature tour finishes (ShowCaseWidget.onFinish).
+  void onShowcaseFinished() =>
+      locator<AnalyticsService>().logOnboardingCompleted(tour: 'home');
 
   Future<void> checkAndStartShowcase(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
@@ -242,20 +248,12 @@ class HomeViewModel extends ReactiveViewModel {
     _sentRequestsSubscription = locator<ChatRequestService>()
         .getUserSentRequestsStream(userId)
         .listen((requests) {
-      // --- DEBUG PRINTS ---
-      print(
-          "Received ${requests.length} requests from Firestore."); // Should print 0
-      if (requests.isEmpty) {
-        print("Requests list is EMPTY.");
-      }
-      // --------------------
-
       // Prioritized Logic:
       final acceptedRequest = requests.firstWhereOrNull(
         (req) => req.status == 'accepted',
       );
 
-      ChatRequest? foundPendingRequest = null; // Temporary variable
+      ChatRequest? foundPendingRequest; // Temporary variable
 
       if (acceptedRequest != null) {
         _activeChatRequest = acceptedRequest;
@@ -268,13 +266,6 @@ class HomeViewModel extends ReactiveViewModel {
         );
         _pendingRequest = foundPendingRequest;
       }
-
-      // --- MORE DEBUG PRINTS ---
-      print(
-          "After processing: _activeChatRequest is null? ${_activeChatRequest == null}");
-      print(
-          "After processing: _pendingRequest is null? ${_pendingRequest == null}");
-      // -------------------------
 
       // --- Update volunteer list visibility ---
       if (hasActiveInteraction) {
@@ -343,25 +334,38 @@ class HomeViewModel extends ReactiveViewModel {
         .streamAvailableVolunteers()
         .listen((volunteersList) async {
       _volunteers = volunteersList;
-      
-      // Fetch tags and ratings for these volunteers
-      for (var volunteer in _volunteers) {
-        if (!_volunteerTags.containsKey(volunteer.uid)) {
-          final info = await locator<VolunteerService>().get(volunteer.uid);
-          if (info != null) {
-            _volunteerTags[volunteer.uid] = info.tags ?? [];
-            _volunteerRatings[volunteer.uid] =
-                info.averageRating > 0 ? info.averageRating : 4.0;
-          } else {
-            _volunteerTags[volunteer.uid] = [];
-            _volunteerRatings[volunteer.uid] = 4.0;
+
+      final uids = volunteersList.map((v) => v.uid).toSet();
+
+      // Prune cached tags/ratings for volunteers no longer in the roster
+      // (prevents unbounded growth of these maps over the session).
+      _volunteerTags.removeWhere((uid, _) => !uids.contains(uid));
+      _volunteerRatings.removeWhere((uid, _) => !uids.contains(uid));
+
+      // Batch-fetch info only for volunteers we haven't loaded yet — a single
+      // query instead of one read per volunteer (fixes the N+1).
+      final missing =
+          uids.where((uid) => !_volunteerTags.containsKey(uid)).toList();
+      if (missing.isNotEmpty) {
+        try {
+          final infos = await locator<VolunteerService>().getMany(missing);
+          for (final uid in missing) {
+            final info = infos[uid];
+            _volunteerTags[uid] = info?.tags ?? [];
+            _volunteerRatings[uid] =
+                (info != null && info.averageRating > 0)
+                    ? info.averageRating
+                    : 4.0;
           }
+        } catch (e) {
+          AppLog.error('HomeViewModel.listenToVolunteers', e);
         }
       }
-      
+
       setBusy(false);
       notifyListeners();
     }, onError: (error) {
+      AppLog.error('HomeViewModel.listenToVolunteers', error);
       setBusy(false);
     });
   }
@@ -371,6 +375,35 @@ class HomeViewModel extends ReactiveViewModel {
   Stream<List<Map<String, dynamic>>> getCommunitiesStream() {
     _communitiesStream ??= locator<CommunityService>().getCommunities();
     return _communitiesStream!;
+  }
+
+  /// Gender-restricted communities, keyed by normalised name. A community not
+  /// listed here is visible to everyone. The values are the genders allowed to
+  /// see it (matched case-insensitively against the user's selected gender).
+  static const Map<String, List<String>> _genderRestrictedCommunities = {
+    "women's emotional wellness": ['female'],
+    "new mothers support": ['female'],
+    "men's mental health": ['male'],
+    // "other than male or female" — the app's remaining gender options.
+    'beyond binary support': ['other', 'prefer not to say'],
+  };
+
+  String _normalizeName(String value) =>
+      value.trim().toLowerCase().replaceAll('’', "'");
+
+  /// Filters the full [communities] list down to those the current user is
+  /// allowed to see, based on their selected gender. Gender-restricted
+  /// communities are hidden when the user's gender is unset or doesn't match.
+  List<Map<String, dynamic>> visibleCommunities(
+      List<Map<String, dynamic>> communities) {
+    final gender = currentUser?.gender?.trim().toLowerCase();
+    return communities.where((community) {
+      final name = _normalizeName(community['name'] as String? ?? '');
+      final allowedGenders = _genderRestrictedCommunities[name];
+      if (allowedGenders == null) return true; // unrestricted → everyone
+      if (gender == null) return false; // restricted, but user has no gender
+      return allowedGenders.contains(gender);
+    }).toList();
   }
 
   /// Navigates to the Community Chat View
@@ -396,8 +429,7 @@ class HomeViewModel extends ReactiveViewModel {
     } catch (e) {
       // Handle the error (e.g., show a dialog or snackbar)
       setError('Logout failed: $e');
-      // In a real app, you might want a better error display
-      print('Logout Error: $e');
+      AppLog.error('HomeViewModel.logout', e);
     } finally {
       setBusy(false);
     }

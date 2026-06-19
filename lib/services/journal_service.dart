@@ -1,16 +1,18 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/journal_model.dart';
+import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/base/app_log.dart';
+import 'package:you_app/services/base/firestore_base.dart';
 
-class JournalService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class JournalService with FirestoreServiceMixin {
+  AnalyticsService get _analytics => locator<AnalyticsService>();
+
 
   /// Adds a new journal entry to a subcollection for the current user.
   Future<void> addJournalEntry(JournalEntry entry) async {
     try {
       // Storing entries in a subcollection is a secure and scalable pattern.
-      final journalCollection = _firestore
+      final journalCollection = db
           .collection('users')
           .doc(entry.userId)
           .collection('journal')
@@ -20,16 +22,16 @@ class JournalService {
           );
 
       await journalCollection.add(entry);
+      _analytics.logJournalCreated(label: entry.label.name);
     } catch (e) {
-      // In a real app, log this error to a service like Sentry or Firebase Crashlytics
-      print('Error adding journal entry: $e');
+      AppLog.error('JournalService.addJournalEntry', e);
       // Rethrow the exception so the ViewModel can catch it and show a dialog
       rethrow;
     }
   }
 
   Stream<List<JournalEntry>> getJournalEntriesStream({required String userId}) {
-    final journalCollection = _firestore
+    final journalCollection = db
         .collection('users')
         .doc(userId)
         .collection('journal') // The name you chose in your rules
@@ -52,14 +54,16 @@ class JournalService {
     required Map<String, dynamic> data,
   }) async {
     try {
-      await _firestore
+      await db
           .collection('users')
           .doc(userId)
           .collection('journal')
           .doc(entryId)
           .update(data);
+      _analytics.logJournalUpdated(
+          label: data['label'] is String ? data['label'] as String : null);
     } catch (e) {
-      debugPrint("Error updating journal entry: $e");
+      AppLog.error('JournalService.updateJournalEntry', e);
       rethrow;
     }
   }
@@ -70,16 +74,15 @@ class JournalService {
   }) async {
     try {
       // Construct the exact path to the document to be deleted.
-      await _firestore
+      await db
           .collection('users')
           .doc(userId)
           .collection('journal') // Ensure this matches your collection name
           .doc(entryId)
           .delete();
+      _analytics.logJournalDeleted();
     } catch (e) {
-      // Log the error for debugging purposes.
-      debugPrint("Error deleting journal entry: $e");
-      // Rethrow the exception so the ViewModel can catch it and show an error dialog to the user.
+      AppLog.error('JournalService.deleteJournalEntry', e);
       rethrow;
     }
   }

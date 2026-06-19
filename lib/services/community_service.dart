@@ -1,14 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:you_app/models/thread_reply.dart';
+import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/base/firestore_base.dart';
 
-class CommunityService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class CommunityService with FirestoreServiceMixin {
+  AnalyticsService get _analytics => locator<AnalyticsService>();
 
-  // 1. Fetch all available communities
-  Stream<List<Map<String, dynamic>>> getCommunities() {
-    return _firestore.collection('communities').orderBy('membersCount', descending: true).snapshots().map((snapshot) {
+
+  // 1. Fetch all available communities (capped to avoid unbounded reads)
+  Stream<List<Map<String, dynamic>>> getCommunities({int limit = 50}) {
+    return db
+        .collection('communities')
+        .orderBy('membersCount', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
         data['id'] = doc.id;
@@ -17,13 +26,17 @@ class CommunityService {
     });
   }
 
-  // 2. Stream top-level posts for a specific community
-  Stream<List<CommunityPost>> getCommunityPosts(String communityId) {
-    return _firestore
+  // 2. Stream top-level posts for a specific community.
+  // [limit] grows as the user loads more, so the result is always a superset
+  // of the previous page (no flicker / reordering of already-shown posts).
+  Stream<List<CommunityPost>> getCommunityPosts(String communityId,
+      {int limit = 20}) {
+    return db
         .collection('posts')
         .where('communityId', isEqualTo: communityId)
         .orderBy('likeCount', descending: true)
         .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => CommunityPost.fromMap(doc.data(), doc.id))
@@ -50,12 +63,13 @@ class CommunityService {
       mentionedUsers: mentionedUsers,
     );
 
-    await _firestore.collection('posts').add(post.toMap());
+    await db.collection('posts').add(post.toMap());
+    _analytics.logCommunityPost(communityId: communityId);
   }
 
   // 4. Stream replies for a specific post (thread)
   Stream<List<ThreadReply>> getThreadReplies(String postId) {
-    return _firestore
+    return db
         .collection('posts')
         .doc(postId)
         .collection('replies')
@@ -86,17 +100,18 @@ class CommunityService {
       mentionedUsers: mentionedUsers,
     );
 
-    final batch = _firestore.batch();
+    final batch = db.batch();
     
     // Add the reply document
-    final replyRef = _firestore.collection('posts').doc(postId).collection('replies').doc();
+    final replyRef = db.collection('posts').doc(postId).collection('replies').doc();
     batch.set(replyRef, reply.toMap());
 
     // Increment the reply count on the parent post
-    final postRef = _firestore.collection('posts').doc(postId);
+    final postRef = db.collection('posts').doc(postId);
     batch.update(postRef, {'replyCount': FieldValue.increment(1)});
 
     await batch.commit();
+    _analytics.logCommunityReply(postId: postId);
   }
 
   // 6. Toggle like on a post
@@ -104,7 +119,7 @@ class CommunityService {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final postRef = _firestore.collection('posts').doc(postId);
+    final postRef = db.collection('posts').doc(postId);
     
     if (isLiked) {
       // User has already liked it -> unlike
@@ -119,6 +134,7 @@ class CommunityService {
         'likeCount': FieldValue.increment(1),
       });
     }
+    _analytics.logPostLiked(liked: !isLiked);
   }
 
   // 7. Toggle like on a reply
@@ -126,7 +142,7 @@ class CommunityService {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final replyRef = _firestore.collection('posts').doc(postId).collection('replies').doc(replyId);
+    final replyRef = db.collection('posts').doc(postId).collection('replies').doc(replyId);
     
     if (isLiked) {
       await replyRef.update({
@@ -146,21 +162,22 @@ class CommunityService {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final batch = _firestore.batch();
+    final batch = db.batch();
     
     // Update the user's joinedCommunities list
-    final userRef = _firestore.collection('users').doc(uid);
+    final userRef = db.collection('users').doc(uid);
     batch.update(userRef, {
       'joinedCommunities': FieldValue.arrayUnion([communityId])
     });
 
     // Optionally increment the members count in the community doc
-    final communityRef = _firestore.collection('communities').doc(communityId);
+    final communityRef = db.collection('communities').doc(communityId);
     batch.update(communityRef, {
       'membersCount': FieldValue.increment(1)
     });
 
     await batch.commit();
+    _analytics.logCommunityJoined(communityId: communityId);
   }
 }
 

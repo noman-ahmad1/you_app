@@ -9,7 +9,9 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/chat_request_model.dart';
+import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -60,6 +62,10 @@ class VolunteerHomeViewModel extends BaseViewModel {
   final GlobalKey requestsKey = GlobalKey();
   final GlobalKey homeFeedKey = GlobalKey();
   final GlobalKey dashboardKey = GlobalKey();
+
+  /// Called when the first-run volunteer tour finishes (ShowCaseWidget.onFinish).
+  void onShowcaseFinished() =>
+      locator<AnalyticsService>().logOnboardingCompleted(tour: 'volunteer');
 
   Future<void> checkAndStartShowcase(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
@@ -113,7 +119,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
       final currentStatus = userDoc?['availabilityStatus'] as String?;
       _isAvailable.value = (currentStatus == 'online');
     } catch (e) {
-      print("Error fetching availability status: $e");
+      AppLog.error('VolunteerHomeViewModel.fetchAvailability', e);
       _isAvailable.value = false; // Default to offline on error
     }
     notifyListeners(); // Update UI with fetched status
@@ -141,7 +147,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
       _dialogService.showDialog(
           title: 'Error',
           description: 'Could not update your status. Please try again.');
-      print("Error updating availability: $e");
+      AppLog.error('VolunteerHomeViewModel.toggleAvailability', e);
     }
   }
 
@@ -162,7 +168,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
       notifyListeners();
     }, onError: (error) {
       _isBusyRequests = false; // Clear specific flag
-      print("Error listening for pending requests: $error");
+      AppLog.error('VolunteerHomeViewModel.listenForRequests', error);
       notifyListeners();
     });
   }
@@ -184,7 +190,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
       notifyListeners();
     }, onError: (error) {
       _isBusyActiveChats = false; // Clear specific flag
-      print("Error listening for active chats: $error");
+      AppLog.error('VolunteerHomeViewModel.listenForActiveChats', error);
       notifyListeners();
     });
   }
@@ -206,7 +212,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
         requestId: request.id!,
       );
     } catch (e) {
-      print("Error accepting request: $e");
+      AppLog.error('VolunteerHomeViewModel.acceptRequest', e);
       _dialogService.showDialog(
           title: 'Error', description: 'Could not accept request.');
     } finally {
@@ -224,7 +230,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
       await locator<ChatRequestService>().declineRequest(request.id!);
       // Request disappears automatically via the pending stream listener.
     } catch (e) {
-      print("Error declining request: $e");
+      AppLog.error('VolunteerHomeViewModel.declineRequest', e);
       _dialogService.showDialog(
           title: 'Error', description: 'Could not decline request.');
     } finally {
@@ -252,8 +258,7 @@ class VolunteerHomeViewModel extends BaseViewModel {
     } catch (e) {
       // Handle the error (e.g., show a dialog or snackbar)
       setError('Logout failed: $e');
-      // In a real app, you might want a better error display
-      print('Logout Error: $e');
+      AppLog.error('VolunteerHomeViewModel.logout', e);
     } finally {
       setBusy(false);
     }

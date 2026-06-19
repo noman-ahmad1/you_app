@@ -263,7 +263,7 @@ class _SetNewPasswordForm extends StatelessWidget {
 Widget _buildLoginPrompt(VolunteerResetPasswordViewModel viewModel) {
   return InkWell(
     splashColor: AppColors.peachDark,
-    onTap: viewModel.navigateToVolunteerLogin,
+    onTap: viewModel.navigateToLogin,
     child: RichText(
       text: TextSpan(
         style:

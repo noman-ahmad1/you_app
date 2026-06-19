@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:you_app/services/base/app_log.dart';
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Future<String?> uploadFile(File file, String path) async {
     try {
-      print('Uploading file to: $path');
       final ref = _storage.ref().child(path);
 
       // Use putFile() instead of putData().
@@ -15,10 +15,9 @@ class StorageService {
 
       final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
-      print('File uploaded successfully: $downloadUrl');
       return downloadUrl;
     } catch (e) {
-      print('Error uploading file to storage: $e');
+      AppLog.error('StorageService.uploadFile', e);
       rethrow;
     }
   }
@@ -28,7 +27,7 @@ class StorageService {
       final ref = _storage.ref().child(path);
       await ref.delete();
     } catch (e) {
-      print('Error deleting file from storage: $e');
+      AppLog.error('StorageService.deleteFile', e);
     }
   }
 
@@ -37,7 +36,7 @@ class StorageService {
       final ref = _storage.refFromURL(url);
       await ref.delete();
     } catch (e) {
-      print('Error deleting file from storage by url: $e');
+      AppLog.error('StorageService.deleteFileByUrl', e);
     }
   }
 }

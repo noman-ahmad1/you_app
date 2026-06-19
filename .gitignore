@@ -3,6 +3,9 @@
 *.log
 *.pyc
 *.swp
+
+# Environment secrets (keep .env.example committed)
+.env
 .DS_Store
 .atom/
 .build/

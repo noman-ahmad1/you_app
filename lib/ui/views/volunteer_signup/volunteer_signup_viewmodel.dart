@@ -237,8 +237,9 @@ class VolunteerSignupViewModel extends BaseViewModel {
     }
   }
 
-  void navigateToVolunteerLogin() {
-    _navigationService.replaceWithVolunteerLoginView();
+  void navigateToLogin() {
+    // Unified login routes by role; there is no separate volunteer sign-in.
+    _navigationService.replaceWithLoginView();
   }
 
   Future<void> back() async {

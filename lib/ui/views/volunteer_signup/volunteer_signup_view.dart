@@ -201,7 +201,7 @@ class VolunteerSignupView extends StackedView<VolunteerSignupViewModel> {
                         // Login Link
                         InkWell(
                           splashColor: AppColors.peachDark,
-                          onTap: viewModel.navigateToVolunteerLogin,
+                          onTap: viewModel.navigateToLogin,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: RichText(

@@ -163,12 +163,19 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                 return const Center(
                                     child: CustomLottieLoader());
                               }
-                              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                              if (!snapshot.hasData) {
                                 return const Center(
                                     child: Text("No communities found."));
                               }
 
-                              final communities = snapshot.data!;
+                              // Show only communities allowed for the user's
+                              // selected gender (gender-restricted circles).
+                              final communities =
+                                  viewModel.visibleCommunities(snapshot.data!);
+                              if (communities.isEmpty) {
+                                return const Center(
+                                    child: Text("No communities found."));
+                              }
 
                               return ListView.separated(
                                 physics: const NeverScrollableScrollPhysics(),

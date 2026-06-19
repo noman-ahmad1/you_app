@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/chat_request_model.dart';
 import 'package:flutter/material.dart';
+import 'package:you_app/services/analytics_service.dart';
 
 class ChatRequestService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  AnalyticsService get _analytics => locator<AnalyticsService>();
 
   /// Creates a new chat request document in Firestore and creates an In-App Notification document for the Volunteer.
   Future<void> sendChatRequest(ChatRequest request) async {
@@ -25,6 +28,8 @@ class ChatRequestService {
         'route': 'volunteer_dashboard',
       },
     });
+
+    _analytics.logChatRequestSent();
   }
 
   /// Fetches chat requests for a specific volunteer.
@@ -94,6 +99,8 @@ class ChatRequestService {
         'route': 'chat_view',
       },
     });
+
+    _analytics.logChatRequestAccepted();
   }
 
   Future<void> declineRequest(String requestId) async {
@@ -101,6 +108,7 @@ class ChatRequestService {
         .collection('chat_requests')
         .doc(requestId)
         .update({'status': 'declined'});
+    _analytics.logChatRequestDeclined();
     // Alternatively, you could delete the request:
     // await _firestore.collection('chat_requests').doc(requestId).delete();
   }

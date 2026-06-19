@@ -1,8 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/shared/app_showcase.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
 class VolunteerBottomBar extends StatelessWidget {
@@ -201,15 +200,10 @@ class _TabItem extends StatelessWidget {
       );
 
     if (showcaseKey != null && showcaseTitle != null && showcaseDescription != null) {
-      content = Showcase(
+      content = AppShowcase.step(
         key: showcaseKey!,
-        title: showcaseTitle,
-        description: showcaseDescription,
-        targetBorderRadius: BorderRadius.circular(23),
-        tooltipBackgroundColor: AppColors.background.withAlpha(220),
-        textColor: AppColors.secondary,
-        descTextStyle: GoogleFonts.crimsonPro(fontSize: 16, color: AppColors.primaryVeryDark),
-        titleTextStyle: GoogleFonts.crimsonPro(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.secondary),
+        title: showcaseTitle!,
+        description: showcaseDescription!,
         child: content,
       );
     }

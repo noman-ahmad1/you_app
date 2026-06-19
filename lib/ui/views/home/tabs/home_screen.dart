@@ -7,7 +7,7 @@ import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:lottie/lottie.dart';
-import 'package:showcaseview/showcaseview.dart';
+import 'package:you_app/ui/shared/app_showcase.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
@@ -25,15 +25,10 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
   @override
   Widget build(BuildContext context, HomeViewModel viewModel) {
     Widget _buildShowcase({required GlobalKey key, required String title, required String description, required Widget child}) {
-      return Showcase(
+      return AppShowcase.step(
         key: key,
         title: title,
         description: description,
-        targetBorderRadius: BorderRadius.circular(23),
-        tooltipBackgroundColor: AppColors.background.withAlpha(220),
-        textColor: AppColors.secondary,
-        descTextStyle: GoogleFonts.crimsonPro(fontSize: 16, color: AppColors.primaryVeryDark),
-        titleTextStyle: GoogleFonts.crimsonPro(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.secondary),
         child: child,
       );
     }

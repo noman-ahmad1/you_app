@@ -13,6 +13,7 @@ import 'package:stacked_services/src/navigation/navigation_service.dart';
 import 'package:stacked_services/src/snackbar/snackbar_service.dart';
 import 'package:stacked_shared/stacked_shared.dart';
 
+import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
 import '../services/chat_request_service.dart';
 import '../services/chat_service.dart';
@@ -20,6 +21,7 @@ import '../services/chatbot_service.dart';
 import '../services/community_service.dart';
 import '../services/country_code_service.dart';
 import '../services/journal_service.dart';
+import '../services/monetization_service.dart';
 import '../services/mood_service.dart';
 import '../services/push_notification_service.dart';
 import '../services/storage_service.dart';
@@ -52,5 +54,7 @@ Future<void> setupLocator(
   locator.registerLazySingleton(() => ChatbotService());
   locator.registerLazySingleton(() => PushNotificationService());
   locator.registerLazySingleton(() => StorageService());
+  locator.registerLazySingleton(() => MonetizationService());
+  locator.registerLazySingleton(() => AnalyticsService());
   locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }

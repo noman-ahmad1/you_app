@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:you_app/models/country_code_model.dart';
+import 'package:you_app/services/base/app_log.dart';
 
 class CountryService {
   List<Country> _countries = [];
@@ -19,7 +20,7 @@ class CountryService {
       // Sort countries by name for better UX
       _countries.sort((a, b) => a.name.compareTo(b.name));
     } catch (e) {
-      print('Error loading countries: $e');
+      AppLog.error('CountryService.loadCountries', e);
       // Fallback to some common countries
       _countries = _getFallbackCountries();
     }

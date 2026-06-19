@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:you_app/services/base/app_log.dart';
 
 class ImageCompressorHelper {
   /// Compresses an image file and returns the compressed File.
@@ -23,16 +24,10 @@ class ImageCompressorHelper {
       if (result != null) {
         final compressedFile = File(result.path);
         
-        // Debug info to verify compression effectiveness
-        final originalSize = await file.length();
-        final compressedSize = await compressedFile.length();
-        print('Original Size: ${originalSize / 1024} KB');
-        print('Compressed Size: ${compressedSize / 1024} KB');
-        
         return compressedFile;
       }
     } catch (e) {
-      print("Error compressing image: $e");
+      AppLog.error('ImageCompressorHelper.compressImage', e);
     }
 
     // Return the original file if compression fails or result is null

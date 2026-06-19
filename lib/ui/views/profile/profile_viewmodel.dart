@@ -3,11 +3,21 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
+import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
 
 class ProfileViewModel extends ReactiveViewModel {
   final _navigationService = locator<NavigationService>();
   final _authService = locator<AuthenticationService>();
+  final _analytics = locator<AnalyticsService>();
+
+  /// Whether anonymous usage analytics + crash reporting is enabled.
+  bool get analyticsEnabled => _analytics.isEnabled;
+
+  Future<void> setAnalyticsEnabled(bool enabled) async {
+    await _analytics.setCollectionEnabled(enabled);
+    notifyListeners();
+  }
 
   @override
   List<ListenableServiceMixin> get listenableServices => [_authService];

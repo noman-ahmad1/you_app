@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:stacked/stacked.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:you_app/ui/shared/app_showcase.dart';
 import 'package:you_app/ui/views/home/widgets/bottom_bar.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
 import 'package:you_app/ui/views/home/widgets/home_drawer.dart';
@@ -27,6 +28,10 @@ class HomeView extends StackedView<HomeViewModel> {
     Widget? child,
   ) {
     return ShowCaseWidget(
+      blurValue: AppShowcase.blur,
+      globalTooltipActions: AppShowcase.globalActions,
+      globalTooltipActionConfig: AppShowcase.globalActionConfig,
+      onFinish: viewModel.onShowcaseFinished,
       builder: (context) {
         viewModel.checkAndStartShowcase(context);
         return Scaffold(

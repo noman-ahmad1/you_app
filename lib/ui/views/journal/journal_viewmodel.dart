@@ -7,6 +7,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/journal_model.dart'; // Make sure this is your JournalEntry model
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -62,8 +63,7 @@ class JournalViewModel extends BaseViewModel {
       notifyListeners(); // Rebuild the UI
     }, onError: (error) {
       setBusy(false);
-      // Optionally show a dialog if fetching fails
-      print("Error fetching journal entries: $error");
+      AppLog.error('JournalViewModel.getJournalEntries', error);
     });
   }
 

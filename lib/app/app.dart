@@ -1,3 +1,4 @@
+import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/country_code_service.dart';
 import 'package:you_app/services/user_service.dart';
@@ -30,7 +31,6 @@ import 'package:you_app/ui/views/chatbot/chatbot_view.dart';
 import 'package:you_app/ui/views/volunteer_signup/volunteer_signup_view.dart';
 import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_view.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart';
-import 'package:you_app/ui/views/volunteer_login/volunteer_login_view.dart';
 import 'package:you_app/ui/views/volunteer_reset_password/volunteer_reset_password_view.dart';
 import 'package:you_app/ui/views/journal_details/journal_details_view.dart';
 import 'package:you_app/ui/views/chat/chat_view.dart';
@@ -42,6 +42,7 @@ import 'package:you_app/ui/views/volunteer_edit_profile/volunteer_edit_profile_v
 import 'package:you_app/ui/views/soothing_sounds/soothing_sounds_view.dart';
 import 'package:you_app/ui/views/breathe/breathe_view.dart';
 // @stacked-import
+import 'package:you_app/services/monetization_service.dart';
 
 @StackedApp(
   routes: [
@@ -59,7 +60,6 @@ import 'package:you_app/ui/views/breathe/breathe_view.dart';
     MaterialRoute(page: VolunteerSignupView),
     MaterialRoute(page: VolunteerSignupInfoView),
     MaterialRoute(page: VolunteerHomeView),
-    MaterialRoute(page: VolunteerLoginView),
     MaterialRoute(page: VolunteerResetPasswordView),
     MaterialRoute(page: VolunteerOtpView),
     MaterialRoute(page: JournalDetailsView),
@@ -91,6 +91,8 @@ import 'package:you_app/ui/views/breathe/breathe_view.dart';
     LazySingleton(classType: PushNotificationService),
     LazySingleton(classType: StorageService),
     // @stacked-service
+    LazySingleton(classType: MonetizationService),
+    LazySingleton(classType: AnalyticsService),
 
     LazySingleton(classType: VolunteerSignupViewModel),
   ],

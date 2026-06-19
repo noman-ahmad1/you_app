@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/models/app_user.dart';
+import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -17,6 +19,9 @@ import 'package:you_app/app/app.locator.dart'; // REQUIRED FOR SERVICE LOCATOR P
 class AuthenticationService with ListenableServiceMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  // Resolved lazily to avoid construction-order issues during setupLocator.
+  AnalyticsService get _analytics => locator<AnalyticsService>();
 
   // REMOVED: final FirestoreService _firestoreService;
   // FirestoreService is now accessed via locator<FirestoreService>()
@@ -95,6 +100,14 @@ class AuthenticationService with ListenableServiceMixin {
 
         _currentUser.value = appUser;
 
+        // Identify the user for analytics/crash segmentation (no content/PII).
+        _analytics.setUser(
+          uid: appUser.uid,
+          role: appUser.role.name,
+          gender: appUser.gender,
+          status: appUser.status,
+        );
+
         // Sync FCM token automatically after authentication
         Future.microtask(() {
           try {
@@ -102,7 +115,7 @@ class AuthenticationService with ListenableServiceMixin {
               locator<PushNotificationService>().syncTokenAfterLogin();
             }
           } catch (e) {
-            print('FCM Token sync error on login: $e');
+            AppLog.error('AuthenticationService.fcmTokenSync', e);
           }
         });
 
@@ -385,7 +398,7 @@ class AuthenticationService with ListenableServiceMixin {
       return userData?['role'] as String?;
     } catch (e) {
       // Log the error but return null to prevent app crash on startup
-      print('AuthenticationService: Error fetching user role on startup: $e');
+      AppLog.error('AuthenticationService.getCurrentUserRole', e);
       return null;
     }
   }
@@ -471,6 +484,7 @@ class AuthenticationService with ListenableServiceMixin {
       final userData = await _getUserData(userCredential.user!.uid);
       final appUser = _createAppUser(userCredential.user!, userData);
 
+      _analytics.logSignUp(method: 'email', role: 'user');
       return appUser;
     } on FirebaseAuthException catch (e) {
       _error.value = _handleAuthError(e);
@@ -524,6 +538,7 @@ class AuthenticationService with ListenableServiceMixin {
       // Reset phone verification after successful signup
       _resetPhoneAuthState();
 
+      _analytics.logSignUp(method: 'email', role: 'volunteer');
       return appUser;
     } on FirebaseAuthException catch (e) {
       _error.value = _handleAuthError(e);
@@ -551,6 +566,7 @@ class AuthenticationService with ListenableServiceMixin {
       final userData = await _getUserData(userCredential.user!.uid);
       final appUser = _createAppUser(userCredential.user!, userData);
 
+      _analytics.logLogin(method: 'email');
       return appUser;
     } on FirebaseAuthException catch (e) {
       _error.value = _handleAuthError(e);
@@ -592,6 +608,19 @@ class AuthenticationService with ListenableServiceMixin {
       final userDataMap =
           await locator<UserService>().get(userCredential.user!.uid);
 
+      // Google sign-in is for the 'user' role only. Volunteers (and admins)
+      // must authenticate with their email/password. If an existing account
+      // with this identity is not a regular user, reject and sign back out.
+      if (userDataMap != null && userDataMap['role'] != 'user') {
+        await _auth.signOut();
+        await _googleSignIn.signOut();
+        _currentUser.value = null;
+        _authStatus.value = AuthStatus.unauthenticated;
+        _error.value =
+            'Google sign-in is only available for user accounts. Please sign in with your email and password.';
+        throw Exception(_error.value);
+      }
+
       if (userDataMap == null) {
         // Create new user document
         final newUserData = {
@@ -607,6 +636,7 @@ class AuthenticationService with ListenableServiceMixin {
         };
         // Use FirestoreService via locator to set user data
         await locator<UserService>().set(userCredential.user!.uid, newUserData);
+        _analytics.logSignUp(method: 'google', role: 'user');
       } else {
         // Update last login for existing user
         // Use FirestoreService via locator to update last login
@@ -617,9 +647,11 @@ class AuthenticationService with ListenableServiceMixin {
       final userData = await _getUserData(userCredential.user!.uid);
       final appUser = _createAppUser(userCredential.user!, userData);
 
+      _analytics.logLogin(method: 'google');
       return appUser;
     } catch (e) {
-      _error.value = 'Google sign-in failed: $e';
+      // Preserve a specific message (e.g. the role rejection) if already set.
+      _error.value ??= 'Google sign-in failed: $e';
       rethrow;
     } finally {
       _isLoading.value = false;
@@ -637,12 +669,18 @@ class AuthenticationService with ListenableServiceMixin {
             'fcmToken': FieldValue.delete(),
           });
         } catch (e) {
-          print('Failed to remove FCM token on signout: $e');
+          AppLog.error('AuthenticationService.signOut.removeFcmToken', e);
         }
       }
 
       await _auth.signOut();
       await _googleSignIn.signOut();
+
+      // Clear any session-scoped service caches so a different user signing in
+      // on the same app session never sees stale data.
+      locator<VolunteerService>().clearCache();
+      _analytics.logLogout();
+      _analytics.clearUser();
 
       _currentUser.value = null;
       _authStatus.value = AuthStatus.unauthenticated;
@@ -712,21 +750,29 @@ class AuthenticationService with ListenableServiceMixin {
       // Commit batch
       await batch.commit();
 
-      // 6. Delete mood docs (not batched as they can be large and are separate)
+      // 6. Delete mood docs in chunked batches (Firestore caps a batch at 500 ops)
       final moodDocs = await firestore.collection('mood').where('userId', isEqualTo: uid).get();
-      for (var doc in moodDocs.docs) {
-        await doc.reference.delete();
+      for (var i = 0; i < moodDocs.docs.length; i += 500) {
+        final moodBatch = firestore.batch();
+        final end = (i + 500 > moodDocs.docs.length) ? moodDocs.docs.length : i + 500;
+        for (var j = i; j < end; j++) {
+          moodBatch.delete(moodDocs.docs[j].reference);
+        }
+        await moodBatch.commit();
       }
 
       // 7. Delete chats
       try {
         await locator<ChatService>().deleteAllUserChats(uid);
       } catch (e) {
-        print('Error deleting chats during account deletion: $e');
+        AppLog.error('AuthenticationService.deleteCurrentAccount.deleteChats', e);
       }
 
       // 8. Delete FirebaseAuth user
       await firebaseUser.delete();
+
+      _analytics.logAccountDeleted(role: user.role.name);
+      _analytics.clearUser();
 
       // Clear local state
       _currentUser.value = null;
@@ -777,6 +823,7 @@ class AuthenticationService with ListenableServiceMixin {
       );
 
       _isPhoneVerificationSent.value = true;
+      _analytics.logPhoneOtpSent();
     } catch (e) {
       _error.value = 'Failed to send verification code: $e';
       throw Exception(_error.value);
@@ -792,9 +839,21 @@ class AuthenticationService with ListenableServiceMixin {
       _error.value = null;
       notifyListeners();
 
+      // On real Android devices Firebase often auto-retrieves the SMS and
+      // completes verification via _onVerificationCompleted (which clears
+      // _verificationId). If that already happened, the manual submit should
+      // succeed instead of failing on a null verificationId.
+      if (_isPhoneVerified.value) {
+        AppLog.info('AuthenticationService.verifyPhoneCode',
+            'Already auto-verified; skipping manual credential sign-in.');
+        return;
+      }
+
       if (_verificationId.value == null) {
-        throw Exception(
-            'No verification in progress. Please request a new code.');
+        throw FirebaseAuthException(
+          code: 'session-expired',
+          message: 'No verification in progress. Please request a new code.',
+        );
       }
 
       // Create credential and sign in
@@ -808,17 +867,20 @@ class AuthenticationService with ListenableServiceMixin {
 
       // Mark phone as verified
       _isPhoneVerified.value = true;
-
-      // Store the verified phone number for later use in signup
-      if (_pendingPhoneNumber.value != null) {
-        // You can store this in a temporary variable or proceed with signup
-        print('Phone verified: ${_pendingPhoneNumber.value}');
-      }
+      _analytics.logPhoneVerified();
 
       // Reset phone auth state but keep verification status
       _resetPhoneAuthState(keepVerificationStatus: true);
+    } on FirebaseAuthException catch (e) {
+      // Surface the *real* error instead of masking everything as a bad code.
+      AppLog.firebase(
+          'AuthenticationService.verifyPhoneCode', '${e.code} - ${e.message}');
+      _error.value = _handlePhoneAuthError(e);
+      _isPhoneVerified.value = false;
+      throw Exception(_error.value);
     } catch (e) {
-      _error.value = 'Invalid verification code. Please try again.';
+      AppLog.error('AuthenticationService.verifyPhoneCode', e);
+      _error.value = 'Verification failed. Please try again.';
       _isPhoneVerified.value = false;
       throw Exception(_error.value);
     } finally {
@@ -840,6 +902,7 @@ class AuthenticationService with ListenableServiceMixin {
       // Auto-sign in when verification is completed automatically (SMS auto-retrieval)
       await _auth.signInWithCredential(credential);
       _isPhoneVerified.value = true;
+      _analytics.logPhoneVerified();
 
       _resetPhoneAuthState(keepVerificationStatus: true);
       notifyListeners();
