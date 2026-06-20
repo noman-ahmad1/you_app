@@ -18,6 +18,7 @@ import 'package:you_app/models/chat_request_model.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
+import 'package:you_app/services/block_service.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -208,6 +209,20 @@ class HomeViewModel extends ReactiveViewModel {
 
     setBusy(true); // Show loading while checking
     try {
+      // Block check: admins can temporarily bar a volunteer from a user.
+      final isBlocked = await locator<BlockService>()
+          .isBlocked(currentUser.uid, volunteer.uid);
+      if (isBlocked) {
+        await _dialogService.showDialog(
+          title: 'Unavailable',
+          description:
+              'You can\'t start a chat with this volunteer right now. Please choose another volunteer.',
+          buttonTitle: 'OK',
+        );
+        setBusy(false);
+        return;
+      }
+
       // ✅ Check for existing request first
       bool requestExists = await locator<ChatRequestService>()
           .checkExistingRequest(currentUser.uid, volunteer.uid);
@@ -333,9 +348,19 @@ class HomeViewModel extends ReactiveViewModel {
     _volunteersSubscription = locator<UserService>()
         .streamAvailableVolunteers()
         .listen((volunteersList) async {
-      _volunteers = volunteersList;
+      // Exclude volunteers this user is temporarily blocked from (admin action).
+      var roster = volunteersList;
+      final userId = currentUser?.uid;
+      if (userId != null) {
+        final blocked =
+            await locator<BlockService>().activeBlockedVolunteerIds(userId);
+        if (blocked.isNotEmpty) {
+          roster = roster.where((v) => !blocked.contains(v.uid)).toList();
+        }
+      }
+      _volunteers = roster;
 
-      final uids = volunteersList.map((v) => v.uid).toSet();
+      final uids = roster.map((v) => v.uid).toSet();
 
       // Prune cached tags/ratings for volunteers no longer in the roster
       // (prevents unbounded growth of these maps over the session).

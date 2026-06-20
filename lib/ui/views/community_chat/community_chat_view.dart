@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
+import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -50,83 +52,96 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
               trailingActions: [],
             ),
             Expanded(
-              child: (viewModel.isBusy && viewModel.posts.isEmpty)
-                  ? const CustomLottieLoader(fullScreen: true)
-                  : viewModel.posts.isEmpty
-                      ? _buildEmptyState()
-                      : NotificationListener<ScrollNotification>(
-                          onNotification: (notification) {
-                            // Trigger load-more as the user nears the bottom.
-                            if (notification.metrics.pixels >=
-                                notification.metrics.maxScrollExtent - 200) {
-                              viewModel.loadMore();
-                            }
-                            return false;
-                          },
-                          child: ListView.separated(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 16),
-                            itemCount: viewModel.posts.length +
-                                (viewModel.canLoadMore ? 1 : 0),
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              if (index >= viewModel.posts.length) {
-                                return const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  child: Center(
-                                    child: SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child:
-                                          CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                  ),
-                                );
-                              }
-                              final post = viewModel.posts[index];
-                              final isMe =
-                                  post.authorId == viewModel.currentUserId;
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: (viewModel.isBusy && viewModel.posts.isEmpty)
+                        ? const CustomLottieLoader(fullScreen: true)
+                        : viewModel.posts.isEmpty
+                            ? _buildEmptyState()
+                            : NotificationListener<ScrollNotification>(
+                                onNotification: (notification) {
+                                  // Trigger load-more as the user nears the bottom.
+                                  if (notification.metrics.pixels >=
+                                      notification.metrics.maxScrollExtent -
+                                          200) {
+                                    viewModel.loadMore();
+                                  }
+                                  return false;
+                                },
+                                child: ListView.separated(
+                                  // Bottom padding clears the floating composer.
+                                  padding:
+                                      const EdgeInsets.fromLTRB(12, 16, 12, 96),
+                                  itemCount: viewModel.posts.length +
+                                      (viewModel.canLoadMore ? 1 : 0),
+                                  separatorBuilder: (context, index) =>
+                                      const SizedBox(height: 12),
+                                  itemBuilder: (context, index) {
+                                    if (index >= viewModel.posts.length) {
+                                      return const Padding(
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 16),
+                                        child: Center(
+                                          child: SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                                strokeWidth: 2),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    final post = viewModel.posts[index];
+                                    final isMe = post.authorId ==
+                                        viewModel.currentUserId;
 
-                              return _CommunityPostCard(
-                                post: post,
-                                isMe: isMe,
-                                isLiked: post.likedBy
-                                    .contains(viewModel.currentUserId),
-                                onTap: () => viewModel.navigateToThread(post),
-                                onLike: () => viewModel.toggleLike(post),
-                              );
-                            },
-                          ),
-                        ),
-            ),
-            if (viewModel.isMember)
-              const _PostComposer()
-            else
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton(
-                    onPressed: viewModel.joinCommunity,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    child: Text(
-                      'Join Community to Post',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
+                                    return _CommunityPostCard(
+                                      post: post,
+                                      isMe: isMe,
+                                      isLiked: post.likedBy
+                                          .contains(viewModel.currentUserId),
+                                      onTap: () =>
+                                          viewModel.navigateToThread(post),
+                                      onLike: () => viewModel.toggleLike(post),
+                                    );
+                                  },
+                                ),
+                              ),
                   ),
-                ),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: viewModel.isMember
+                        ? const _PostComposer()
+                        : SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: ElevatedButton(
+                                onPressed: viewModel.joinCommunity,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.secondary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  minimumSize: const Size(double.infinity, 50),
+                                ),
+                                child: Text(
+                                  'Join Community to Post',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
+                ],
               ),
+            ),
           ],
         ),
       ),
@@ -193,7 +208,7 @@ class _PostComposer extends ViewModelWidget<CommunityChatViewModel> {
                   color: AppColors.secondary.withAlpha(150),
                 ),
                 filled: true,
-                fillColor: AppColors.secondaryVeryLight.withAlpha(75),
+                fillColor: AppColors.secondaryVeryLight.withAlpha(240),
                 contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
@@ -322,9 +337,9 @@ class _CommunityPostCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  // Post Body
+                  // Post Body (contact info blurred for safety)
                   Text(
-                    post.content,
+                    locator<ModerationService>().maskPii(post.content),
                     style: GoogleFonts.crimsonPro(
                       fontSize: 16,
                       color: AppColors.primaryVeryDark.withAlpha(220),

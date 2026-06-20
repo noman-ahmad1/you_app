@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
+import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -52,7 +54,10 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
               trailingActions: [],
             ),
             Expanded(
-              child: viewModel.isBusy
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: viewModel.isBusy
                   ? const CustomLottieLoader(fullScreen: true)
                   : CustomScrollView(slivers: [
                       SliverToBoxAdapter(
@@ -104,37 +109,43 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                                 childCount: viewModel.replies.length,
                               ),
                             ),
-                      // Add some bottom padding
-                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                      // Bottom padding clears the floating composer.
+                      const SliverToBoxAdapter(child: SizedBox(height: 96)),
                     ]),
-            ),
-            if (viewModel.isMember)
-              const _ReplyComposer()
-            else
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton(
-                    onPressed: viewModel.joinCommunity,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    child: Text(
-                      'Join Community to Reply',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
                   ),
-                ),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: viewModel.isMember
+                        ? const _ReplyComposer()
+                        : SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: ElevatedButton(
+                                onPressed: viewModel.joinCommunity,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.secondary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  minimumSize: const Size(double.infinity, 50),
+                                ),
+                                child: Text(
+                                  'Join Community to Reply',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
+                ],
               ),
+            ),
           ],
         ),
       ),
@@ -197,7 +208,7 @@ class _ReplyComposer extends ViewModelWidget<ThreadRepliesViewModel> {
                   color: AppColors.secondary.withAlpha(150),
                 ),
                 filled: true,
-                fillColor: AppColors.secondaryVeryLight.withAlpha(75),
+                fillColor: AppColors.secondaryVeryLight.withAlpha(240),
                 contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
@@ -313,7 +324,7 @@ class _OriginalPostCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            post.content,
+            locator<ModerationService>().maskPii(post.content),
             style: GoogleFonts.crimsonPro(
               fontSize: 18,
               color: AppColors.primaryVeryDark,
@@ -458,7 +469,7 @@ class _ReplyCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  reply.content,
+                  locator<ModerationService>().maskPii(reply.content),
                   style: GoogleFonts.crimsonPro(
                     fontSize: 15,
                     color: AppColors.primaryVeryDark.withAlpha(220),

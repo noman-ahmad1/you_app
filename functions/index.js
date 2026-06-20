@@ -11,6 +11,9 @@ const admin = require("firebase-admin");
 // Import the logger
 const logger = require("firebase-functions/logger");
 
+// Keyword/regex moderation engine (mirrors the Flutter ModerationService)
+const moderation = require("./moderation");
+
 // Initialize the Admin SDK
 admin.initializeApp();
 const db = admin.firestore();
@@ -339,3 +342,121 @@ exports.runDailyAnalyticsNow = onRequest(async (req, res) => {
         res.status(500).json({ ok: false, error: String(error) });
     }
 });
+
+// ============================================================================
+// Content moderation (authoritative server-side flagging)
+// Re-checks DELIVERED chat messages & community content; on a match it records a
+// moderation_flags doc for the admin panel and tags the source doc so clients
+// can show an "under review" state. Blocked (never-delivered) content is flagged
+// by the client instead. Multiple create-triggers per path are allowed, so
+// these coexist with the existing onReply*/onPost* functions.
+// ============================================================================
+
+async function recordContentFlag(flag, sourceRef, result) {
+    await db.collection("moderation_flags").add(flag);
+    try {
+        await sourceRef.set({
+            moderation: {
+                flagged: true,
+                categories: result.categories,
+                masked: result.didMask,
+            },
+        }, { merge: true });
+    } catch (e) {
+        logger.error("Failed to tag moderated doc:", e);
+    }
+}
+
+exports.moderateChatMessage = onDocumentCreated("chats/{chatId}/messages/{messageId}", async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const data = snap.data();
+    const text = data.text || "";
+    const result = moderation.inspect(text);
+    if (!result.flagged) return;
+
+    const { chatId, messageId } = event.params;
+    const senderId = data.senderId || "";
+    const recipientId = chatId.split("_").find((id) => id !== senderId) || "";
+
+    await recordContentFlag({
+        source: "chat",
+        chatId,
+        messageId,
+        senderId,
+        recipientId,
+        text,
+        categories: result.categories,
+        severity: result.severity,
+        action: "flagged",
+        delivered: true,
+        status: "open",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, snap.ref, result);
+    logger.log(`Flagged chat message ${messageId} (${result.categories.join(",")})`);
+});
+
+exports.moderatePost = onDocumentCreated("posts/{postId}", async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const data = snap.data();
+    const text = data.content || "";
+    const result = moderation.inspect(text);
+    if (!result.flagged) return;
+
+    await recordContentFlag({
+        source: "post",
+        postId: event.params.postId,
+        communityId: data.communityId || null,
+        senderId: data.authorId || "",
+        text,
+        categories: result.categories,
+        severity: result.severity,
+        action: "flagged",
+        delivered: true,
+        status: "open",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, snap.ref, result);
+    logger.log(`Flagged post ${event.params.postId} (${result.categories.join(",")})`);
+});
+
+exports.moderateReply = onDocumentCreated("posts/{postId}/replies/{replyId}", async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const data = snap.data();
+    const text = data.content || "";
+    const result = moderation.inspect(text);
+    if (!result.flagged) return;
+
+    await recordContentFlag({
+        source: "reply",
+        postId: event.params.postId,
+        replyId: event.params.replyId,
+        senderId: data.authorId || "",
+        text,
+        categories: result.categories,
+        severity: result.severity,
+        action: "flagged",
+        delivered: true,
+        status: "open",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, snap.ref, result);
+    logger.log(`Flagged reply ${event.params.replyId} (${result.categories.join(",")})`);
+});
+
+/**
+ * When an admin deletes a community thread (posts/{postId}), cascade-delete its
+ * replies subcollection so no orphans remain (mirrors cleanupChatroom).
+ */
+exports.onPostDeleted = onDocumentDeleted("posts/{postId}", async (event) => {
+    const { postId } = event.params;
+    try {
+        await db.recursiveDelete(
+            db.collection("posts").doc(postId).collection("replies"),
+        );
+        logger.log(`Cleaned up replies for deleted post: ${postId}`);
+    } catch (error) {
+        logger.error(`Error cleaning up replies for post ${postId}:`, error);
+    }
+});
+

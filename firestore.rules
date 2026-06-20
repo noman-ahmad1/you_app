@@ -34,8 +34,46 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------
-    // IMPORTANT: Make sure to copy your existing rules for 'users', 
+    // Moderation & safety (added with the content-moderation feature)
+    // ---------------------------------------------------------
+
+    // True when the requester's users/{uid} doc has role == 'admin'.
+    function isAdmin() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Flagged content for the admin review queue. Admins manage everything.
+    // The one client write allowed is recording a user's OWN blocked attempt
+    // (Cloud Functions use the Admin SDK and bypass these rules entirely).
+    match /moderation_flags/{flagId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isAdmin()
+        || (request.auth != null
+            && request.resource.data.senderId == request.auth.uid
+            && request.resource.data.action == 'blocked');
+    }
+
+    // Admin-created, time-boxed blocks hiding a volunteer from a specific user.
+    // The owning user may READ their blocks (so the app can enforce them);
+    // only admins may create/modify them.
+    match /volunteer_blocks/{blockId} {
+      allow read: if isAdmin()
+        || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // Tunable moderation keyword lists: readable by signed-in clients, admin-writable.
+    match /app_settings/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------
+    // IMPORTANT: Make sure to copy your existing rules for 'users',
     // 'chat_requests', 'chats', etc. below this point before deploying!
+    // ⚠️ This file does NOT yet contain rules for users/chats/mood/etc., so it
+    // is INCOMPLETE — do NOT deploy it as-is or the app will lose access.
     // ---------------------------------------------------------
     
     // match /{document=**} {

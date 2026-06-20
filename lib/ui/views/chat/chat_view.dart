@@ -4,6 +4,8 @@ import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/chat_messaage_model.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
+import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -87,23 +89,35 @@ class ChatView extends StackedView<ChatViewModel> {
             ],
           ),
           Expanded(
-            child: viewModel.isBusy
-                ? const CustomLottieLoader(fullScreen: true)
-                : viewModel.messages.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        reverse: true, // Shows latest messages at the bottom
-                        padding: const EdgeInsets.all(12),
-                        itemCount: viewModel.messages.length,
-                        itemBuilder: (context, index) {
-                          final message = viewModel.messages[index];
-                          final isMe =
-                              message.senderId == viewModel.currentUserId;
-                          return _MessageBubble(message: message, isMe: isMe);
-                        },
-                      ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: viewModel.isBusy
+                      ? const CustomLottieLoader(fullScreen: true)
+                      : viewModel.messages.isEmpty
+                          ? _buildEmptyState()
+                          : ListView.builder(
+                              reverse: true, // Shows latest messages at the bottom
+                              // Bottom padding leaves room for the floating input
+                              // so the newest message isn't hidden behind it.
+                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+                              itemCount: viewModel.messages.length,
+                              itemBuilder: (context, index) {
+                                final message = viewModel.messages[index];
+                                final isMe =
+                                    message.senderId == viewModel.currentUserId;
+                                return _MessageBubble(
+                                    message: message, isMe: isMe);
+                              },
+                            ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: _MessageInputField(),
+                ),
+              ],
+            ),
           ),
-          _MessageInputField(),
         ],
       ),
     ));
@@ -167,7 +181,7 @@ class _MessageInputField extends ViewModelWidget<ChatViewModel> {
                     color: AppColors.secondary.withAlpha(150),
                   ),
                   filled: true,
-                  fillColor: AppColors.secondaryVeryLight.withAlpha(75),
+                  fillColor: AppColors.secondaryVeryLight.withAlpha(240),
                   contentPadding: const EdgeInsets.fromLTRB(
                       16, 16, 60, 16), // Increased right padding
                   border: OutlineInputBorder(
@@ -233,6 +247,9 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Blur any shared contact info (phone / social handle / email / URL).
+    final displayText = locator<ModerationService>().maskPii(message.text);
+    final wasMasked = displayText != message.text;
     return Row(
       mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: [
@@ -266,13 +283,32 @@ class _MessageBubble extends StatelessWidget {
               ),
             ],
           ),
-          child: Text(
-            message.text,
-            style: GoogleFonts.crimsonPro(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: isMe ? AppColors.secondary : AppColors.lightPurple,
-            ),
+          child: Column(
+            crossAxisAlignment:
+                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                displayText,
+                style: GoogleFonts.crimsonPro(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: isMe ? AppColors.secondary : AppColors.lightPurple,
+                ),
+              ),
+              if (wasMasked) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Contact info hidden for safety',
+                  style: GoogleFonts.crimsonPro(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: (isMe ? AppColors.secondary : AppColors.lightPurple)
+                        .withAlpha(160),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ],

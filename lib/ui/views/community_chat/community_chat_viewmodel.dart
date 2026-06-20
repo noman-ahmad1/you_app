@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/community_service.dart';
+import 'package:you_app/services/moderation_flag_service.dart';
+import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:you_app/ui/views/community_chat/thread_replies_view.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
@@ -94,6 +97,35 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   Future<void> sendPost() async {
     final text = messageController.text.trim();
     if (text.isEmpty) return;
+
+    // --- Moderation gate ---
+    final moderation = locator<ModerationService>()
+        .inspect(text, context: ModerationContext.community);
+    if (moderation.isBlocked) {
+      _snackbarService.showSnackbar(
+        title: 'Post blocked',
+        message:
+            'This post appears to violate our community guidelines and was not published.',
+      );
+      locator<AnalyticsService>().logContentBlocked(
+          source: 'post', category: moderation.categoryNames.join(','));
+      locator<ModerationFlagService>().recordBlocked(
+        context: ModerationContext.community,
+        senderId: currentUserId,
+        communityId: communityId,
+        text: text,
+        result: moderation,
+      );
+      return; // keep the text so the author can edit it
+    }
+    if (moderation.action == ModerationAction.maskSend) {
+      _snackbarService.showSnackbar(
+          message:
+              'Sharing contact details is discouraged; it will be hidden from others.');
+    } else if (moderation.action == ModerationAction.warnSend) {
+      _snackbarService.showSnackbar(
+          message: 'Please keep posts supportive and on-topic.');
+    }
 
     messageController.clear();
     notifyListeners();

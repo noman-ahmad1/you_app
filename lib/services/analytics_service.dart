@@ -139,6 +139,12 @@ class AnalyticsService {
   Future<void> logOnboardingCompleted({required String tour}) =>
       _log('onboarding_completed', {'tour': tour});
 
+  // --- Moderation ---
+  Future<void> logContentBlocked({required String source, String? category}) =>
+      _log('content_blocked', {'source': source, 'category': category});
+  Future<void> logContentFlagged({required String source, String? category}) =>
+      _log('content_flagged', {'source': source, 'category': category});
+
   // --- Internals ---
 
   /// Logs an event, dropping null params. No-op when collection is disabled.

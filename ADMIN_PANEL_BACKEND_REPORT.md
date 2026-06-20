@@ -216,5 +216,59 @@ Existing composite indexes (from `firestore.indexes.json`):
 
 ---
 
+## 11. Content moderation, flags & volunteer blocks (safety features)
+
+The app now runs keyword + regex moderation on community posts/replies and 1-on-1 chat messages, blurs shared contact info (phone/social/email/URL), and writes records for the admin panel. **Cloud Functions** (`moderateChatMessage`, `moderatePost`, `moderateReply`, all in `asia-south1`) re-check delivered content authoritatively; the client writes a flag only for content it **blocked** before sending. `onPostDeleted` cascade-deletes a thread's `replies` when a post is removed.
+
+### 11.1 `moderation_flags/{id}` — admin review queue
+| Field | Type | Notes |
+|---|---|---|
+| `source` | string | `"chat"` \| `"post"` \| `"reply"` |
+| `chatId?`/`messageId?` | string | when `source=="chat"` |
+| `postId?`/`replyId?`/`communityId?` | string | when `source` is post/reply |
+| `senderId` | string | author of the offending content |
+| `recipientId?` | string | chat only (the other participant) |
+| `text` | string | full original content (**admin-only**, sensitive) |
+| `categories` | array<string> | any of `hate, violence, sexual, romance, offTopic, pii` |
+| `severity` | string | `"severe"` (hate/violence/sexual) \| `"pii"` \| `"moderate"` |
+| `action` | string | `"flagged"` (delivered) \| `"blocked"` (client stopped it) |
+| `delivered` | bool | false for blocked attempts |
+| `status` | string | `"open"` → set `"resolved"` when handled |
+| `createdAt` | Timestamp | |
+| `resolvedBy?`/`resolvedAt?` | — | set by admin on resolve |
+
+Review queue query: `moderation_flags where status=="open" orderBy createdAt desc` (composite index already deployed). Resolve: set `status:"resolved"`, `resolvedBy`, `resolvedAt`.
+
+Flagged content docs (messages/posts/replies) also gain a `moderation` map `{ flagged:true, categories:[], masked:bool }` so the app can show an "under review" state.
+
+### 11.2 `volunteer_blocks/{userId}_{volunteerId}` — time-boxed block
+Hide a specific volunteer from a specific user for a period. **Deterministic doc id** `${userId}_${volunteerId}`.
+| Field | Type | Notes |
+|---|---|---|
+| `userId` | string | the user who won't see the volunteer |
+| `volunteerId` | string | the blocked volunteer |
+| `createdAt` | Timestamp | |
+| `expiresAt` | Timestamp | block is active while `expiresAt > now` (e.g. now + 1 month) |
+| `reason?` | string | optional admin note |
+| `createdBy` | string | admin uid |
+
+The app enforces this: blocked volunteers are excluded from the user's discovery list and new chat requests to them are refused, automatically expiring when `expiresAt` passes (index `userId` + `expiresAt` deployed). The admin panel only **creates** these.
+
+### 11.3 Admin actions the Angular panel performs
+1. **Review queue** — list/open `moderation_flags` (§11.1); open the related chat/thread.
+2. **End chat immediately** — set `chats/{chatId}.status="completed"`, add `endedBy:"admin"` (+ optional `endedReason`). The app navigates both participants out with a "ended by a moderator" message.
+3. **Block volunteer for a user (≥1 month)** — create `volunteer_blocks/{userId}_{volunteerId}` with `expiresAt = now + 1 month`, `createdBy = adminUid`.
+4. **Delete a community thread** — delete `posts/{postId}`; the `onPostDeleted` function removes its replies.
+5. **Resolve a flag** — set `status:"resolved"`, `resolvedBy/At`.
+6. *(Optional)* **Tune keyword lists** without an app release — write `app_settings/moderation_config` (`{ hate:[], violence:[], sexual:[], romance:[], offTopic:[], contactIntent:[], version }`); the app + functions merge it over their bundled defaults.
+
+### 11.4 Security-rules note
+`firestore.rules` was extended (admin-only `moderation_flags`/`volunteer_blocks`/`app_settings`, plus an `isAdmin()` helper) but **NOT deployed** — the committed rules file is incomplete (it lacks rules for `users`/`chats`/`mood`/etc.), so deploying it as-is would lock the app out. Reconcile the full ruleset before any `firebase deploy --only firestore:rules`.
+
+### ⚠️ Safety caveat (read before tuning)
+Keyword matching is blunt. Critically, **self-harm / suicidal expressions are NOT moderation violations** — they are crisis disclosures that must reach a volunteer, never be blocked. The `violence` list is scoped to threats toward *others*; do not add self-referential phrases. Consider a separate, supportive crisis-detection flow later (and/or upgrade detection to an AI scorer behind the same interface).
+
+---
+
 ### TL;DR for the admin panel
-Build an Angular app on the **same Firebase project**, authenticate admins (`role=="admin"`), and primarily: (1) **approve volunteers** (`users` where `role=="volunteer"` & `status=="pending_verification"`, show their `volunteer_info` + ID images, then set the approved status + notify them via a `notifications` doc), (2) **manage users** (role/status), (3) **moderate** `posts`/`replies`, (4) **CRUD communities**, (5) **toggle** `app_settings/global_config`, and (6) **show analytics** via GA4 Data API / BigQuery (not Firestore). Mind the privacy rules and the `verified`/`active` status decision.
+Build an Angular app on the **same Firebase project**, authenticate admins (`role=="admin"`), and primarily: (1) **approve volunteers** (`users` where `role=="volunteer"` & `status=="pending_verification"`, show their `volunteer_info` + ID images, then set the approved status + notify them via a `notifications` doc), (2) **manage users** (role/status), (3) **moderate** `posts`/`replies` via the `moderation_flags` queue (§11), (4) **end chats** / **block a volunteer for a user** / **delete threads**, (5) **CRUD communities**, (6) **toggle** `app_settings/global_config`, and (7) **show analytics** via GA4 Data API / BigQuery (not Firestore). Mind the privacy rules and the `verified`/`active` status decision.

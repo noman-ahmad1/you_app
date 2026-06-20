@@ -7,7 +7,10 @@ import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/chat_messaage_model.dart';
+import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/moderation_flag_service.dart';
+import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -112,15 +115,19 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
       final data = snapshot.data();
       if (data != null && data['status'] == 'completed') {
         if (snapshot.metadata.isFromCache) return;
-        _handleChatEndedRemotely();
+        _handleChatEndedRemotely(byAdmin: data['endedBy'] == 'admin');
       }
     });
   }
 
-  void _handleChatEndedRemotely() {
+  void _handleChatEndedRemotely({bool byAdmin = false}) {
     if (_isDeleting) return;
     _isDeleting = true;
-    _snackbarService.showSnackbar(message: "This chat has been ended.");
+    _snackbarService.showSnackbar(
+      message: byAdmin
+          ? "This chat was ended by a moderator."
+          : "This chat has been ended.",
+    );
     _navigateAway();
   }
 
@@ -133,14 +140,53 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
     }
   }
 
-  /// Sends a message to Firestore.
+  /// Sends a message to Firestore, after a moderation check.
   Future<void> sendMessage() async {
     final textToSend = messageController.text.trim();
     if (textToSend.isEmpty || _chatId == null || currentUserId == null) {
       return;
     }
 
+    // --- Moderation gate (stricter chat context) ---
+    final moderation = locator<ModerationService>()
+        .inspect(textToSend, context: ModerationContext.chat);
+
+    if (moderation.isBlocked) {
+      // Severe content (hate/violence/sexual): do NOT send; warn the sender and
+      // record an admin flag for the blocked attempt.
+      await _dialogService.showDialog(
+        title: 'Message not sent',
+        description:
+            'This message appears to violate our community guidelines and was not sent. Repeated violations may be reviewed by a moderator.',
+        buttonTitle: 'OK',
+      );
+      locator<AnalyticsService>().logContentBlocked(
+          source: 'chat', category: moderation.categoryNames.join(','));
+      locator<ModerationFlagService>().recordBlocked(
+        context: ModerationContext.chat,
+        senderId: currentUserId!,
+        recipientId: volunteerId,
+        chatId: _chatId,
+        text: textToSend,
+        result: moderation,
+      );
+      return; // keep the text in the field so the sender can edit it
+    }
+
+    if (moderation.action == ModerationAction.maskSend) {
+      _snackbarService.showSnackbar(
+        message:
+            'For your safety, sharing contact details is discouraged — it will be hidden from the other person.',
+      );
+    } else if (moderation.action == ModerationAction.warnSend) {
+      _snackbarService.showSnackbar(
+        message: 'Please keep the conversation supportive and on-topic.',
+      );
+    }
+
     // Create the message object. The timestamp will be set by the server.
+    // Raw text is stored so moderators see the full content; the recipient's
+    // client blurs PII at render time, and the Cloud Function flags it.
     final message = ChatMessage(
       senderId: currentUserId!,
       text: textToSend,

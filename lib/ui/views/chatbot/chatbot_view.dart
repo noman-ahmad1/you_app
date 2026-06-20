@@ -45,46 +45,59 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
               trailingActions: [],
             ),
             Expanded(
-              child: ListView.builder(
-                reverse: true,
-                padding: const EdgeInsets.all(12),
-                itemCount: viewModel.messages.length,
-                itemBuilder: (context, index) {
-                  final msg =
-                      viewModel.messages[viewModel.messages.length - 1 - index];
-                  final isMe = msg['isMe'] == 'true';
-                  return _MessageBubble(text: msg['text'] ?? '', isMe: isMe);
-                },
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: ListView.builder(
+                      reverse: true,
+                      // Bottom padding leaves room for the floating input.
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+                      itemCount: viewModel.messages.length,
+                      itemBuilder: (context, index) {
+                        final msg = viewModel
+                            .messages[viewModel.messages.length - 1 - index];
+                        final isMe = msg['isMe'] == 'true';
+                        return _MessageBubble(
+                            text: msg['text'] ?? '', isMe: isMe);
+                      },
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Loading Indicator for Dodo thinking
+                        if (viewModel.isBusy)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 0, 8, 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Dodo is typing...",
+                                  style: GoogleFonts.crimsonPro(
+                                    color: AppColors.primaryVeryDark,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                                const CustomLottieLoader(
+                                  width: 70,
+                                  height: 70,
+                                  loaderWidth: 200,
+                                  loaderHeight: 200,
+                                )
+                              ],
+                            ),
+                          ),
+                        // Input field identical to ChatView
+                        const _MessageInputField(),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-
-            // Loading Indicator for Dodo thinking
-            if (viewModel.isBusy)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 8, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Dodo is typing...",
-                      style: GoogleFonts.crimsonPro(
-                        color: AppColors.primaryVeryDark,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                    // const SizedBox(width: 10),
-                    const CustomLottieLoader(
-                      width: 70,
-                      height: 70,
-                      loaderWidth: 200,
-                      loaderHeight: 200,
-                    )
-                  ],
-                ),
-              ),
-
-            // Input field identical to ChatView
-            const _MessageInputField(),
           ],
         ),
       ),
@@ -121,7 +134,8 @@ class _MessageInputField extends ViewModelWidget<ChatbotViewModel> {
                     color: AppColors.secondary.withAlpha(150),
                   ),
                   filled: true,
-                  fillColor: AppColors.secondaryVeryLight.withAlpha(75),
+                  fillColor:
+                      const Color.fromARGB(255, 227, 177, 203).withAlpha(240),
                   contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),

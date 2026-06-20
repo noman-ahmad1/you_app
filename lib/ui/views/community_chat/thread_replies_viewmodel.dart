@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/community_service.dart';
+import 'package:you_app/services/moderation_flag_service.dart';
+import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:you_app/models/thread_reply.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
@@ -81,6 +84,35 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
   Future<void> sendReply() async {
     final text = replyController.text.trim();
     if (text.isEmpty) return;
+
+    // --- Moderation gate ---
+    final moderation = locator<ModerationService>()
+        .inspect(text, context: ModerationContext.community);
+    if (moderation.isBlocked) {
+      _snackbarService.showSnackbar(
+        title: 'Reply blocked',
+        message:
+            'This reply appears to violate our community guidelines and was not published.',
+      );
+      locator<AnalyticsService>().logContentBlocked(
+          source: 'reply', category: moderation.categoryNames.join(','));
+      locator<ModerationFlagService>().recordBlocked(
+        context: ModerationContext.community,
+        senderId: currentUserId,
+        communityId: post.communityId,
+        text: text,
+        result: moderation,
+      );
+      return; // keep the text so the author can edit it
+    }
+    if (moderation.action == ModerationAction.maskSend) {
+      _snackbarService.showSnackbar(
+          message:
+              'Sharing contact details is discouraged; it will be hidden from others.');
+    } else if (moderation.action == ModerationAction.warnSend) {
+      _snackbarService.showSnackbar(
+          message: 'Please keep replies supportive and on-topic.');
+    }
 
     replyController.clear();
     notifyListeners();

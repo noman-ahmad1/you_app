@@ -1,6 +1,9 @@
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/block_service.dart';
 import 'package:you_app/services/country_code_service.dart';
+import 'package:you_app/services/moderation_flag_service.dart';
+import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -93,6 +96,9 @@ import 'package:you_app/services/monetization_service.dart';
     // @stacked-service
     LazySingleton(classType: MonetizationService),
     LazySingleton(classType: AnalyticsService),
+    LazySingleton(classType: ModerationService),
+    LazySingleton(classType: ModerationFlagService),
+    LazySingleton(classType: BlockService),
 
     LazySingleton(classType: VolunteerSignupViewModel),
   ],
