@@ -8,6 +8,7 @@ import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/views/community_chat/community_card_widgets.dart';
 import 'package:you_app/ui/common/app_constants.dart';
+import 'package:you_app/ui/shared/floating_composer_layout.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:you_app/models/thread_reply.dart';
@@ -53,10 +54,37 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
               trailingActions: [],
             ),
             Expanded(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: viewModel.isBusy
+              child: FloatingComposerLayout(
+                composer: viewModel.isLocked
+                    ? const _LockedBanner()
+                    : viewModel.isMember
+                        ? const _ReplyComposer()
+                        : SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: ElevatedButton(
+                                onPressed: viewModel.joinCommunity,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.secondary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  minimumSize: const Size(double.infinity, 50),
+                                ),
+                                child: Text(
+                                  'Join Community to Reply',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                listBuilder: (context, bottomInset) => viewModel.isBusy
                   ? const CustomLottieLoader(fullScreen: true)
                   : CustomScrollView(slivers: [
                       SliverToBoxAdapter(
@@ -108,43 +136,10 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                                 childCount: viewModel.replies.length,
                               ),
                             ),
-                      // Bottom padding clears the floating composer.
-                      const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                      // Bottom padding tracks the floating composer's height.
+                      SliverToBoxAdapter(
+                          child: SizedBox(height: bottomInset)),
                     ]),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: viewModel.isLocked
-                        ? const _LockedBanner()
-                        : viewModel.isMember
-                        ? const _ReplyComposer()
-                        : SafeArea(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: ElevatedButton(
-                                onPressed: viewModel.joinCommunity,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.secondary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  minimumSize: const Size(double.infinity, 50),
-                                ),
-                                child: Text(
-                                  'Join Community to Reply',
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                  ),
-                ],
               ),
             ),
           ],

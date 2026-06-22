@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
+import 'package:you_app/ui/shared/floating_composer_layout.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 
 import 'chatbot_viewmodel.dart';
@@ -42,37 +43,29 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
               trailingActions: [],
             ),
             Expanded(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: ListView.builder(
-                      reverse: true,
-                      // Bottom padding leaves room for the floating input.
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
-                      // When Dodo is replying, show a typing bubble as the
-                      // bottom-most item (index 0 in a reversed list) so it sits
-                      // in-flow with messages and never overlaps the reply.
-                      itemCount:
-                          viewModel.messages.length + (viewModel.isBusy ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (viewModel.isBusy && index == 0) {
-                          return const _TypingBubble();
-                        }
-                        final msgIndex =
-                            viewModel.isBusy ? index - 1 : index;
-                        final msg = viewModel
-                            .messages[viewModel.messages.length - 1 - msgIndex];
-                        final isMe = msg['isMe'] == 'true';
-                        return _MessageBubble(
-                            text: msg['text'] ?? '', isMe: isMe);
-                      },
-                    ),
-                  ),
-                  const Align(
-                    alignment: Alignment.bottomCenter,
-                    child: _MessageInputField(),
-                  ),
-                ],
+              child: FloatingComposerLayout(
+                composer: const _MessageInputField(),
+                listBuilder: (context, bottomInset) => ListView.builder(
+                  reverse: true,
+                  // Bottom padding tracks the floating input's height so the
+                  // newest message stays visible as it grows to multiple lines.
+                  padding: EdgeInsets.fromLTRB(12, 12, 12, bottomInset),
+                  // When Dodo is replying, show a typing bubble as the
+                  // bottom-most item (index 0 in a reversed list) so it sits
+                  // in-flow with messages and never overlaps the reply.
+                  itemCount:
+                      viewModel.messages.length + (viewModel.isBusy ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (viewModel.isBusy && index == 0) {
+                      return const _TypingBubble();
+                    }
+                    final msgIndex = viewModel.isBusy ? index - 1 : index;
+                    final msg = viewModel
+                        .messages[viewModel.messages.length - 1 - msgIndex];
+                    final isMe = msg['isMe'] == 'true';
+                    return _MessageBubble(text: msg['text'] ?? '', isMe: isMe);
+                  },
+                ),
               ),
             ),
           ],

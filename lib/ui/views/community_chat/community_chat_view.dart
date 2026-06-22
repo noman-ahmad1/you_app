@@ -8,6 +8,7 @@ import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/views/community_chat/community_card_widgets.dart';
 import 'package:you_app/ui/common/app_constants.dart';
+import 'package:you_app/ui/shared/floating_composer_layout.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -52,10 +53,38 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
               trailingActions: [],
             ),
             Expanded(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: (viewModel.isBusy && viewModel.posts.isEmpty)
+              child: FloatingComposerLayout(
+                composer: viewModel.isLocked
+                    ? const _LockedBanner()
+                    : viewModel.isMember
+                        ? const _PostComposer()
+                        : SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: ElevatedButton(
+                                onPressed: viewModel.joinCommunity,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.secondary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  minimumSize: const Size(double.infinity, 50),
+                                ),
+                                child: Text(
+                                  'Join Community to Post',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                listBuilder: (context, bottomInset) =>
+                    (viewModel.isBusy && viewModel.posts.isEmpty)
                         ? const CustomLottieLoader(fullScreen: true)
                         : viewModel.posts.isEmpty
                             ? _buildEmptyState()
@@ -70,9 +99,9 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                                   return false;
                                 },
                                 child: ListView.separated(
-                                  // Bottom padding clears the floating composer.
+                                  // Bottom padding tracks the floating composer.
                                   padding:
-                                      const EdgeInsets.fromLTRB(12, 16, 12, 96),
+                                      EdgeInsets.fromLTRB(12, 16, 12, bottomInset),
                                   itemCount: viewModel.posts.length +
                                       (viewModel.canLoadMore ? 1 : 0),
                                   separatorBuilder: (context, index) =>
@@ -108,40 +137,6 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                                   },
                                 ),
                               ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: viewModel.isLocked
-                        ? const _LockedBanner()
-                        : viewModel.isMember
-                        ? const _PostComposer()
-                        : SafeArea(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: ElevatedButton(
-                                onPressed: viewModel.joinCommunity,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.secondary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  minimumSize: const Size(double.infinity, 50),
-                                ),
-                                child: Text(
-                                  'Join Community to Post',
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                  ),
-                ],
               ),
             ),
           ],

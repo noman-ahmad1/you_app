@@ -8,6 +8,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
+import 'package:you_app/ui/shared/floating_composer_layout.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 
 import 'chat_viewmodel.dart';
@@ -107,33 +108,25 @@ class ChatView extends StackedView<ChatViewModel> {
             ],
           ),
           Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: viewModel.isBusy
-                      ? const CustomLottieLoader(fullScreen: true)
-                      : viewModel.messages.isEmpty
-                          ? _buildEmptyState()
-                          : ListView.builder(
-                              reverse: true, // Shows latest messages at the bottom
-                              // Bottom padding leaves room for the floating input
-                              // so the newest message isn't hidden behind it.
-                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
-                              itemCount: viewModel.messages.length,
-                              itemBuilder: (context, index) {
-                                final message = viewModel.messages[index];
-                                final isMe =
-                                    message.senderId == viewModel.currentUserId;
-                                return _MessageBubble(
-                                    message: message, isMe: isMe);
-                              },
-                            ),
-                ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: _MessageInputField(),
-                ),
-              ],
+            child: FloatingComposerLayout(
+              composer: _MessageInputField(),
+              listBuilder: (context, bottomInset) => viewModel.isBusy
+                  ? const CustomLottieLoader(fullScreen: true)
+                  : viewModel.messages.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          reverse: true, // Shows latest messages at the bottom
+                          // Bottom padding tracks the floating input's height so
+                          // the newest message stays visible as it grows.
+                          padding: EdgeInsets.fromLTRB(12, 12, 12, bottomInset),
+                          itemCount: viewModel.messages.length,
+                          itemBuilder: (context, index) {
+                            final message = viewModel.messages[index];
+                            final isMe =
+                                message.senderId == viewModel.currentUserId;
+                            return _MessageBubble(message: message, isMe: isMe);
+                          },
+                        ),
             ),
           ),
         ],
