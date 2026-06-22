@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
@@ -42,6 +43,7 @@ class JournalView extends StackedView<JournalViewModel> {
                   trailingActions: [],
                 ),
                 Space.verticalSpaceTiny(context),
+                _PromptOfTheDay(viewModel: viewModel),
                 FilterBar(
                     currentIndex: viewModel.currentIndex,
                     onTap: (viewModel.setTab)),
@@ -81,5 +83,91 @@ class JournalView extends StackedView<JournalViewModel> {
   void onViewModelReady(JournalViewModel viewModel) {
     // This is crucial to start fetching the data.
     viewModel.listenToJournalEntries();
+  }
+}
+
+/// A gentle "Prompt of the Day" card. Shows the admin-scheduled prompt for today
+/// (live), falling back to the viewmodel's default so it's never empty. Tapping
+/// it opens a new entry.
+class _PromptOfTheDay extends StatelessWidget {
+  final JournalViewModel viewModel;
+  const _PromptOfTheDay({required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<String?>(
+      stream: viewModel.promptOfTheDay,
+      builder: (context, snapshot) {
+        final prompt = (snapshot.data?.trim().isNotEmpty ?? false)
+            ? snapshot.data!.trim()
+            : viewModel.defaultPrompt;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: viewModel.navigateToNewJournalEntry,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withAlpha(235),
+                      AppColors.secondaryVeryLight.withAlpha(90),
+                    ],
+                  ),
+                  border: Border.all(
+                      color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryVeryDark.withAlpha(18),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.auto_awesome,
+                            size: 16, color: AppColors.secondary),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Prompt of the Day',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                            color: AppColors.secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      prompt,
+                      style: GoogleFonts.crimsonPro(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        height: 1.35,
+                        color: AppColors.primaryVeryDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

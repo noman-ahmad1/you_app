@@ -5,14 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/user_service.dart';
-import 'package:you_app/services/volunteer_service.dart';
-import 'package:you_app/services/mood_service.dart';
-import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_service.dart';
-import 'package:you_app/services/chat_request_service.dart';
-import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/ui/common/app_colors.dart'; // Needed for the date picker theme
+import 'package:you_app/ui/common/validators.dart';
 
 class UserInfoViewModel extends BaseViewModel {
   final String uid;
@@ -102,26 +97,37 @@ class UserInfoViewModel extends BaseViewModel {
     _validationError = null;
     final username = userNameController.text.trim();
 
-    // 1. Synchronous checks
+    // 1. Required fields
     if (username.isEmpty || _selectedDate == null || _selectedGender == null) {
       _validationError =
-          'All fields (Username, Birthday, Gender) are required.';
-    }
-
-    if (_validationError == null && username.length < 3) {
-      _validationError = 'Username must be at least 3 characters long.';
-    }
-
-    if (_validationError != null) {
+          'Please provide your username, date of birth, and gender.';
       notifyListeners();
       return false;
     }
 
-    // 2. Asynchronous uniqueness check
-    // The Firestore service function already converts the username to lowercase for the query.
+    // 2. Username format (letters, numbers, underscores; 3–20 chars)
+    final usernameError = Validators.username(username);
+    if (usernameError != null) {
+      _validationError = usernameError;
+      notifyListeners();
+      return false;
+    }
+
+    // 3. Date of birth: not in the future, and at least 16 years old
+    if (_selectedDate!.isAfter(DateTime.now())) {
+      _validationError = 'Your date of birth cannot be in the future.';
+      notifyListeners();
+      return false;
+    }
+    if (Validators.ageFrom(_selectedDate!) < 16) {
+      _validationError = 'You must be at least 16 years old to use You.';
+      notifyListeners();
+      return false;
+    }
+
+    // 4. Asynchronous uniqueness check (service lowercases for the query)
     final isAvailable =
         await locator<UserService>().checkUsernameAvailability(username);
-
     if (!isAvailable) {
       _validationError =
           'This username is already taken. Please choose another one.';

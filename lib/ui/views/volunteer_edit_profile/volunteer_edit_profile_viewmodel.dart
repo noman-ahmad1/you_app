@@ -48,11 +48,12 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
 
   // Options
   final List<String> genders = ['Male', 'Female', 'Other', 'Prefer not to say'];
+  // Eligibility: only final-year Bachelor's or higher may volunteer.
   final List<String> levels = [
-    'Undergraduate Student',
-    'Graduate Student',
+    "Final-Year Bachelor's Student",
+    "Master's Student",
     'PhD Candidate',
-    'Post Doc'
+    'Post-Doctorate',
   ];
   final List<String> categories = AppConstants.volunteerTags;
 
@@ -100,7 +101,11 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
       if (volunteerInfo != null) {
         institutionController.text = volunteerInfo.institutionName ?? '';
         graduationYearController.text = volunteerInfo.graduationYear ?? '';
-        _selectedLevel = volunteerInfo.currentLevelOfStudy;
+        // Only keep the stored level if it's still a valid (eligible) option;
+        // otherwise leave it null so the dropdown isn't fed an unknown value
+        // (which would crash) and the volunteer re-selects an eligible level.
+        final storedLevel = volunteerInfo.currentLevelOfStudy;
+        _selectedLevel = levels.contains(storedLevel) ? storedLevel : null;
         if (volunteerInfo.tags != null) {
           _selectedTags = List<String>.from(volunteerInfo.tags!);
         }

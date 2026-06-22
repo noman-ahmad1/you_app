@@ -7,6 +7,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/shared/notification_style.dart';
 
 class NotificationsDrawer extends StatelessWidget {
   const NotificationsDrawer({super.key});
@@ -55,13 +56,9 @@ class NotificationsDrawer extends StatelessWidget {
             final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
             final customData = data['data'] as Map<String, dynamic>?;
 
-            String icon = '🌱';
             VoidCallback? onTap;
 
-            if (type == 'request_received' || type == 'chat_request') {
-              icon = '⏳';
-            } else if (type == 'request_accepted') {
-              icon = '🎉';
+            if (type == 'request_accepted') {
               final requestId = customData?['requestId'] as String?;
               if (requestId != null) {
                 onTap = () {
@@ -70,7 +67,6 @@ class NotificationsDrawer extends StatelessWidget {
                 };
               }
             } else if (type == 'new_message') {
-              icon = '💬';
               final chatId = customData?['chatId'] as String?;
               if (chatId != null) {
                 onTap = () {
@@ -84,16 +80,10 @@ class NotificationsDrawer extends StatelessWidget {
                   );
                 };
               }
-            } else if (type == 'whisper') {
-              icon = '🌸';
-            } else if (type == 'habit') {
-              icon = '💜';
-            } else if (type == 'chatbot') {
-              icon = '🕊️';
             }
 
             liveNotifications.add({
-              'icon': icon,
+              'type': type,
               'title': title,
               'body': body,
               'time': _formatTimeAgo(createdAt),
@@ -108,7 +98,7 @@ class NotificationsDrawer extends StatelessWidget {
           ...liveNotifications,
           if (liveNotifications.isEmpty) ...[
             {
-              'icon': '🌸',
+              'type': 'whisper',
               'title': 'Mira sent a gentle check-in',
               'body': 'Thinking of you today.',
               'time': '2m ago',
@@ -116,7 +106,7 @@ class NotificationsDrawer extends StatelessWidget {
               'onTap': null,
             },
             {
-              'icon': '💜',
+              'type': 'habit',
               'title': 'Your post in Anxiety Garden has 12 hugs',
               'body': 'Your sharing has touched others.',
               'time': '1h ago',
@@ -124,7 +114,7 @@ class NotificationsDrawer extends StatelessWidget {
               'onTap': null,
             },
             {
-              'icon': '🌱',
+              'type': 'general',
               'title': 'You\'ve journaled 3 days in a row',
               'body': 'Keep up the beautiful momentum.',
               'time': '4h ago',
@@ -141,7 +131,7 @@ class NotificationsDrawer extends StatelessWidget {
 
   Widget _buildDrawerContent(BuildContext context, List<Map<String, dynamic>> notifications) {
     return Drawer(
-      backgroundColor: const Color(0xFFFBF8F5), // Soft off-white to match theme
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(35),
@@ -191,7 +181,7 @@ class NotificationsDrawer extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final notification = notifications[index];
                     return _buildNotificationCard(
-                      icon: notification['icon'] as String,
+                      type: notification['type'] as String,
                       title: notification['title'] as String,
                       body: notification['body'] as String? ?? '',
                       time: notification['time'] as String,
@@ -209,7 +199,7 @@ class NotificationsDrawer extends StatelessWidget {
   }
 
   Widget _buildNotificationCard({
-    required String icon,
+    required String type,
     required String title,
     required String body,
     required String time,
@@ -238,11 +228,8 @@ class NotificationsDrawer extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  icon,
-                  style: const TextStyle(fontSize: 24),
-                ),
-                const SizedBox(width: 16),
+                NotificationStyle.iconBadge(type, fontSize: 22),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +248,7 @@ class NotificationsDrawer extends StatelessWidget {
                           body,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: Colors.grey[700],
+                            color: AppColors.primaryVeryDark.withAlpha(160),
                           ),
                         ),
                       ],
@@ -270,7 +257,7 @@ class NotificationsDrawer extends StatelessWidget {
                         time,
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: Colors.grey[400],
+                          color: AppColors.primaryVeryDark.withAlpha(110),
                         ),
                       ),
                     ],
@@ -283,7 +270,7 @@ class NotificationsDrawer extends StatelessWidget {
                     height: 8,
                     margin: const EdgeInsets.only(top: 6),
                     decoration: const BoxDecoration(
-                      color: Color(0xFF9070B6), // Purple dot
+                      color: AppColors.secondary,
                       shape: BoxShape.circle,
                     ),
                   ),

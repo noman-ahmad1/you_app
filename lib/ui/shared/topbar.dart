@@ -54,7 +54,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
             // ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
             child: isCenterTitle
                 ? _buildCenterTitleLayout(width)
                 : _buildLeftTitleLayout(width),

@@ -10,6 +10,8 @@ class AppColors {
   static const Color secondaryVeryLight = Color(0xFFCDBABE);
   static const Color error = Color(0xFFB00020);
   static const Color background = Color.fromARGB(255, 240, 240, 240);
+  // Soft off-white surface for cards, notification banners & drawers.
+  static const Color surface = Color(0xFFFBF8F5);
   static const Color darkBackground = Color(0xFF121212);
   static const Color backgroundGradient = Color(0xFFCDBABE);
   static const Color peachDark = Color(0xFF7C5C69);

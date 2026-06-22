@@ -6,6 +6,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/community_service.dart';
+import 'package:you_app/services/escalation_service.dart';
 import 'package:you_app/services/moderation_flag_service.dart';
 import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/models/community_post.dart';
@@ -28,7 +29,22 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
 
   ThreadRepliesViewModel({
     required this.post,
-  });
+  }) {
+    _communitySub = locator<CommunityService>()
+        .getCommunity(post.communityId)
+        .listen((community) {
+      final locked = community?['isLocked'] == true;
+      if (locked != _isLocked) {
+        _isLocked = locked;
+        notifyListeners();
+      }
+    });
+  }
+
+  // --- Lock state (admin can flip communities to read-only) ---
+  StreamSubscription<Map<String, dynamic>?>? _communitySub;
+  bool _isLocked = false;
+  bool get isLocked => _isLocked;
 
   bool get isMember {
     final user = _authService.currentUser;
@@ -85,6 +101,14 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
     final text = replyController.text.trim();
     if (text.isEmpty) return;
 
+    if (_isLocked) {
+      _snackbarService.showSnackbar(
+        title: 'Read-only',
+        message: 'This community is read-only. New replies are disabled.',
+      );
+      return;
+    }
+
     // --- Moderation gate ---
     final moderation = locator<ModerationService>()
         .inspect(text, context: ModerationContext.community);
@@ -103,6 +127,14 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
         text: text,
         result: moderation,
       );
+      if (moderation.categories.contains(ModerationCategory.violence)) {
+        locator<EscalationService>().escalateModeration(
+          userId: currentUserId,
+          userName: currentUserName,
+          reason:
+              'Blocked phrase: "${moderation.matchedTerms.isNotEmpty ? moderation.matchedTerms.first : 'violence'}"',
+        );
+      }
       return; // keep the text so the author can edit it
     }
     if (moderation.action == ModerationAction.maskSend) {
@@ -118,12 +150,6 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
     notifyListeners();
 
     try {
-      final words = text.split(' ');
-      List<String> mentionedUsernames = words
-          .where((w) => w.startsWith('@') && w.length > 1)
-          .map((w) => w.substring(1))
-          .toList();
-
       await locator<CommunityService>().createReply(
         postId: post.id,
         content: text,
@@ -178,6 +204,7 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
 
   @override
   void dispose() {
+    _communitySub?.cancel();
     replyController.dispose();
     super.dispose();
   }

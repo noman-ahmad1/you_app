@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -130,20 +129,34 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                           : viewModel.activeChats.isEmpty
                               ? Center(
                                   child: Column(
-                                  children: [
-                                    Lottie.asset(
-                                      AppConstants.empty,
-                                      decoder: customDecoder,
-                                      width: 200,
-                                      height: 200,
-                                    ),
-                                    Text(
-                                      "No active chats.",
-                                      style:
-                                          GoogleFonts.crimsonPro(fontSize: 20),
-                                    ),
-                                  ],
-                                ))
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Lottie.asset(
+                                        AppConstants.empty,
+                                        decoder: customDecoder,
+                                        width: 180,
+                                        height: 180,
+                                      ),
+                                      Text(
+                                        "No active chats yet",
+                                        style: GoogleFonts.crimsonPro(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primaryVeryDark,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Accepted chats will appear here.",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 13,
+                                          color: AppColors.primaryVeryDark
+                                              .withAlpha(150),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
                               : ListView.builder(
                                   // ✅ Use activeChats list
                                   itemCount: viewModel.activeChats.length,
@@ -201,87 +214,81 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
 
   Widget _buildAvailabilityCard(
       double width, double height, VolunteerHomeViewModel viewModel) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(25),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
-        child: Container(
-          width: width,
-          padding: EdgeInsets.all(width * 0.05),
-          decoration: BoxDecoration(
-            color: viewModel.isAvailable
-                ? const Color(0xFFE8F5E9).withAlpha(150) // Light green
-                : AppColors.secondaryVeryLight.withAlpha(90),
-            borderRadius: BorderRadius.circular(25),
-            border: Border.all(
-                color:
-                    viewModel.isAvailable ? Colors.green : AppColors.secondary,
-                width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(15),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: viewModel.isAvailable
-                      ? Colors.green.withAlpha(50)
-                      : AppColors.secondary.withAlpha(50),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  viewModel.isAvailable ? Icons.sensors : Icons.sensors_off,
-                  color: viewModel.isAvailable
-                      ? Colors.green[700]
-                      : AppColors.secondary,
-                  size: 28,
-                ),
-              ),
-              SizedBox(width: width * 0.04),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Availability Status",
-                      style: GoogleFonts.crimsonPro(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryVeryDark,
-                      ),
-                    ),
-                    Text(
-                      viewModel.isAvailable
-                          ? "Online - Ready for chats"
-                          : "Offline - Away",
-                      style: GoogleFonts.crimsonPro(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: viewModel.isAvailable
-                            ? Colors.green[800]
-                            : AppColors.secondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: viewModel.isAvailable,
-                activeThumbColor: Colors.green,
-                inactiveThumbColor: AppColors.secondary,
-                onChanged: (val) {
-                  viewModel.toggleAvailability(val);
-                },
-              ),
-            ],
-          ),
+    final online = viewModel.isAvailable;
+    final Color accent = online ? Colors.green : AppColors.secondary;
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: online
+              ? [
+                  Colors.white.withAlpha(240),
+                  const Color(0xFF6FCF77).withAlpha(70),
+                ]
+              : [
+                  Colors.white.withAlpha(240),
+                  AppColors.secondaryVeryLight.withAlpha(85),
+                ],
         ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: accent.withAlpha(70), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryVeryDark.withAlpha(18),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration:
+                BoxDecoration(color: accent.withAlpha(38), shape: BoxShape.circle),
+            child: Icon(
+              online ? Icons.sensors_rounded : Icons.sensors_off_rounded,
+              color: accent,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Availability Status",
+                  style: GoogleFonts.crimsonPro(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryVeryDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  online ? "Online · Ready for chats" : "Offline · Away",
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: accent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: online,
+            activeThumbColor: Colors.green,
+            inactiveThumbColor: AppColors.secondary,
+            onChanged: (val) {
+              viewModel.toggleAvailability(val);
+            },
+          ),
+        ],
       ),
     );
   }

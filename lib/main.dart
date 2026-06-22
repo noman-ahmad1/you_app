@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/services/push_notification_service.dart';
 import 'package:you_app/app/app.bottomsheets.dart';
 import 'package:you_app/app/app.dialogs.dart';
@@ -56,6 +58,25 @@ Future<void> main() async {
     } catch (e) {
       debugPrint('Error initializing PushNotificationService: $e');
     }
+
+    // Live-listen to the remote moderation config so admin edits (banned
+    // keywords / enabled toggle) apply without an app update. The first
+    // snapshot applies immediately; failures are non-fatal (defaults stand).
+    FirebaseFirestore.instance
+        .collection('app_settings')
+        .doc('moderation_config')
+        .snapshots()
+        .listen((doc) {
+      final data = doc.data();
+      locator<ModerationService>().applyRemoteConfig(
+        enabled: data?['enabled'] as bool?,
+        bannedKeywords: (data?['bannedKeywords'] as List?)
+            ?.map((e) => e.toString())
+            .toList(),
+      );
+    }, onError: (e) {
+      debugPrint('Moderation config listener error: $e');
+    });
 
     setupDialogUi();
     setupBottomSheetUi();

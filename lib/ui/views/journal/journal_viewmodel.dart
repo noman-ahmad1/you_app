@@ -6,6 +6,7 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/journal_model.dart'; // Make sure this is your JournalEntry model
+import 'package:you_app/services/app_content_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/user_service.dart';
@@ -66,6 +67,15 @@ class JournalViewModel extends BaseViewModel {
       AppLog.error('JournalViewModel.getJournalEntries', error);
     });
   }
+
+  /// The admin-scheduled prompt for today, or null when none is active.
+  /// The view falls back to [defaultPrompt] so a prompt is always shown.
+  Stream<String?> get promptOfTheDay =>
+      locator<AppContentService>().promptOfTheDay();
+
+  /// Gentle fallback used when there's no active prompt for today.
+  String get defaultPrompt =>
+      'What is one thing that brought you peace today?';
 
   /// Changes the active tab in the UI.
   void setTab(int index) {

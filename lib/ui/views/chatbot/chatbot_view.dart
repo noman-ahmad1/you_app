@@ -1,9 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
-import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -52,48 +49,28 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
                       reverse: true,
                       // Bottom padding leaves room for the floating input.
                       padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
-                      itemCount: viewModel.messages.length,
+                      // When Dodo is replying, show a typing bubble as the
+                      // bottom-most item (index 0 in a reversed list) so it sits
+                      // in-flow with messages and never overlaps the reply.
+                      itemCount:
+                          viewModel.messages.length + (viewModel.isBusy ? 1 : 0),
                       itemBuilder: (context, index) {
+                        if (viewModel.isBusy && index == 0) {
+                          return const _TypingBubble();
+                        }
+                        final msgIndex =
+                            viewModel.isBusy ? index - 1 : index;
                         final msg = viewModel
-                            .messages[viewModel.messages.length - 1 - index];
+                            .messages[viewModel.messages.length - 1 - msgIndex];
                         final isMe = msg['isMe'] == 'true';
                         return _MessageBubble(
                             text: msg['text'] ?? '', isMe: isMe);
                       },
                     ),
                   ),
-                  Align(
+                  const Align(
                     alignment: Alignment.bottomCenter,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Loading Indicator for Dodo thinking
-                        if (viewModel.isBusy)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 0, 8, 8),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Dodo is typing...",
-                                  style: GoogleFonts.crimsonPro(
-                                    color: AppColors.primaryVeryDark,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                                const CustomLottieLoader(
-                                  width: 70,
-                                  height: 70,
-                                  loaderWidth: 200,
-                                  loaderHeight: 200,
-                                )
-                              ],
-                            ),
-                          ),
-                        // Input field identical to ChatView
-                        const _MessageInputField(),
-                      ],
-                    ),
+                    child: _MessageInputField(),
                   ),
                 ],
               ),
@@ -109,7 +86,7 @@ class ChatbotView extends StackedView<ChatbotViewModel> {
 }
 
 class _MessageInputField extends ViewModelWidget<ChatbotViewModel> {
-  const _MessageInputField({super.key});
+  const _MessageInputField();
 
   @override
   Widget build(BuildContext context, ChatbotViewModel viewModel) {
@@ -210,26 +187,40 @@ class _MessageBubble extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           margin: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
-            color: isMe
-                ? AppColors.secondaryVeryLight.withAlpha(75)
-                : AppColors.primary.withAlpha(75),
-            border: Border.all(
-              color: isMe ? AppColors.secondary : AppColors.primaryVeryDark,
-              width: 2,
-            ),
+            gradient: isMe
+                ? const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.secondary, AppColors.secondaryLight],
+                  )
+                : LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withAlpha(235),
+                      AppColors.lightPink.withAlpha(160),
+                    ],
+                  ),
+            border: isMe
+                ? null
+                : Border.all(
+                    color: AppColors.secondaryVeryLight.withAlpha(120),
+                    width: 1),
             borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(20),
-              topRight: const Radius.circular(20),
+              topLeft: const Radius.circular(22),
+              topRight: const Radius.circular(22),
               bottomLeft:
-                  isMe ? const Radius.circular(20) : const Radius.circular(5),
+                  isMe ? const Radius.circular(22) : const Radius.circular(6),
               bottomRight:
-                  isMe ? const Radius.circular(5) : const Radius.circular(20),
+                  isMe ? const Radius.circular(6) : const Radius.circular(22),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(25),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: isMe
+                    ? AppColors.secondary.withAlpha(64)
+                    : Colors.black.withAlpha(18),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
@@ -238,8 +229,64 @@ class _MessageBubble extends StatelessWidget {
             style: GoogleFonts.crimsonPro(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: isMe ? AppColors.secondary : AppColors.primaryVeryDark,
+              color: isMe ? Colors.white : AppColors.primaryVeryDark,
             ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// In-list "Dodo is typing…" bubble, styled like a Dodo (other) message so it
+/// flows with the conversation and is replaced cleanly by the reply.
+class _TypingBubble extends StatelessWidget {
+  const _TypingBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withAlpha(235),
+                AppColors.lightPink.withAlpha(160),
+              ],
+            ),
+            border: Border.all(
+                color: AppColors.secondaryVeryLight.withAlpha(120), width: 1),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(22),
+              topRight: Radius.circular(22),
+              bottomLeft: Radius.circular(6),
+              bottomRight: Radius.circular(22),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Dodo is typing',
+                style: GoogleFonts.crimsonPro(
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.primaryVeryDark.withAlpha(190),
+                ),
+              ),
+              const CustomLottieLoader(
+                width: 34,
+                height: 34,
+                loaderWidth: 120,
+                loaderHeight: 120,
+              ),
+            ],
           ),
         ),
       ],

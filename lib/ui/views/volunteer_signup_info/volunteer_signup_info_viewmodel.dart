@@ -9,17 +9,13 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/validators.dart';
 // Import the VolunteerInfo model
 import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/storage_service.dart';
 // import 'package:you_app/models/volunteer_info.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
-import 'package:you_app/services/mood_service.dart';
-import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_service.dart';
-import 'package:you_app/services/chat_request_service.dart';
-import 'package:you_app/services/community_service.dart';
 import 'package:you_app/ui/common/app_constants.dart'; // UNCOMMENTED
 import 'package:you_app/utils/image_compressor_helper.dart';
 
@@ -52,11 +48,12 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
     'Other',
     'Prefer not to say'
   ];
+  // Eligibility: only final-year Bachelor's or higher may volunteer.
   final List<String> _levels = [
-    'Undergraduate Student',
-    'Graduate Student',
+    "Final-Year Bachelor's Student",
+    "Master's Student",
     'PhD Candidate',
-    'Post Doc'
+    'Post-Doctorate',
   ];
   final List<String> _categories = AppConstants.volunteerTags;
 
@@ -122,7 +119,12 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   }
 
   void nextPage() {
-    // NOTE: This check should include validation logic before moving pages
+    // Validate the current step before advancing; show a dialog if incomplete.
+    final error = _errorForStep(_currentPage);
+    if (error != null) {
+      _showError('Incomplete step', error);
+      return;
+    }
     if (_currentPage < 2) {
       _currentPage++;
       notifyListeners();
@@ -138,6 +140,67 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
 
   bool get isFirstPage => _currentPage == 0;
   bool get isLastPage => _currentPage == 2;
+
+  /// Returns the first validation problem on [page], or null if the step is OK.
+  String? _errorForStep(int page) {
+    switch (page) {
+      case 0: // Personal
+        if (_selectedProfileImage == null) {
+          return 'Please upload a profile photo.';
+        }
+        if (firstNameController.text.trim().isEmpty) {
+          return 'Please enter your first name.';
+        }
+        if (secondNameController.text.trim().isEmpty) {
+          return 'Please enter your last name.';
+        }
+        if (_selectedDate == null || dateOfBirthController.text.trim().isEmpty) {
+          return 'Please select your date of birth.';
+        }
+        if (_selectedGender == null) {
+          return 'Please select your gender.';
+        }
+        if (_selectedIdCardImage == null) {
+          return 'Please upload the front of your Government ID.';
+        }
+        if (_selectedIdCardBackImage == null) {
+          return 'Please upload the back of your Government ID.';
+        }
+        return null;
+      case 1: // Academic
+        if (_selectedLevel == null) {
+          return 'Please select your current level of study.';
+        }
+        if (institutionController.text.trim().isEmpty) {
+          return 'Please enter your institution name.';
+        }
+        final yearError = Validators.graduationYear(graduationYearController.text);
+        if (yearError != null) return yearError;
+        if (_selectedTags.isEmpty) {
+          return 'Please select at least one specialization tag.';
+        }
+        if (_selectedStudentIdImage == null) {
+          return 'Please upload the front of your Student ID.';
+        }
+        if (_selectedStudentIdBackImage == null) {
+          return 'Please upload the back of your Student ID.';
+        }
+        return null;
+      case 2: // Agreement
+        if (!_agreementAccepted) {
+          return 'Please read and accept the volunteer agreement to continue.';
+        }
+        return null;
+    }
+    return null;
+  }
+
+  /// Sets the inline error and shows an explanatory dialog.
+  void _showError(String title, String message) {
+    _validationError = message;
+    notifyListeners();
+    _dialogService.showDialog(title: title, description: message);
+  }
 
   Future<void> selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -544,49 +607,15 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
     _validationError = null;
     notifyListeners();
 
-    if (_selectedProfileImage == null) {
-      _validationError = 'Please upload a Profile Photo.';
-      notifyListeners();
-      return;
-    }
-
-    if (_selectedIdCardImage == null || _selectedIdCardBackImage == null) {
-      _validationError =
-          'Please upload both Front and Back of your Government ID.';
-      notifyListeners();
-      return;
-    }
-
-    if (_selectedStudentIdImage == null ||
-        _selectedStudentIdBackImage == null) {
-      _validationError =
-          'Please upload both Front and Back of your Student ID.';
-      notifyListeners();
-      return;
-    }
-
-    if (firstNameController.text.isEmpty ||
-        secondNameController.text.isEmpty ||
-        dateOfBirthController.text.isEmpty ||
-        _selectedGender == null) {
-      _validationError = 'All personal fields must be completed.';
-      notifyListeners();
-      return;
-    }
-
-    if (institutionController.text.isEmpty ||
-        graduationYearController.text.isEmpty ||
-        _selectedLevel == null ||
-        _selectedTags.isEmpty) {
-      _validationError = 'All academic fields must be completed.';
-      notifyListeners();
-      return;
-    }
-
-    if (_currentPage != 2 || !_agreementAccepted) {
-      _validationError = 'Please complete all steps and accept the agreement.';
-      notifyListeners();
-      return;
+    // Re-validate every step; on the first problem, jump to that step and
+    // show a dialog so the user knows exactly what to fix.
+    for (var page = 0; page <= 2; page++) {
+      final error = _errorForStep(page);
+      if (error != null) {
+        _currentPage = page;
+        _showError('Incomplete step', error);
+        return;
+      }
     }
 
     setBusy(true);

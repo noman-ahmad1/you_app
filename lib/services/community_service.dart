@@ -26,6 +26,20 @@ class CommunityService with FirestoreServiceMixin {
     });
   }
 
+  // 1b. Stream a single community document (for live fields like isLocked).
+  Stream<Map<String, dynamic>?> getCommunity(String communityId) {
+    return db
+        .collection('communities')
+        .doc(communityId)
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) return null;
+      final data = doc.data()!;
+      data['id'] = doc.id;
+      return data;
+    });
+  }
+
   // 2. Stream top-level posts for a specific community.
   // [limit] grows as the user loads more, so the result is always a superset
   // of the previous page (no flicker / reordering of already-shown posts).

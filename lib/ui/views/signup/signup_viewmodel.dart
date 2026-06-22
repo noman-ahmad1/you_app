@@ -1,10 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/ui/common/validators.dart';
 
 class SignupViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
@@ -20,32 +20,56 @@ class SignupViewModel extends BaseViewModel {
   String? _validationError;
   String? get validationError => _validationError;
 
+  /// Sets the inline error and shows an explanatory dialog.
+  void _fail(String title, String message) {
+    _validationError = message;
+    notifyListeners();
+    _dialogService.showDialog(title: title, description: message);
+  }
+
   void signUp() async {
     // 1. Reset local errors
     _validationError = null;
     notifyListeners();
 
-    // 2. Client-Side Validation
-    if (firstNameController.text.isEmpty ||
-        secondNameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        confirmPasswordController.text.isEmpty) {
-      _validationError = 'All fields must be filled out.';
-      notifyListeners();
+    final firstName = firstNameController.text.trim();
+    final lastName = secondNameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final confirm = confirmPasswordController.text;
+
+    // 2. Client-Side Validation (each failure shows a specific dialog)
+    if (firstName.isEmpty ||
+        lastName.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirm.isEmpty) {
+      _fail('Missing information', 'Please fill out all fields to continue.');
       return;
     }
-
-    if (passwordController.text != confirmPasswordController.text) {
-      _validationError = 'Passwords do not match.';
-      notifyListeners();
+    final firstNameError = Validators.personName(firstName, 'First name');
+    if (firstNameError != null) {
+      _fail('Invalid name', firstNameError);
       return;
     }
-
-    // Check for a minimum password length if not handled by Firebase error
-    if (passwordController.text.length < 6) {
-      _validationError = 'Password must be at least 6 characters.';
-      notifyListeners();
+    final lastNameError = Validators.personName(lastName, 'Last name');
+    if (lastNameError != null) {
+      _fail('Invalid name', lastNameError);
+      return;
+    }
+    final emailError = Validators.email(email);
+    if (emailError != null) {
+      _fail('Invalid email', emailError);
+      return;
+    }
+    final passwordError = Validators.password(password);
+    if (passwordError != null) {
+      _fail('Weak password', passwordError);
+      return;
+    }
+    if (password != confirm) {
+      _fail("Passwords don't match",
+          'Your password and confirmation must be identical.');
       return;
     }
 

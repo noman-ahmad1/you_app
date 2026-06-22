@@ -69,8 +69,26 @@ class ChatView extends StackedView<ChatViewModel> {
             onLeadingPressed: () {
               viewModel.back();
             },
-            title: '${viewModel.volunteerName}',
+            title: viewModel.volunteerName.trim().split(' ').first,
             trailingActions: [
+              if (viewModel.isCurrentUserVolunteer)
+                InkWell(
+                  onTap: () {
+                    viewModel.escalate();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.red.withAlpha(80)),
+                    ),
+                    child: const Icon(
+                      Icons.warning_amber_rounded,
+                      size: 24,
+                      color: AppColors.red,
+                    ),
+                  ),
+                ),
               InkWell(
                 onTap: () {
                   viewModel.endChat();
@@ -260,26 +278,38 @@ class _MessageBubble extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           margin: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
-            color: isMe
-                ? AppColors.secondaryVeryLight.withAlpha(75)
-                : AppColors.lightPurple.withAlpha(75),
-            border: Border.all(
-              color: isMe ? AppColors.secondary : AppColors.lightPurple,
-              width: 2,
-            ),
+            gradient: isMe
+                ? const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.secondary, AppColors.secondaryLight],
+                  )
+                : LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withAlpha(235),
+                      AppColors.lightPurple.withAlpha(150),
+                    ],
+                  ),
+            border: isMe
+                ? null
+                : Border.all(color: AppColors.primary.withAlpha(90), width: 1),
             borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(20),
-              topRight: const Radius.circular(20),
+              topLeft: const Radius.circular(22),
+              topRight: const Radius.circular(22),
               bottomLeft:
-                  isMe ? const Radius.circular(20) : const Radius.circular(5),
+                  isMe ? const Radius.circular(22) : const Radius.circular(6),
               bottomRight:
-                  isMe ? const Radius.circular(5) : const Radius.circular(20),
+                  isMe ? const Radius.circular(6) : const Radius.circular(22),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(25),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: isMe
+                    ? AppColors.secondary.withAlpha(64)
+                    : Colors.black.withAlpha(18),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
@@ -293,7 +323,7 @@ class _MessageBubble extends StatelessWidget {
                 style: GoogleFonts.crimsonPro(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: isMe ? AppColors.secondary : AppColors.lightPurple,
+                  color: isMe ? Colors.white : AppColors.primaryVeryDark,
                 ),
               ),
               if (wasMasked) ...[
@@ -303,8 +333,9 @@ class _MessageBubble extends StatelessWidget {
                   style: GoogleFonts.crimsonPro(
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
-                    color: (isMe ? AppColors.secondary : AppColors.lightPurple)
-                        .withAlpha(160),
+                    color: isMe
+                        ? Colors.white.withAlpha(200)
+                        : AppColors.primaryVeryDark.withAlpha(160),
                   ),
                 ),
               ],

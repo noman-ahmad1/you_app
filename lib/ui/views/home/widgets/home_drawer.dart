@@ -93,7 +93,9 @@ class HomeDrawer extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '7-DAY STREAK 🔥',
+                      viewModel.moodStreak > 0
+                          ? '${viewModel.moodStreak}-DAY STREAK 🔥'
+                          : 'START YOUR STREAK 🌱',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -103,7 +105,9 @@ class HomeDrawer extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "You've shown up for yourself this week.",
+                      viewModel.moodStreak > 0
+                          ? "You've shown up for yourself ${viewModel.moodStreak == 1 ? 'today' : 'for ${viewModel.moodStreak} days'}."
+                          : 'Log your mood today to begin your streak.',
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         height: 1.4,

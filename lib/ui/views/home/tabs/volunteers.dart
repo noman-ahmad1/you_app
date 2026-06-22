@@ -210,8 +210,8 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.secondaryVeryLight.withAlpha(50),
-                    border: Border.all(
-                        color: AppColors.secondaryVeryLight, width: 2),
+                    // border: Border.all(
+                    //     color: AppColors.secondaryVeryLight, width: 2),
                     borderRadius: BorderRadius.circular(50),
                     boxShadow: [
                       // BoxShadow(
@@ -229,8 +229,7 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                       style: TextStyle(fontSize: 22),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          AppColors.secondaryVeryLight.withAlpha(100),
+                      backgroundColor: AppColors.secondaryVeryLight,
                       foregroundColor: AppColors.secondary,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 12),

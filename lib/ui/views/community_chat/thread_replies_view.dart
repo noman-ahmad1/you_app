@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -7,13 +6,13 @@ import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/views/community_chat/community_card_widgets.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:you_app/models/thread_reply.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'thread_replies_viewmodel.dart';
-import 'package:you_app/ui/shared/lottie_like_button.dart';
 import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
@@ -115,7 +114,9 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                   ),
                   Align(
                     alignment: Alignment.bottomCenter,
-                    child: viewModel.isMember
+                    child: viewModel.isLocked
+                        ? const _LockedBanner()
+                        : viewModel.isMember
                         ? const _ReplyComposer()
                         : SafeArea(
                             child: Padding(
@@ -255,6 +256,47 @@ class _ReplyComposer extends ViewModelWidget<ThreadRepliesViewModel> {
   }
 }
 
+class _LockedBanner extends StatelessWidget {
+  const _LockedBanner({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          decoration: BoxDecoration(
+            color: AppColors.secondaryVeryLight.withAlpha(240),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.secondary.withAlpha(60)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_outline,
+                  size: 20, color: AppColors.secondary),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  'This community is read-only',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.crimsonPro(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.secondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _OriginalPostCard extends StatelessWidget {
   final CommunityPost post;
   final bool isLiked;
@@ -270,55 +312,69 @@ class _OriginalPostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeString = timeago.format(post.createdAt);
 
+    final initial = post.authorUsername.isNotEmpty
+        ? post.authorUsername[0].toUpperCase()
+        : '?';
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
       decoration: BoxDecoration(
-        color: AppColors.background.withAlpha(200),
-        borderRadius: BorderRadius.circular(20),
-        border: Border(
-          bottom: BorderSide(
-              color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withAlpha(245),
+            AppColors.secondaryVeryLight.withAlpha(85),
+          ],
         ),
+        border:
+            Border.all(color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryVeryDark.withAlpha(25),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: AppColors.secondary.withAlpha(50),
-                child: Text(
-                  post.authorUsername.isNotEmpty
-                      ? post.authorUsername[0].toUpperCase()
-                      : '?',
-                  style: GoogleFonts.crimsonPro(
-                    color: AppColors.secondary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
+              GradientAvatar(initial: initial, size: 46),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      post.authorUsername,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.crimsonPro(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryVeryDark,
+                      ),
+                    ),
+                    Text(
+                      '@${post.authorUsername.toLowerCase().replaceAll(' ', '')}',
+                      style: GoogleFonts.crimsonPro(
+                        fontSize: 13.5,
+                        color: AppColors.primaryVeryDark.withAlpha(150),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    post.authorUsername,
-                    style: GoogleFonts.crimsonPro(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryVeryDark,
-                    ),
-                  ),
-                  Text(
-                    '@${post.authorUsername.toLowerCase().replaceAll(' ', '')}',
-                    style: GoogleFonts.crimsonPro(
-                      fontSize: 14,
-                      color: AppColors.primaryVeryDark.withAlpha(150),
-                    ),
-                  ),
-                ],
+              Text(
+                timeString,
+                style: GoogleFonts.crimsonPro(
+                  fontSize: 12.5,
+                  color: AppColors.primaryVeryDark.withAlpha(130),
+                ),
               ),
             ],
           ),
@@ -326,67 +382,25 @@ class _OriginalPostCard extends StatelessWidget {
           Text(
             locator<ModerationService>().maskPii(post.content),
             style: GoogleFonts.crimsonPro(
-              fontSize: 18,
+              fontSize: 17,
               color: AppColors.primaryVeryDark,
-              height: 1.4,
+              height: 1.5,
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            timeString,
-            style: GoogleFonts.crimsonPro(
-              fontSize: 14,
-              color: AppColors.primaryVeryDark.withAlpha(150),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Divider(color: AppColors.primaryVeryDark.withAlpha(20), height: 1),
+          Divider(color: AppColors.primaryVeryDark.withAlpha(18), height: 1),
           const SizedBox(height: 12),
           Row(
             children: [
-              Image(
-                  image: AssetImage(AppConstants.reply),
-                  width: 20,
-                  color: AppColors.primaryVeryDark.withAlpha(150)),
-              const SizedBox(width: 6),
-              Text(
-                '${post.replyCount}',
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryVeryDark,
-                ),
+              StatChip(
+                iconAsset: AppConstants.reply,
+                label: '${post.replyCount}',
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Replies',
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 15,
-                  color: AppColors.primaryVeryDark.withAlpha(150),
-                ),
-              ),
-              const SizedBox(width: 24),
-              LottieLikeButton(
+              const SizedBox(width: 10),
+              LikeChip(
                 isLiked: isLiked,
-                onTap: onLike,
-                size: 32,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${post.likeCount}',
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryVeryDark,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Likes',
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 15,
-                  color: AppColors.primaryVeryDark.withAlpha(150),
-                ),
+                onLike: onLike,
+                count: post.likeCount,
               ),
             ],
           ),
@@ -413,35 +427,36 @@ class _ReplyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeString = timeago.format(reply.createdAt, locale: 'en_short');
 
+    final initial = reply.authorUsername.isNotEmpty
+        ? reply.authorUsername[0].toUpperCase()
+        : '?';
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: AppColors.background.withAlpha(150),
-        border: Border(
-          bottom: BorderSide(
-              color: AppColors.primaryVeryDark.withAlpha(15), width: 1),
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withAlpha(225),
+            AppColors.primaryLight.withAlpha(90),
+          ],
         ),
+        border:
+            Border.all(color: AppColors.primaryVeryDark.withAlpha(15), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryVeryDark.withAlpha(13),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: isMe
-                ? AppColors.secondary.withAlpha(50)
-                : AppColors.primaryVeryDark.withAlpha(50),
-            child: Text(
-              reply.authorUsername.isNotEmpty
-                  ? reply.authorUsername[0].toUpperCase()
-                  : '?',
-              style: GoogleFonts.crimsonPro(
-                color: isMe ? AppColors.secondary : AppColors.primaryVeryDark,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-          ),
+          GradientAvatar(initial: initial, isMe: isMe, size: 36),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -450,18 +465,30 @@ class _ReplyCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      reply.authorUsername,
-                      style: GoogleFonts.crimsonPro(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryVeryDark,
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              reply.authorUsername,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.crimsonPro(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryVeryDark,
+                              ),
+                            ),
+                          ),
+                          if (isMe) const YouChip(),
+                        ],
                       ),
                     ),
                     Text(
                       timeString,
                       style: GoogleFonts.crimsonPro(
-                        fontSize: 13,
+                        fontSize: 12.5,
                         color: AppColors.primaryVeryDark.withAlpha(130),
                       ),
                     ),
@@ -472,28 +499,18 @@ class _ReplyCard extends StatelessWidget {
                   locator<ModerationService>().maskPii(reply.content),
                   style: GoogleFonts.crimsonPro(
                     fontSize: 15,
-                    color: AppColors.primaryVeryDark.withAlpha(220),
-                    height: 1.3,
+                    color: AppColors.primaryVeryDark.withAlpha(230),
+                    height: 1.4,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    LottieLikeButton(
-                      isLiked: isLiked,
-                      onTap: onLike,
-                      size: 24, // smaller than post like button
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${reply.likeCount}',
-                      style: GoogleFonts.crimsonPro(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primaryVeryDark.withAlpha(120),
-                      ),
-                    ),
-                  ],
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: LikeChip(
+                    isLiked: isLiked,
+                    onLike: onLike,
+                    count: reply.likeCount,
+                  ),
                 ),
               ],
             ),

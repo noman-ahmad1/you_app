@@ -14,6 +14,7 @@ import 'package:stacked_services/src/snackbar/snackbar_service.dart';
 import 'package:stacked_shared/stacked_shared.dart';
 
 import '../services/analytics_service.dart';
+import '../services/app_content_service.dart';
 import '../services/auth_service.dart';
 import '../services/block_service.dart';
 import '../services/chat_request_service.dart';
@@ -21,6 +22,7 @@ import '../services/chat_service.dart';
 import '../services/chatbot_service.dart';
 import '../services/community_service.dart';
 import '../services/country_code_service.dart';
+import '../services/escalation_service.dart';
 import '../services/journal_service.dart';
 import '../services/moderation_flag_service.dart';
 import '../services/moderation_service.dart';
@@ -61,6 +63,8 @@ Future<void> setupLocator(
   locator.registerLazySingleton(() => AnalyticsService());
   locator.registerLazySingleton(() => ModerationService());
   locator.registerLazySingleton(() => ModerationFlagService());
+  locator.registerLazySingleton(() => EscalationService());
+  locator.registerLazySingleton(() => AppContentService());
   locator.registerLazySingleton(() => BlockService());
   locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }

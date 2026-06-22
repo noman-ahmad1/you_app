@@ -11,6 +11,7 @@ class CommunityCard extends StatelessWidget {
   final String assetPath;
   final String? coverPhotoUrl;
   final bool isJoined;
+  final bool isLocked;
   final VoidCallback onTap;
   final VoidCallback onJoin;
 
@@ -23,6 +24,7 @@ class CommunityCard extends StatelessWidget {
     required this.assetPath,
     this.coverPhotoUrl,
     this.isJoined = true,
+    this.isLocked = false,
     required this.onTap,
     required this.onJoin,
   });
@@ -89,13 +91,48 @@ class CommunityCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primaryVeryDark,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primaryVeryDark,
+                          ),
+                        ),
+                      ),
+                      if (isLocked) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondaryVeryLight.withAlpha(120),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.lock_outline,
+                                  size: 12, color: AppColors.secondary),
+                              const SizedBox(width: 3),
+                              Text(
+                                'Read-only',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.secondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -147,7 +184,13 @@ class CommunityCard extends StatelessWidget {
 
             // Right Action
             // const SizedBox(width: 5),
-            if (!isJoined)
+            if (isLocked)
+              Icon(
+                Icons.lock_outline,
+                color: Colors.grey[500],
+                size: 26,
+              )
+            else if (!isJoined)
               ElevatedButton(
                 onPressed: onJoin,
                 style: ElevatedButton.styleFrom(

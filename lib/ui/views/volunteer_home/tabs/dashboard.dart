@@ -1,15 +1,7 @@
-import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
-import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
-import 'package:you_app/app/app.dart';
-import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -22,7 +14,6 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final width = mediaQuery.size.width;
     final height = mediaQuery.size.height;
     return ViewModelBuilder<VolunteerHomeViewModel>.reactive(
       viewModelBuilder: () => VolunteerHomeViewModel(),
@@ -140,7 +131,7 @@ class DashboardScreen extends StatelessWidget {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _buildHeader(width, height, viewModel),
+                                  _buildHeader(viewModel),
                                   SizedBox(height: height * 0.03),
                                   Text(
                                     "Overview",
@@ -151,10 +142,9 @@ class DashboardScreen extends StatelessWidget {
                                     ),
                                   ),
                                   SizedBox(height: height * 0.02),
-                                  _buildStatsRow(width, height, viewModel),
+                                  _buildStatsRow(viewModel),
                                   SizedBox(height: height * 0.03),
-                                  _buildQuickActions(
-                                      context, width, height, viewModel),
+                                  _buildQuickActions(context, viewModel),
                                   const SizedBox(height: 120),
                                 ],
                               ),
@@ -175,71 +165,103 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // --- Shared modern card styling ---
+  BoxDecoration _cardDecoration() => BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withAlpha(240),
+            AppColors.secondaryVeryLight.withAlpha(70),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+            color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryVeryDark.withAlpha(18),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      );
+
+  Widget _iconChip(String icon, {Color color = AppColors.secondary}) =>
+      Container(
+        padding: const EdgeInsets.all(9),
+        decoration:
+            BoxDecoration(color: color.withAlpha(30), shape: BoxShape.circle),
+        child: Image.asset(icon, color: color, width: 22, height: 22),
+      );
+
   /// HEADER SECTION
-  Widget _buildHeader(
-      double width, double height, VolunteerHomeViewModel viewModel) {
+  Widget _buildHeader(VolunteerHomeViewModel viewModel) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            InkWell(
-              onTap: () => viewModel.navigateToVolunteerEditProfile(),
-              child: Container(
-                width: width * 0.18,
-                height: width * 0.18,
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryVeryLight.withAlpha(102),
-                  border: Border.all(color: AppColors.secondary, width: 2),
-                  shape: BoxShape.circle,
-                ),
-                child: ClipOval(
-                  child: viewModel.currentUserProfileUrl != null &&
-                          viewModel.currentUserProfileUrl!.isNotEmpty
-                      ? Image.network(viewModel.currentUserProfileUrl!,
-                          fit: BoxFit.cover)
-                      : Image.asset(
-                          viewModel.currentUser?.defaultAvatar ??
-                              AppConstants.avatarBinary,
-                          fit: BoxFit.cover),
-                ),
+        InkWell(
+          onTap: () => viewModel.navigateToVolunteerEditProfile(),
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.secondary, AppColors.secondaryLight],
               ),
             ),
-            SizedBox(width: width * 0.04),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Welcome, ${viewModel.currentUserName}",
-                  style: GoogleFonts.crimsonPro(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryVeryDark,
-                  ),
+            child: CircleAvatar(
+              radius: 32,
+              backgroundColor: AppColors.secondaryVeryLight,
+              backgroundImage: (viewModel.currentUserProfileUrl != null &&
+                      viewModel.currentUserProfileUrl!.isNotEmpty)
+                  ? NetworkImage(viewModel.currentUserProfileUrl!)
+                  : AssetImage(viewModel.currentUser?.defaultAvatar ??
+                      AppConstants.avatarBinary) as ImageProvider,
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Welcome back,",
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppColors.primaryVeryDark.withAlpha(150),
                 ),
-                Text(
-                  "Volunteer Listener",
-                  style: GoogleFonts.crimsonPro(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+              ),
+              Text(
+                viewModel.currentUserName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.crimsonPro(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryVeryDark,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withAlpha(28),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '🎧 Volunteer Listener',
+                  style: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.secondary,
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.secondaryVeryLight.withAlpha(102),
-            border: Border.all(color: AppColors.secondary, width: 2),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: Image.asset(AppConstants.delete,
-                color: Colors.red, height: 28, width: 28),
-            onPressed: viewModel.isBusy ? null : viewModel.deleteAccount,
-            tooltip: 'Delete Account',
+              ),
+            ],
           ),
         ),
       ],
@@ -247,77 +269,57 @@ class DashboardScreen extends StatelessWidget {
   }
 
   /// STATS SECTION
-  Widget _buildStatsRow(
-      double width, double height, VolunteerHomeViewModel viewModel) {
+  Widget _buildStatsRow(VolunteerHomeViewModel viewModel) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildStatCard(
-            "Pending Requests",
-            viewModel.pendingRequests.length.toString(),
-            AppConstants.pending,
-            width,
-            height),
-        _buildStatCard("Active Chats", viewModel.activeChats.length.toString(),
-            AppConstants.activeChat, width, height),
+        Expanded(
+          child: _buildStatCard(
+              "Pending Requests",
+              viewModel.pendingRequests.length.toString(),
+              AppConstants.pending),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: _buildStatCard("Active Chats",
+              viewModel.activeChats.length.toString(), AppConstants.activeChat),
+        ),
       ],
     );
   }
 
-  Widget _buildStatCard(
-      String title, String value, String icon, double width, double height) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(25),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
-        child: Container(
-          width: width * 0.42,
-          height: height * 0.14,
-          padding: EdgeInsets.all(width * 0.04),
-          decoration: BoxDecoration(
-            color: AppColors.secondaryVeryLight.withAlpha(90),
-            borderRadius: BorderRadius.circular(25),
-            border: Border.all(color: AppColors.secondary, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(25),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
+  Widget _buildStatCard(String title, String value, String icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _iconChip(icon),
+          const SizedBox(height: 14),
+          Text(
+            value,
+            style: GoogleFonts.crimsonPro(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primaryVeryDark,
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.asset(icon,
-                  color: AppColors.secondary, width: width * 0.08),
-              Spacer(),
-              Text(
-                value,
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryVeryDark,
-                ),
-              ),
-              Text(
-                title,
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.secondary,
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+              color: AppColors.primaryVeryDark.withAlpha(160),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   /// QUICK ACTIONS
-  Widget _buildQuickActions(BuildContext context, double width, double height,
-      VolunteerHomeViewModel viewModel) {
+  Widget _buildQuickActions(
+      BuildContext context, VolunteerHomeViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -329,104 +331,160 @@ class DashboardScreen extends StatelessWidget {
             color: AppColors.primaryVeryDark,
           ),
         ),
-        SizedBox(height: height * 0.02),
+        const SizedBox(height: 14),
+        _buildCertificationCard(viewModel),
+        const SizedBox(height: 14),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildActionButton("Edit Profile", AppConstants.setting, () {
-              viewModel.navigateToVolunteerEditProfile();
-            }, width, height),
-            _buildActionButton("Completed Chats", AppConstants.done, () {}, width, height),
+            Expanded(
+              child: _buildActionButton("Edit Profile", AppConstants.setting,
+                  viewModel.navigateToVolunteerEditProfile),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: _buildActionButton("Completed Chats", AppConstants.done,
+                  () => viewModel.showComingSoon('Completed Chats')),
+            ),
           ],
         ),
-        SizedBox(height: height * 0.02),
+        const SizedBox(height: 14),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // LOGOUT BUTTON: Calls the ViewModel's logout method
-            _buildActionButton(
-              "Log Out",
-              AppConstants.logout,
-              viewModel.isBusy ? () {} : viewModel.logout, // Disable when busy
-              width,
-              height,
+            Expanded(
+              child: _buildActionButton("Guidelines", AppConstants.write,
+                  viewModel.navigateToGuidelines),
             ),
-            _buildActionButton("Guidelines", AppConstants.write, () {}, width, height),
+            const SizedBox(width: 14),
+            Expanded(
+              child: _buildActionButton("Log Out", AppConstants.logout,
+                  viewModel.isBusy ? () {} : viewModel.logout),
+            ),
           ],
+        ),
+        const SizedBox(height: 14),
+        _buildActionButton(
+          "Delete Account",
+          AppConstants.delete,
+          viewModel.isBusy ? () {} : viewModel.deleteAccount,
+          danger: true,
+          fullWidth: true,
         ),
       ],
     );
   }
 
-  String _getFormattedDate() {
-    final now = DateTime.now();
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
-    ];
-    const weekdays = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday'
-    ];
-    return '${weekdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
+  /// Prominent gradient "Get Certified" card (feature in development).
+  Widget _buildCertificationCard(VolunteerHomeViewModel viewModel) {
+    return GestureDetector(
+      onTap: viewModel.getCertification,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.secondary, AppColors.secondaryLight],
+          ),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.secondary.withAlpha(85),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(45),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.workspace_premium_rounded,
+                  color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Get Certified',
+                    style: GoogleFonts.crimsonPro(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Earn your verified listener experience certificate',
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      color: Colors.white.withAlpha(215),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_rounded,
+                color: Colors.white, size: 20),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildActionButton(String title, String icon, VoidCallback onTap,
-      double width, double height) {
+      {bool danger = false, bool fullWidth = false}) {
+    final accent = danger ? AppColors.error : AppColors.secondary;
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
-          child: Container(
-            width: width * 0.42,
-            height: height * 0.12,
-            padding: EdgeInsets.all(width * 0.04),
-            decoration: BoxDecoration(
-              color: AppColors.secondaryVeryLight.withAlpha(90),
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: AppColors.secondary, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(icon,
-                    color: AppColors.secondary, width: width * 0.08),
-                SizedBox(height: height * 0.01),
-                Text(
-                  title,
-                  style: GoogleFonts.crimsonPro(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryVeryDark,
-                  ),
-                ),
-              ],
-            ),
+      child: Container(
+        width: fullWidth ? double.infinity : null,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withAlpha(240),
+              accent.withAlpha(danger ? 28 : 60),
+            ],
           ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryVeryDark.withAlpha(15),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment:
+              fullWidth ? MainAxisAlignment.center : MainAxisAlignment.start,
+          children: [
+            _iconChip(icon, color: accent),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: danger ? AppColors.error : AppColors.primaryVeryDark,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

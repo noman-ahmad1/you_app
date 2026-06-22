@@ -9,6 +9,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/chat_messaage_model.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/escalation_service.dart';
 import 'package:you_app/services/moderation_flag_service.dart';
 import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/services/user_service.dart';
@@ -170,6 +171,7 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
         text: textToSend,
         result: moderation,
       );
+      _maybeEscalateModeration(moderation);
       return; // keep the text in the field so the sender can edit it
     }
 
@@ -208,6 +210,18 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   }
 
   Future<void> deleteChat() async {
+    // Preserve evidence: never delete a chat a supervisor still needs to review.
+    if (_chatId != null &&
+        await locator<EscalationService>().hasUnresolvedEscalation(_chatId!)) {
+      await _dialogService.showDialog(
+        title: 'Cannot delete',
+        description:
+            'This chat has an active safety escalation and must stay available until a supervisor resolves it.',
+        buttonTitle: 'OK',
+      );
+      return;
+    }
+
     // 1. Show Confirmation Dialog FIRST
     final response = await _dialogService.showConfirmationDialog(
       title: 'Delete Chat',
@@ -287,6 +301,66 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
             description: 'Could not end chat. Please try again.');
       }
     }
+  }
+
+  /// Whether the current user is the volunteer in this chat (shows the
+  /// Emergency Escalate button).
+  bool get isCurrentUserVolunteer =>
+      _authenticationService.currentUser?.isVolunteer ?? false;
+
+  /// Volunteer-triggered emergency escalation: alerts an on-call supervisor and
+  /// keeps the chat open so the volunteer can continue supporting the user.
+  Future<void> escalate() async {
+    if (_chatId == null || currentUserId == null) return;
+
+    final response = await _dialogService.showConfirmationDialog(
+      title: 'Escalate to a supervisor?',
+      description:
+          'This alerts an on-call supervisor to review this conversation immediately. Use it if the user may be at risk of harm.',
+      confirmationTitle: 'Escalate',
+      cancelTitle: 'Cancel',
+    );
+    if (response?.confirmed != true) return;
+
+    final me = _authenticationService.currentUser;
+    try {
+      // The other participant (volunteerId/volunteerName params) is the user in
+      // crisis; the current user is the volunteer raising the escalation.
+      await locator<EscalationService>().escalateChat(
+        chatId: _chatId!,
+        userId: volunteerId,
+        userName: volunteerName,
+        volunteerId: currentUserId!,
+        volunteerName: me?.fullName ?? 'Volunteer',
+      );
+      await _dialogService.showDialog(
+        title: 'Supervisor alerted',
+        description:
+            'A supervisor has been alerted and will review this conversation. Please stay with the user.',
+        buttonTitle: 'OK',
+      );
+    } catch (_) {
+      await _dialogService.showDialog(
+        title: 'Could not escalate',
+        description:
+            'We couldn\'t alert a supervisor just now. Please try again.',
+        buttonTitle: 'OK',
+      );
+    }
+  }
+
+  /// Opens a `type:'moderation'` escalation for the highest-risk (violence)
+  /// blocks only, so the supervisor feed isn't flooded by every blocked word.
+  void _maybeEscalateModeration(ModerationResult moderation) {
+    if (!moderation.categories.contains(ModerationCategory.violence)) return;
+    final me = _authenticationService.currentUser;
+    locator<EscalationService>().escalateModeration(
+      userId: currentUserId!,
+      userName: me?.username ?? me?.fullName ?? 'Unknown',
+      chatId: _chatId,
+      reason:
+          'Blocked phrase: "${moderation.matchedTerms.isNotEmpty ? moderation.matchedTerms.first : 'violence'}"',
+    );
   }
 
   void back() {

@@ -203,6 +203,7 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                         AppConstants.lonliness,
                                     coverPhotoUrl: community['cover_photo'],
                                     isJoined: isJoined,
+                                    isLocked: community['isLocked'] == true,
                                     onJoin: () {
                                       viewModel.joinCommunity(communityId);
                                     },

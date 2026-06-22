@@ -7,6 +7,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/shared/notification_style.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_home_viewmodel.dart';
 
 class VolunteerNotificationsDrawer extends StatelessWidget {
@@ -57,17 +58,14 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
             final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
             final customData = data['data'] as Map<String, dynamic>?;
 
-            String icon = '🌱';
             VoidCallback? onTap;
 
             if (type == 'request_received' || type == 'chat_request') {
-              icon = '⏳';
               onTap = () {
                 Navigator.of(context).pop(); // Close drawer
                 viewModel.setTab(0); // Switch to pending requests tab
               };
             } else if (type == 'new_message') {
-              icon = '💬';
               final chatId = customData?['chatId'] as String?;
               if (chatId != null) {
                 onTap = () {
@@ -81,16 +79,10 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                   );
                 };
               }
-            } else if (type == 'whisper') {
-              icon = '🌸';
-            } else if (type == 'habit') {
-              icon = '💜';
-            } else if (type == 'chatbot') {
-              icon = '🕊️';
             }
 
             liveNotifications.add({
-              'icon': icon,
+              'type': type,
               'title': title,
               'body': body,
               'time': _formatTimeAgo(createdAt),
@@ -105,7 +97,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
           ...liveNotifications,
           if (liveNotifications.isEmpty) ...[
             {
-              'icon': '⏳',
+              'type': 'request_received',
               'title': 'New Pending Chat Request',
               'body': 'A friend wants to connect with you.',
               'time': '5m ago',
@@ -116,7 +108,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
               },
             },
             {
-              'icon': '🌱',
+              'type': 'general',
               'title': 'System Notification',
               'body': 'Your availability status has been set to Online.',
               'time': '1h ago',
@@ -133,7 +125,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
 
   Widget _buildDrawerContent(BuildContext context, List<Map<String, dynamic>> notifications) {
     return Drawer(
-      backgroundColor: const Color(0xFFFBF8F5), // Soft off-white to match theme
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(35),
@@ -183,7 +175,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final notification = notifications[index];
                     return _buildNotificationCard(
-                      icon: notification['icon'] as String,
+                      type: notification['type'] as String,
                       title: notification['title'] as String,
                       body: notification['body'] as String? ?? '',
                       time: notification['time'] as String,
@@ -201,7 +193,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
   }
 
   Widget _buildNotificationCard({
-    required String icon,
+    required String type,
     required String title,
     required String body,
     required String time,
@@ -230,11 +222,8 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  icon,
-                  style: const TextStyle(fontSize: 24),
-                ),
-                const SizedBox(width: 16),
+                NotificationStyle.iconBadge(type, fontSize: 22),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +242,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                           body,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: Colors.grey[700],
+                            color: AppColors.primaryVeryDark.withAlpha(160),
                           ),
                         ),
                       ],
@@ -262,7 +251,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                         time,
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: Colors.grey[400],
+                          color: AppColors.primaryVeryDark.withAlpha(110),
                         ),
                       ),
                     ],
@@ -275,7 +264,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                     height: 8,
                     margin: const EdgeInsets.only(top: 6),
                     decoration: const BoxDecoration(
-                      color: Color(0xFF9070B6), // Purple dot
+                      color: AppColors.secondary,
                       shape: BoxShape.circle,
                     ),
                   ),

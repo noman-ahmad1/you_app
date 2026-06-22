@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/shared/notification_style.dart';
 import 'package:you_app/ui/views/chat/chat_viewmodel.dart';
 
 class InAppNotificationBanner extends StatefulWidget {
@@ -115,21 +116,6 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
     final mediaQuery = MediaQuery.of(context);
     final topPadding = mediaQuery.padding.top + 12;
 
-    String icon = '🌱';
-    if (widget.type == 'request_received' || widget.type == 'chat_request') {
-      icon = '⏳';
-    } else if (widget.type == 'request_accepted') {
-      icon = '🎉';
-    } else if (widget.type == 'new_message') {
-      icon = '💬';
-    } else if (widget.type == 'whisper') {
-      icon = '🌸';
-    } else if (widget.type == 'habit') {
-      icon = '💜';
-    } else if (widget.type == 'chatbot') {
-      icon = '🕊️';
-    }
-
     return Positioned(
       top: topPadding,
       left: 16,
@@ -153,8 +139,7 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
               color: Colors.transparent,
               child: Container(
                 decoration: BoxDecoration(
-                  color:
-                      const Color(0xFFFBF8F5), // curating harmonious off-white
+                  color: NotificationStyle.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: AppColors.secondary.withAlpha(50),
@@ -172,17 +157,7 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondaryVeryLight.withAlpha(80),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        icon,
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                    ),
+                    NotificationStyle.iconBadge(widget.type),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -194,7 +169,7 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.secondary,
+                              color: AppColors.primaryVeryDark,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -202,7 +177,7 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
                             widget.body,
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: AppColors.primaryVeryDark,
+                              color: AppColors.primaryVeryDark.withAlpha(160),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,

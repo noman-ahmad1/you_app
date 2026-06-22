@@ -1,11 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
-import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 // Note: Assuming the class AcademicInfoView is exported from this path
 import 'package:you_app/ui/views/volunteer_signup_info/tabs/academic_info.dart';
@@ -31,9 +28,6 @@ class VolunteerSignupInfoView
     VolunteerSignupInfoViewModel viewModel,
     Widget? child,
   ) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -50,58 +44,19 @@ class VolunteerSignupInfoView
           ),
         ),
         child: SafeArea(
-          bottom: false,
-          child: Stack(
-            children: [
-              // Content Area (IndexedStack handles the pages)
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Column(
-                    children: [
-                      Space.verticalSpaceSmall(context),
-                      _buildProgressIndicator(viewModel, context),
-                      Space.verticalSpaceTiny(context),
-                      // Use Expanded to ensure IndexedStack takes remaining space
-                      Expanded(
-                        child: _buildCurrentPage(viewModel, context),
-                      ),
-                      Space.verticalSpaceMedium(context),
-                      // Extra space so content doesn’t hide behind buttons
-                    ],
-                  ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25.0),
+            child: Column(
+              children: [
+                Space.verticalSpaceSmall(context),
+                _buildProgressIndicator(viewModel, context),
+                Space.verticalSpaceTiny(context),
+                // The step content + its nav buttons scroll together.
+                Expanded(
+                  child: _buildCurrentPage(viewModel, context),
                 ),
-              ),
-
-              // Floating Navigation Buttons
-              Positioned(
-                bottom: 20,
-                left: 25,
-                right: 25,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (!viewModel.isFirstPage)
-                      _buildGlassButton(
-                        onTap: viewModel.previousPage,
-                        asset: AppConstants.back,
-                        screenWidth: screenWidth,
-                        screenHeight: screenHeight,
-                      )
-                    else
-                      SizedBox(width: screenWidth * 0.15),
-                    _buildGlassButton(
-                      onTap: viewModel.isLastPage
-                          ? () => viewModel.submitForm()
-                          : viewModel.nextPage,
-                      asset: AppConstants.next,
-                      screenWidth: screenWidth,
-                      screenHeight: screenHeight,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -143,93 +98,126 @@ class VolunteerSignupInfoView
 
   Widget _buildCurrentPage(
       VolunteerSignupInfoViewModel viewModel, BuildContext context) {
-    // The IndexedStack keeps the state alive, and the child widgets
-    // no longer need the 'uid' argument, as they access the ViewModel via Provider.
-    return IndexedStack(
-      index: viewModel.currentPage,
-      children: const [
-        // Page 0: Personal Info
-        SingleChildScrollView(
-          child: PersonalInfoView(),
-        ),
-        // Page 1: Academic Info
-        SingleChildScrollView(
-          child: AcademicInfoView(),
-        ),
-        // Page 2: Agreement Info
-        SingleChildScrollView(
-          child: AgreementInfoView(),
+    // State (controllers, selections) lives in the shared ViewModel, so we can
+    // swap the step widget directly without losing any entered data.
+    final Widget step;
+    switch (viewModel.currentPage) {
+      case 0:
+        step = const PersonalInfoView();
+        break;
+      case 1:
+        step = const AcademicInfoView();
+        break;
+      default:
+        step = const AgreementInfoView();
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        children: [
+          step,
+          const SizedBox(height: 24),
+          // In-flow navigation buttons (scroll with the content).
+          _buildNavRow(viewModel),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavRow(VolunteerSignupInfoViewModel viewModel) {
+    final isLast = viewModel.isLastPage;
+    return Row(
+      children: [
+        if (!viewModel.isFirstPage) ...[
+          Expanded(
+            child: _navButton(
+              label: 'Back',
+              icon: Icons.arrow_back_rounded,
+              filled: false,
+              onTap: viewModel.previousPage,
+            ),
+          ),
+          const SizedBox(width: 14),
+        ],
+        Expanded(
+          child: _navButton(
+            label: isLast ? 'Submit' : 'Next',
+            icon: isLast ? Icons.check_rounded : Icons.arrow_forward_rounded,
+            iconTrailing: true,
+            filled: true,
+            onTap: viewModel.isBusy
+                ? null
+                : (isLast ? viewModel.submitForm : viewModel.nextPage),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildGlassButton({
-    required VoidCallback onTap,
-    required String asset,
-    required double screenWidth,
-    required double screenHeight,
+  Widget _navButton({
+    required String label,
+    required IconData icon,
+    required bool filled,
+    VoidCallback? onTap,
+    bool iconTrailing = false,
   }) {
+    final Color fg = filled ? Colors.white : AppColors.secondary;
+    final iconWidget = Icon(icon, size: 18, color: fg);
+    final textWidget = Flexible(
+      child: Text(
+        label,
+        overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.crimsonPro(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: fg,
+        ),
+      ),
+    );
+
     return GestureDetector(
-      onTapDown: (_) => HapticFeedback.lightImpact(),
-      onTap: onTap,
+      onTap: onTap == null
+          ? null
+          : () {
+              HapticFeedback.lightImpact();
+              onTap();
+            },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: screenWidth * 0.15,
-        height: screenHeight * 0.067,
+        height: 54,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(100),
-          gradient: LinearGradient(
-            colors: [
-              AppColors.background.withOpacity(0.4),
-              AppColors.primaryDark.withOpacity(0.4),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          border: Border.all(
-            color: AppColors.background.withOpacity(0.4),
-            width: 1.2,
-          ),
+          color: filled ? null : AppColors.surface,
+          gradient: filled
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.secondary, AppColors.secondaryLight],
+                )
+              : null,
+          borderRadius: BorderRadius.circular(30),
+          border: filled
+              ? null
+              : Border.all(
+                  color: AppColors.secondary.withAlpha(80), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.white.withOpacity(0.3),
-              blurRadius: 5,
-              spreadRadius: -3,
-              offset: const Offset(-3, -3),
+              color: filled
+                  ? AppColors.secondary.withAlpha(90)
+                  : AppColors.primaryVeryDark.withAlpha(35),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(100),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-            child: Center(
-              child: ShaderMask(
-                shaderCallback: (Rect bounds) {
-                  return LinearGradient(
-                    colors: [
-                      AppColors.background.withOpacity(0.9),
-                      Colors.white.withOpacity(0.3),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ).createShader(bounds);
-                },
-                blendMode: BlendMode.srcATop,
-                child: Image.asset(
-                  asset,
-                  width: 26,
-                  height: 26,
-                ),
-              ),
-            ),
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (!iconTrailing) ...[iconWidget, const SizedBox(width: 8)],
+            textWidget,
+            if (iconTrailing) ...[const SizedBox(width: 8), iconWidget],
+          ],
         ),
       ),
     );

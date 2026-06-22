@@ -177,6 +177,30 @@ class VolunteerEditProfileView
                           Space.verticalSpaceVTiny(context),
                           _buildLevelDropdown(context, viewModel),
                           Space.verticalSpaceVTiny(context),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 8.0, right: 8.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(Icons.info_outline_rounded,
+                                    size: 15,
+                                    color: AppColors.secondary.withAlpha(180)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    "Eligible volunteers must be in their final year of a Bachelor's degree or higher.",
+                                    style: TextStyle(
+                                      color: AppColors.secondary.withAlpha(190),
+                                      fontSize: 13,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Space.verticalSpaceVTiny(context),
                           CustomTextField(
                             controller: viewModel.institutionController,
                             labelText: 'Institution Name',

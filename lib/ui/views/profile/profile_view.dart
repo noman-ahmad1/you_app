@@ -245,14 +245,14 @@ class ProfileView extends StackedView<ProfileViewModel> {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.primaryVeryDark,
+                              color: AppColors.background,
                             ),
                           ),
                           subtitle: Text(
                             'Helps us improve the app. Your journal, mood, and chat content is never collected.',
                             style: GoogleFonts.inter(
                               fontSize: 11.5,
-                              color: AppColors.primaryVeryDark.withAlpha(160),
+                              color: AppColors.background.withAlpha(200),
                             ),
                           ),
                           value: viewModel.analyticsEnabled,

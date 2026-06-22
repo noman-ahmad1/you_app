@@ -4,6 +4,7 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/ui/common/validators.dart';
 
 enum DialogType { infoAlert }
 
@@ -32,8 +33,6 @@ class VolunteerSignupViewModel extends BaseViewModel {
     _dialCode = dialCode;
   }
 
-  static void _noop() {}
-
   Future<void> sendVerificationCode() async {
     _validationError = null;
     notifyListeners();
@@ -43,14 +42,13 @@ class VolunteerSignupViewModel extends BaseViewModel {
 
     // Enhanced validation
     if (nationalNumber.isEmpty) {
-      _validationError = 'Please enter your mobile number.';
-      notifyListeners();
+      _setError('Mobile number required', 'Please enter your mobile number.');
       return;
     }
 
     if (!RegExp(r'^[0-9]{10,15}$').hasMatch(nationalNumber)) {
-      _validationError = 'Please enter a valid mobile number (10-15 digits).';
-      notifyListeners();
+      _setError('Invalid number',
+          'Please enter a valid mobile number (10–15 digits, no spaces).');
       return;
     }
 
@@ -58,8 +56,8 @@ class VolunteerSignupViewModel extends BaseViewModel {
 
     // Validate international phone number format
     if (!RegExp(r'^\+\d{1,4}\d{10,15}$').hasMatch(fullPhoneNumber)) {
-      _validationError = 'Please enter a valid international phone number.';
-      notifyListeners();
+      _setError('Invalid number',
+          'Please enter a valid international phone number.');
       return;
     }
 
@@ -93,16 +91,15 @@ class VolunteerSignupViewModel extends BaseViewModel {
 
     // Enhanced OTP validation
     if (smsCode.isEmpty) {
-      _validationError = 'Please enter the verification code.';
       setBusy(false);
-      notifyListeners();
+      _setError('Code required', 'Please enter the verification code.');
       return;
     }
 
     if (!RegExp(r'^[0-9]{6}$').hasMatch(smsCode)) {
-      _validationError = 'Please enter a valid 6-digit verification code.';
       setBusy(false);
-      notifyListeners();
+      _setError(
+          'Invalid code', 'Please enter the 6-digit verification code we sent.');
       return;
     }
 
@@ -135,10 +132,7 @@ class VolunteerSignupViewModel extends BaseViewModel {
           'Invalid verification code. Please check the code and try again.';
       await _showErrorDialog('Verification Failed', errorMessage);
 
-      // Only cancel if the service provides this method
-      if (_authenticationService.cancelPhoneVerification != null) {
-        _authenticationService.cancelPhoneVerification();
-      }
+      _authenticationService.cancelPhoneVerification();
     } finally {
       setBusy(false);
     }
@@ -165,46 +159,33 @@ class VolunteerSignupViewModel extends BaseViewModel {
     _validationError = null;
     notifyListeners();
 
-    // Comprehensive validation
-    if (emailController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        confirmPasswordController.text.isEmpty) {
-      _validationError = 'All fields are required.';
-      notifyListeners();
-      return;
-    }
-
     final email = emailController.text.trim();
-    if (!RegExp(
-            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-        .hasMatch(email)) {
-      _validationError = 'Please enter a valid email address.';
-      notifyListeners();
+    final password = passwordController.text;
+    final confirm = confirmPasswordController.text;
+
+    // Comprehensive validation (each failure shows a specific dialog)
+    if (email.isEmpty || password.isEmpty || confirm.isEmpty) {
+      _setError('Missing information', 'Please fill out all fields to continue.');
       return;
     }
-
-    if (passwordController.text.length < 6) {
-      _validationError = 'Password must be at least 6 characters long.';
-      notifyListeners();
+    final emailError = Validators.email(email);
+    if (emailError != null) {
+      _setError('Invalid email', emailError);
       return;
     }
-
-    if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d).{6,}$')
-        .hasMatch(passwordController.text)) {
-      _validationError = 'Password must contain both letters and numbers.';
-      notifyListeners();
+    final passwordError = Validators.password(password);
+    if (passwordError != null) {
+      _setError('Weak password', passwordError);
       return;
     }
-
-    if (passwordController.text != confirmPasswordController.text) {
-      _validationError = 'Passwords do not match.';
-      notifyListeners();
+    if (password != confirm) {
+      _setError("Passwords don't match",
+          'Your password and confirmation must be identical.');
       return;
     }
-
     if (!isPhoneVerified) {
-      _validationError = 'Please verify your mobile number before signing up.';
-      notifyListeners();
+      _setError('Verify your number',
+          'Please verify your mobile number before signing up.');
       return;
     }
 
@@ -244,6 +225,13 @@ class VolunteerSignupViewModel extends BaseViewModel {
 
   Future<void> back() async {
     await _navigationService.back();
+  }
+
+  /// Sets the inline error and shows an explanatory dialog.
+  void _setError(String title, String message) {
+    _validationError = message;
+    notifyListeners();
+    _showErrorDialog(title, message);
   }
 
   // Enhanced dialog methods with proper await

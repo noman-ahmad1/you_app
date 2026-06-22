@@ -1,83 +1,261 @@
 rules_version = '2';
+
+// =============================================================================
+// "You" Firestore security rules — hardened for the admin panel.
+//
+// Deploy with:
+//   firebase deploy --only firestore:rules
+//
+// KEY CHANGES vs the previous rules (read CAREFULLY before deploying):
+//   1. REMOVED the catch-all `match /{document=**} { allow read, write: if auth != null }`.
+//      That rule exposed every journal / chat / mood doc to every signed-in user
+//      and made all per-collection rules below it pointless. Now anything NOT
+//      explicitly matched below is DENIED by default — test your app flows.
+//   2. Added isAdmin() and admins can now: read/update any users doc, read/update
+//      volunteer_info, CRUD communities, moderate posts/replies, toggle app_settings,
+//      and read daily_analytics.
+//   3. Added explicit rules for volunteer_info/{uid}/reviews and daily_analytics,
+//      which previously only worked because of the catch-all.
+// =============================================================================
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // ---------------------------------------------------------
-    // NEW: Threads (Posts) and Replies Security Rules
-    // ---------------------------------------------------------
-    
-    match /posts/{postId} {
-      // Anyone authenticated can read posts
-      allow read: if request.auth != null;
-      
-      // Creating a post requires the authorId to match the requester's UID
-      allow create: if request.auth != null 
-                    && request.resource.data.authorId == request.auth.uid;
-                    
-      // Updating or deleting a post requires the user to be the original author
-      allow update, delete: if request.auth != null 
-                            && resource.data.authorId == request.auth.uid;
 
-      // Subcollection: Replies
-      match /replies/{replyId} {
-        // Anyone authenticated can read replies
-        allow read: if request.auth != null;
-        
-        // Creating a reply requires the authorId to match the requester's UID
-        allow create: if request.auth != null 
-                      && request.resource.data.authorId == request.auth.uid;
-                      
-        // Updating or deleting a reply requires the user to be the original author
-        allow update, delete: if request.auth != null 
-                              && resource.data.authorId == request.auth.uid;
+    // ---- helpers ----
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    // Reads the requester's own users doc. NOTE: each call costs one document read,
+    // so always put the cheaper isOwner() check first so `||` short-circuits.
+    function selfRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    function isAdmin() {
+      return isSignedIn() && selfRole() == 'admin';
+    }
+
+    // =============================
+    // users
+    // =============================
+    match /users/{userId} {
+      // A user reads their own doc; an admin can read anyone's.
+      allow get: if isOwner(userId) || isAdmin();
+      // Any signed-in user can run queries (the app lists available volunteers).
+      allow list: if isSignedIn();
+      // Signup writes own doc; admins create other accounts (e.g. createAdminUser).
+      allow create: if isOwner(userId) || isAdmin();
+      // Profile self-edits, plus admin actions (role change, status, soft-delete, verify).
+      allow update: if isOwner(userId) || isAdmin();
+      // SAFETY: never hard-delete a user (admins soft-delete via status:"deleted").
+      allow delete: if false;
+
+      // Private journal — owner only. Admins must NOT read journal content (privacy).
+      match /journal/{journalId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Notifications: anyone signed in may CREATE one (this is how the app — and the
+      // admin panel — notifies a user; creating a doc triggers the FCM Cloud Function).
+      // Only the owner can read/modify their notification history.
+      match /notifications/{notificationId} {
+        allow create: if isSignedIn();
+        allow read, update, delete: if isOwner(userId);
       }
     }
 
-    // ---------------------------------------------------------
-    // Moderation & safety (added with the content-moderation feature)
-    // ---------------------------------------------------------
-
-    // True when the requester's users/{uid} doc has role == 'admin'.
-    function isAdmin() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    // =============================
+    // app_settings
+    // =============================
+    match /app_settings/global_config {
+      allow read: if isSignedIn();
+      // Admin panel toggles is_subscription_required. (Was: write denied.)
+      allow write: if isAdmin();
+    }
+    // Moderation keyword list — read by the app's moderation engine, edited by admins.
+    match /app_settings/moderation_config {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    // Home-screen announcement banner — read by the app, edited by admins.
+    match /app_settings/home_announcement {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
-    // Flagged content for the admin review queue. Admins manage everything.
-    // The one client write allowed is recording a user's OWN blocked attempt
-    // (Cloud Functions use the Admin SDK and bypass these rules entirely).
+    // =============================
+    // journal_prompts/{YYYY-MM-DD}  ("Prompt of the Day")
+    // =============================
+    match /journal_prompts/{dateId} {
+      allow read: if isSignedIn();   // the app shows today's prompt
+      allow write: if isAdmin();
+    }
+
+    // =============================
+    // broadcasts  (admin push audit log)
+    // =============================
+    match /broadcasts/{broadcastId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // =============================
+    // volunteer_info  (doc id == user uid)
+    // =============================
+    match /volunteer_info/{volunteerId} {
+      // Professional/verification info — readable by any signed-in user (the app shows
+      // volunteer profiles & stats) and by admins reviewing applications.
+      allow read: if isSignedIn();
+      // The volunteer creates/edits their own; admins may edit (e.g. mirror status).
+      allow create: if isOwner(volunteerId) || isAdmin();
+      allow update: if isOwner(volunteerId)
+                    || isAdmin()
+                    // Allow the review transaction to bump ONLY the aggregate stats.
+                    || (isSignedIn() && request.resource.data.diff(resource.data)
+                          .affectedKeys()
+                          .hasOnly(['averageRating', 'totalReviews', 'completedChats']));
+      allow delete: if false;
+
+      // Reviews left for a volunteer after a chat (previously relied on the catch-all).
+      match /reviews/{reviewId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        // Reviews are immutable to authors; admins can remove abusive reviews.
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // =============================
+    // mood
+    // =============================
+    match /mood/{moodId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // =============================
+    // chats
+    // PRIVACY NOTE: admins can READ chats/messages for life-safety escalation review
+    // only (the panel surfaces them in the Escalation Review screen). Admins can NOT
+    // write to chats. This is a deliberate exception to the "no chat text" rule.
+    // =============================
+    match /chats/{chatId} {
+      allow read: if (request.auth.uid in resource.data.participants) || isAdmin();
+      allow update, delete: if request.auth.uid in resource.data.participants;
+      allow create: if request.auth.uid in request.resource.data.participants;
+
+      match /messages/{messageId} {
+        allow read: if isAdmin()
+          || request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow write: if request.auth.uid in
+          get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+      }
+    }
+
+    // =============================
+    // escalations  (unified crisis feed — volunteer escalate + severe moderation)
+    // =============================
+    match /escalations/{escalationId} {
+      // The app (volunteer/user context) creates escalations; admins triage them.
+      allow create: if isSignedIn();
+      allow read, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // =============================
+    // incident_reports  (clinical paper trail — immutable once filed)
+    // =============================
+    match /incident_reports/{reportId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // =============================
+    // chat_requests
+    // =============================
+    match /chat_requests/{requestId} {
+      allow create: if isSignedIn()
+                    && request.resource.data.requesterId == request.auth.uid;
+      allow read, update: if isSignedIn()
+                          && (request.auth.uid == resource.data.requesterId
+                              || request.auth.uid == resource.data.volunteerId);
+      allow delete: if isSignedIn()
+                    && (request.auth.uid == resource.data.requesterId
+                        || request.auth.uid == resource.data.volunteerId);
+    }
+
+    // =============================
+    // communities  (admin-managed CRUD)
+    // =============================
+    match /communities/{communityId} {
+      allow read: if isSignedIn();
+      // Admin panel can now create/edit/delete communities. (Was: write denied.)
+      allow create, update, delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn()
+                      && request.resource.data.senderId == request.auth.uid;
+        allow update, delete: if (isSignedIn() && resource.data.senderId == request.auth.uid)
+                              || isAdmin();
+      }
+    }
+
+    // =============================
+    // posts + replies  (content moderation)
+    // =============================
+    match /posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+                    && request.resource.data.authorId == request.auth.uid;
+      // Author edits/deletes own; admins delete/edit for moderation.
+      allow update, delete: if (isSignedIn() && resource.data.authorId == request.auth.uid)
+                            || isAdmin();
+
+      match /replies/{replyId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn()
+                      && request.resource.data.authorId == request.auth.uid;
+        allow update, delete: if (isSignedIn() && resource.data.authorId == request.auth.uid)
+                              || isAdmin();
+      }
+    }
+
+    // =============================
+    // moderation_flags  (admin review queue; carried over from prior rules)
+    // The one client write allowed is recording a user's OWN blocked attempt.
+    // Cloud Functions use the Admin SDK and bypass these rules entirely.
+    // =============================
     match /moderation_flags/{flagId} {
       allow read, update, delete: if isAdmin();
       allow create: if isAdmin()
-        || (request.auth != null
+        || (isSignedIn()
             && request.resource.data.senderId == request.auth.uid
             && request.resource.data.action == 'blocked');
     }
 
-    // Admin-created, time-boxed blocks hiding a volunteer from a specific user.
-    // The owning user may READ their blocks (so the app can enforce them);
-    // only admins may create/modify them.
+    // =============================
+    // volunteer_blocks  (admin-created, time-boxed; carried over from prior rules)
+    // The owning user may READ their blocks so the app can enforce them;
+    // only admins create/modify them.
+    // =============================
     match /volunteer_blocks/{blockId} {
       allow read: if isAdmin()
-        || (request.auth != null && resource.data.userId == request.auth.uid);
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow write: if isAdmin();
     }
 
-    // Tunable moderation keyword lists: readable by signed-in clients, admin-writable.
-    match /app_settings/{docId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
+    // =============================
+    // daily_analytics  (dashboard reads; written by a backend Cloud Function)
+    // =============================
+    match /daily_analytics/{dateId} {
+      allow read: if isAdmin();
+      // The Admin SDK (Cloud Function) bypasses rules, so client writes stay denied.
+      allow write: if false;
     }
 
-    // ---------------------------------------------------------
-    // IMPORTANT: Make sure to copy your existing rules for 'users',
-    // 'chat_requests', 'chats', etc. below this point before deploying!
-    // ⚠️ This file does NOT yet contain rules for users/chats/mood/etc., so it
-    // is INCOMPLETE — do NOT deploy it as-is or the app will lose access.
-    // ---------------------------------------------------------
-    
-    // match /{document=**} {
-    //   allow read, write: if request.auth != null;
-    // }
+    // NO catch-all. Anything not matched above is denied by default.
   }
 }

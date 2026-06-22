@@ -15,7 +15,9 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/models/chat_request_model.dart';
+import 'package:you_app/models/mood_model.dart';
 import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/app_content_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/block_service.dart';
@@ -88,6 +90,11 @@ class HomeViewModel extends ReactiveViewModel {
 
   StreamSubscription? _volunteersSubscription;
 
+  // Consecutive-day mood-logging streak (for the home drawer card).
+  StreamSubscription? _moodStreakSubscription;
+  int _moodStreak = 0;
+  int get moodStreak => _moodStreak;
+
   bool get hasActiveInteraction =>
       pendingRequest != null || activeChatRequest != null;
 
@@ -140,7 +147,60 @@ class HomeViewModel extends ReactiveViewModel {
     listenToVolunteers();
     listenForSentRequests();
     listenForNotifications();
+    listenForMoodStreak();
     fetchTodayWhisper();
+  }
+
+  /// Listens to the user's mood entries and keeps [moodStreak] (consecutive
+  /// days with a logged mood) up to date for the home drawer streak card.
+  void listenForMoodStreak() {
+    final userId = _authenticationService.currentUser?.uid;
+    if (userId == null) return;
+    _moodStreakSubscription?.cancel();
+    _moodStreakSubscription =
+        locator<MoodService>().getUserMoodStream(userId).listen((entries) {
+      _moodStreak = _computeMoodStreak(entries);
+      notifyListeners();
+    }, onError: (error) {
+      AppLog.error('HomeViewModel.listenForMoodStreak', error);
+    });
+  }
+
+  /// Counts consecutive days (ending today or yesterday) with a mood entry.
+  int _computeMoodStreak(List<MoodEntry> entries) {
+    if (entries.isEmpty) return 0;
+
+    // Collapse to unique calendar days, newest first.
+    final uniqueDays = <DateTime>{};
+    for (final e in entries) {
+      DateTime d;
+      try {
+        d = DateTime.parse(e.timestamp);
+      } catch (_) {
+        continue;
+      }
+      uniqueDays.add(DateTime(d.year, d.month, d.day));
+    }
+    if (uniqueDays.isEmpty) return 0;
+
+    final days = uniqueDays.toList()..sort((a, b) => b.compareTo(a));
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    // Streak only counts if the latest entry is today or yesterday.
+    if (days.first.isBefore(today.subtract(const Duration(days: 1)))) return 0;
+
+    int streak = 0;
+    DateTime expected = days.first; // today or yesterday
+    for (final day in days) {
+      if (day == expected) {
+        streak++;
+        expected = expected.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
 
   Future<void> fetchTodayWhisper() async {
@@ -395,6 +455,11 @@ class HomeViewModel extends ReactiveViewModel {
     });
   }
 
+  /// Live home-screen announcement (admin-authored), or null when none is
+  /// active — the view then renders nothing.
+  Stream<String?> get homeAnnouncement =>
+      locator<AppContentService>().homeAnnouncement();
+
   Stream<List<Map<String, dynamic>>>? _communitiesStream;
 
   Stream<List<Map<String, dynamic>>> getCommunitiesStream() {
@@ -423,6 +488,18 @@ class HomeViewModel extends ReactiveViewModel {
       List<Map<String, dynamic>> communities) {
     final gender = currentUser?.gender?.trim().toLowerCase();
     return communities.where((community) {
+      // Prefer the explicit server-side list when present; it supersedes the
+      // legacy name-based map (and is the eventual migration target).
+      final explicit = (community['allowedGenders'] as List?)
+          ?.map((e) => e.toString().trim().toLowerCase())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      if (explicit != null && explicit.isNotEmpty) {
+        if (gender == null) return false; // restricted, but user has no gender
+        return explicit.contains(gender);
+      }
+
+      // Fallback: legacy name-based restriction (unchanged).
       final name = _normalizeName(community['name'] as String? ?? '');
       final allowedGenders = _genderRestrictedCommunities[name];
       if (allowedGenders == null) return true; // unrestricted → everyone
@@ -611,6 +688,7 @@ class HomeViewModel extends ReactiveViewModel {
     _sentRequestsSubscription?.cancel();
     _notificationsSubscription?.cancel();
     _volunteersSubscription?.cancel();
+    _moodStreakSubscription?.cancel();
     super.dispose();
   }
 }

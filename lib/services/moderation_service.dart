@@ -5,7 +5,7 @@ import 'package:you_app/ui/common/moderation_keywords.dart';
 enum ModerationContext { chat, community }
 
 /// Content categories a message can match.
-enum ModerationCategory { hate, violence, sexual, romance, offTopic, pii }
+enum ModerationCategory { hate, violence, sexual, romance, offTopic, pii, banned }
 
 /// What the caller should do with the message.
 enum ModerationAction {
@@ -29,10 +29,15 @@ class ModerationResult {
     required this.categories,
     required this.maskedText,
     required this.didMask,
+    this.matchedTerms = const {},
   });
 
   final ModerationAction action;
   final Set<ModerationCategory> categories;
+
+  /// The offending keyword(s) that matched (lowercased). Used to build a
+  /// human-readable escalation reason; empty for PII/regex-only matches.
+  final Set<String> matchedTerms;
 
   /// [maskedText] has any PII blurred; equals the input when nothing matched.
   final String maskedText;
@@ -46,7 +51,8 @@ class ModerationResult {
 
   /// The dominant severity label for a flag record.
   String get severity {
-    if (categories.contains(ModerationCategory.hate) ||
+    if (categories.contains(ModerationCategory.banned) ||
+        categories.contains(ModerationCategory.hate) ||
         categories.contains(ModerationCategory.violence) ||
         categories.contains(ModerationCategory.sexual)) {
       return 'severe';
@@ -74,6 +80,25 @@ class ModerationService {
   List<String> _offTopic = ModerationKeywords.offTopic;
   List<String> _contactIntent = ModerationKeywords.contactIntent;
 
+  // Runtime config from `app_settings/moderation_config` (live-listened in
+  // main.dart). When [_enabled] is false the engine is fully off: nothing is
+  // blocked and PII is not masked. [_banned] is the admin's explicit hard-block
+  // list, layered on top of the bundled category keywords.
+  bool _enabled = true;
+  List<String> _banned = const [];
+
+  /// Applies the remote moderation config. Null args are ignored so a partial
+  /// document never clobbers a field. Keywords are lowercased.
+  void applyRemoteConfig({bool? enabled, List<String>? bannedKeywords}) {
+    if (enabled != null) _enabled = enabled;
+    if (bannedKeywords != null) {
+      _banned = bannedKeywords
+          .map((k) => k.toLowerCase().trim())
+          .where((k) => k.isNotEmpty)
+          .toList();
+    }
+  }
+
   /// Replace the keyword lists from a remote config (any null arg is kept).
   void updateLists({
     List<String>? hate,
@@ -92,24 +117,34 @@ class ModerationService {
   }
 
   ModerationResult inspect(String text, {required ModerationContext context}) {
+    // Engine fully disabled by remote config: allow everything, mask nothing.
+    if (!_enabled) {
+      return ModerationResult(
+        action: ModerationAction.allow,
+        categories: const {},
+        maskedText: text,
+        didMask: false,
+      );
+    }
+
     final normalized = _normalize(text);
     final categories = <ModerationCategory>{};
+    final matchedTerms = <String>{};
 
-    if (_containsAny(normalized, _hate)) {
-      categories.add(ModerationCategory.hate);
+    void check(List<String> terms, ModerationCategory category) {
+      final term = _firstMatch(normalized, terms);
+      if (term != null) {
+        categories.add(category);
+        matchedTerms.add(term);
+      }
     }
-    if (_containsAny(normalized, _violence)) {
-      categories.add(ModerationCategory.violence);
-    }
-    if (_containsAny(normalized, _sexual)) {
-      categories.add(ModerationCategory.sexual);
-    }
-    if (_containsAny(normalized, _romance)) {
-      categories.add(ModerationCategory.romance);
-    }
-    if (_containsAny(normalized, _offTopic)) {
-      categories.add(ModerationCategory.offTopic);
-    }
+
+    check(_banned, ModerationCategory.banned);
+    check(_hate, ModerationCategory.hate);
+    check(_violence, ModerationCategory.violence);
+    check(_sexual, ModerationCategory.sexual);
+    check(_romance, ModerationCategory.romance);
+    check(_offTopic, ModerationCategory.offTopic);
 
     final masked = maskPii(text);
     final didMask = masked != text;
@@ -123,11 +158,13 @@ class ModerationService {
       categories: categories,
       maskedText: masked,
       didMask: didMask,
+      matchedTerms: matchedTerms,
     );
   }
 
   /// Blurs phone numbers, emails, @handles and URLs in [text]. Deterministic.
   String maskPii(String text) {
+    if (!_enabled) return text; // engine off → no masking
     var out = text;
     for (final pattern in ModerationKeywords.piiPatterns) {
       out = out.replaceAllMapped(pattern, (m) => _blur(m.group(0) ?? ''));
@@ -138,7 +175,8 @@ class ModerationService {
   // --- internals ---
 
   ModerationAction _actionFor(Set<ModerationCategory> categories) {
-    if (categories.contains(ModerationCategory.hate) ||
+    if (categories.contains(ModerationCategory.banned) ||
+        categories.contains(ModerationCategory.hate) ||
         categories.contains(ModerationCategory.violence) ||
         categories.contains(ModerationCategory.sexual)) {
       return ModerationAction.block;
@@ -156,14 +194,19 @@ class ModerationService {
   String _normalize(String text) =>
       text.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
 
-  bool _containsAny(String normalized, List<String> terms) {
+  bool _containsAny(String normalized, List<String> terms) =>
+      _firstMatch(normalized, terms) != null;
+
+  /// Returns the first term (lowercased) that matches on a word boundary, or
+  /// null if none match.
+  String? _firstMatch(String normalized, List<String> terms) {
     for (final term in terms) {
       if (term.isEmpty) continue;
-      final pattern =
-          RegExp('\\b${RegExp.escape(term.toLowerCase())}\\b');
-      if (pattern.hasMatch(normalized)) return true;
+      final lower = term.toLowerCase();
+      final pattern = RegExp('\\b${RegExp.escape(lower)}\\b');
+      if (pattern.hasMatch(normalized)) return lower;
     }
-    return false;
+    return null;
   }
 
   String _blur(String original) {

@@ -158,6 +158,9 @@ class PushNotificationService {
       }
     } else if (type == 'request_received' || type == 'chat_request') {
       navigationService.clearStackAndShow(Routes.volunteerHomeView);
+    } else if (type == 'broadcast') {
+      // Broadcasts carry no routing data — land on home by default.
+      navigationService.clearStackAndShow(Routes.homeView);
     }
   }
 }

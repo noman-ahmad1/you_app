@@ -151,6 +151,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            _HomeAnnouncement(viewModel: viewModel),
                             ClipRRect(
                                 borderRadius: BorderRadius.circular(23),
                               child: BackdropFilter(
@@ -856,6 +857,70 @@ class _AnimatedDodoIconState extends State<_AnimatedDodoIcon>
               ),
             ),
           ),
+    );
+  }
+}
+
+/// A light, dismissible FYI strip for the admin-authored home announcement.
+/// Renders nothing when there's no active announcement.
+class _HomeAnnouncement extends StatefulWidget {
+  final HomeViewModel viewModel;
+  const _HomeAnnouncement({required this.viewModel});
+
+  @override
+  State<_HomeAnnouncement> createState() => _HomeAnnouncementState();
+}
+
+class _HomeAnnouncementState extends State<_HomeAnnouncement> {
+  bool _dismissed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_dismissed) return const SizedBox.shrink();
+    return StreamBuilder<String?>(
+      stream: widget.viewModel.homeAnnouncement,
+      builder: (context, snapshot) {
+        final message = snapshot.data?.trim() ?? '';
+        if (message.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+          decoration: BoxDecoration(
+            color: AppColors.secondaryVeryLight.withAlpha(110),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.secondary.withAlpha(40)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Icon(Icons.campaign_outlined,
+                  size: 18, color: AppColors.secondary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    height: 1.35,
+                    color: AppColors.primaryVeryDark,
+                  ),
+                ),
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => setState(() => _dismissed = true),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(Icons.close,
+                      size: 16,
+                      color: AppColors.primaryVeryDark.withAlpha(140)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

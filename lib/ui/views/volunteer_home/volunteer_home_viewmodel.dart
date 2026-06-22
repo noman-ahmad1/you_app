@@ -9,6 +9,7 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/chat_request_model.dart';
+import 'package:you_app/ui/views/volunteer_guidelines/volunteer_guidelines_view.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
@@ -291,6 +292,25 @@ class VolunteerHomeViewModel extends BaseViewModel {
 
   void navigateToVolunteerEditProfile() {
     _navigationService.navigateTo(Routes.volunteerEditProfileView);
+  }
+
+  /// Shows a friendly "in development" dialog for features not yet live.
+  Future<void> showComingSoon(String feature) => _dialogService.showDialog(
+        title: '$feature is coming soon',
+        description:
+            'This feature is in development and will be live soon. Thank you for your patience 🌱',
+        buttonTitle: 'Got it',
+      );
+
+  /// Get Certification — placeholder until the certification flow ships.
+  void getCertification() => showComingSoon('Certification');
+
+  /// Opens the read-only Volunteer Code of Conduct & Guidelines screen.
+  void navigateToGuidelines() {
+    _navigationService.navigateWithTransition(
+      const VolunteerGuidelinesView(),
+      transitionStyle: Transition.rightToLeft,
+    );
   }
 
   void setTab(int index) {
