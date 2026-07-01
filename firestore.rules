@@ -192,7 +192,13 @@ service cloud.firestore {
     match /communities/{communityId} {
       allow read: if isSignedIn();
       // Admin panel can now create/edit/delete communities. (Was: write denied.)
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+                    // Allow any signed-in user to join/leave by bumping ONLY the
+                    // membersCount aggregate (client-side batch in joinCommunity()).
+                    || (isSignedIn() && request.resource.data.diff(resource.data)
+                          .affectedKeys()
+                          .hasOnly(['membersCount']));
 
       match /messages/{messageId} {
         allow read: if isSignedIn();
