@@ -148,7 +148,7 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                                       const SizedBox(height: 4),
                                       Text(
                                         "Accepted chats will appear here.",
-                                        style: GoogleFonts.inter(
+                                        style: GoogleFonts.crimsonPro(
                                           fontSize: 13,
                                           color: AppColors.primaryVeryDark
                                               .withAlpha(150),
@@ -247,8 +247,8 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration:
-                BoxDecoration(color: accent.withAlpha(38), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+                color: accent.withAlpha(38), shape: BoxShape.circle),
             child: Icon(
               online ? Icons.sensors_rounded : Icons.sensors_off_rounded,
               color: accent,
@@ -271,7 +271,7 @@ class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
                 const SizedBox(height: 2),
                 Text(
                   online ? "Online · Ready for chats" : "Offline · Away",
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.crimsonPro(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                     color: accent,

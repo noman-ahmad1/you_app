@@ -46,6 +46,10 @@ class AuthenticationService with ListenableServiceMixin {
   List<AppUser> get allUsers => _allUsers.value;
 
   StreamSubscription<User?>? _authSubscription;
+  // Live listener on the signed-in user's own doc so profile/subscription
+  // changes (e.g. an admin granting Premium) reflect without a restart.
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _userDocSubscription;
 
   AppUser? get currentUser => _currentUser.value;
   AuthStatus get authStatus => _authStatus.value;
@@ -100,6 +104,9 @@ class AuthenticationService with ListenableServiceMixin {
 
         _currentUser.value = appUser;
 
+        // Keep the user in sync with their Firestore doc (subscription, profile).
+        _listenToUserDoc(firebaseUser);
+
         // Identify the user for analytics/crash segmentation (no content/PII).
         _analytics.setUser(
           uid: appUser.uid,
@@ -143,6 +150,8 @@ class AuthenticationService with ListenableServiceMixin {
         _authStatus.value = AuthStatus.unauthenticated;
       }
     } else {
+      _userDocSubscription?.cancel();
+      _userDocSubscription = null;
       _currentUser.value = null;
       _allUsers.value = []; // Clear users list on logout
       _authStatus.value = AuthStatus.unauthenticated;
@@ -150,6 +159,24 @@ class AuthenticationService with ListenableServiceMixin {
 
     _isLoading.value = false;
     notifyListeners();
+  }
+
+  /// Subscribes to the signed-in user's own Firestore doc so live changes
+  /// (subscription tier/expiry, profile edits) update [currentUser] without a
+  /// restart. Rebuilds the AppUser via [_createAppUser] on every snapshot.
+  void _listenToUserDoc(User firebaseUser) {
+    _userDocSubscription?.cancel();
+    _userDocSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(firebaseUser.uid)
+        .snapshots()
+        .listen((snapshot) {
+      if (!snapshot.exists) return;
+      _currentUser.value = _createAppUser(firebaseUser, snapshot.data());
+      notifyListeners();
+    }, onError: (e) {
+      AppLog.error('AuthenticationService.userDocListener', e);
+    });
   }
 
   // New method to force refresh the current user's state (useful after external actions like password reset)
@@ -207,6 +234,10 @@ class AuthenticationService with ListenableServiceMixin {
       joinedCommunities: userData?['joinedCommunities'] != null
           ? List<String>.from(userData!['joinedCommunities'])
           : [],
+      subscriptionTier: userData?['subscriptionTier'] ?? 'free',
+      subscriptionExpiry:
+          (userData?['subscription_expiry'] as Timestamp?)?.toDate(),
+      subscriptionSource: userData?['subscription_source'],
     );
   }
 
@@ -1048,5 +1079,6 @@ class AuthenticationService with ListenableServiceMixin {
 
   void dispose() {
     _authSubscription?.cancel();
+    _userDocSubscription?.cancel();
   }
 }

@@ -340,7 +340,7 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
               children: [
                 Text(
                   'YOU\'RE NOT ALONE',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.crimsonPro(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.5,
@@ -371,7 +371,7 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                 Space.verticalSpaceTiny(context),
                 Text(
                   'Pairing is exclusive for 24 hours — to keep your space focused.',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.crimsonPro(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
                     color: Colors.grey[700],

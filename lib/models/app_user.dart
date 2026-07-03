@@ -24,6 +24,9 @@ class AppUser {
   final List<String>? permissions;
   final String? fcmToken;
   final List<String> joinedCommunities;
+  final String subscriptionTier; // 'free' | 'premium'
+  final DateTime? subscriptionExpiry; // null => no expiry (indefinite grant)
+  final String? subscriptionSource; // e.g. 'admin', 'promo'
 
   AppUser({
     required this.uid,
@@ -44,6 +47,9 @@ class AppUser {
     this.permissions,
     this.fcmToken,
     this.joinedCommunities = const [],
+    this.subscriptionTier = 'free',
+    this.subscriptionExpiry,
+    this.subscriptionSource,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> data) {
@@ -73,6 +79,9 @@ class AppUser {
       joinedCommunities: data['joinedCommunities'] != null
           ? List<String>.from(data['joinedCommunities'])
           : [],
+      subscriptionTier: data['subscriptionTier'] ?? 'free',
+      subscriptionExpiry: (data['subscription_expiry'] as Timestamp?)?.toDate(),
+      subscriptionSource: data['subscription_source'],
     );
   }
 
@@ -88,6 +97,9 @@ class AppUser {
       isAdmin && (permissions?.contains('manage_content') ?? true);
   bool get canViewAnalytics =>
       isAdmin && (permissions?.contains('view_analytics') ?? true);
+  bool get isPremium =>
+      subscriptionTier == 'premium' &&
+      (subscriptionExpiry == null || subscriptionExpiry!.isAfter(DateTime.now()));
 
   String get defaultAvatar {
     final g = gender?.toLowerCase();
@@ -115,6 +127,9 @@ class AppUser {
     List<String>? permissions,
     String? fcmToken,
     List<String>? joinedCommunities,
+    String? subscriptionTier,
+    DateTime? subscriptionExpiry,
+    String? subscriptionSource,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
@@ -131,6 +146,9 @@ class AppUser {
       permissions: permissions ?? this.permissions,
       fcmToken: fcmToken ?? this.fcmToken,
       joinedCommunities: joinedCommunities ?? this.joinedCommunities,
+      subscriptionTier: subscriptionTier ?? this.subscriptionTier,
+      subscriptionExpiry: subscriptionExpiry ?? this.subscriptionExpiry,
+      subscriptionSource: subscriptionSource ?? this.subscriptionSource,
     );
   }
 }

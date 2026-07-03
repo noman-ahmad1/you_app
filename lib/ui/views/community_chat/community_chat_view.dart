@@ -75,7 +75,7 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                                 ),
                                 child: Text(
                                   'Join Community to Post',
-                                  style: GoogleFonts.inter(
+                                  style: GoogleFonts.crimsonPro(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
@@ -83,60 +83,68 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                               ),
                             ),
                           ),
-                listBuilder: (context, bottomInset) =>
-                    (viewModel.isBusy && viewModel.posts.isEmpty)
-                        ? const CustomLottieLoader(fullScreen: true)
-                        : viewModel.posts.isEmpty
-                            ? _buildEmptyState()
-                            : NotificationListener<ScrollNotification>(
-                                onNotification: (notification) {
-                                  // Trigger load-more as the user nears the bottom.
-                                  if (notification.metrics.pixels >=
-                                      notification.metrics.maxScrollExtent -
-                                          200) {
-                                    viewModel.loadMore();
-                                  }
-                                  return false;
-                                },
-                                child: ListView.separated(
-                                  // Bottom padding tracks the floating composer.
-                                  padding:
-                                      EdgeInsets.fromLTRB(12, 16, 12, bottomInset),
-                                  itemCount: viewModel.posts.length +
-                                      (viewModel.canLoadMore ? 1 : 0),
-                                  separatorBuilder: (context, index) =>
-                                      const SizedBox(height: 12),
-                                  itemBuilder: (context, index) {
-                                    if (index >= viewModel.posts.length) {
-                                      return const Padding(
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 16),
-                                        child: Center(
-                                          child: SizedBox(
-                                            width: 24,
-                                            height: 24,
-                                            child: CircularProgressIndicator(
-                                                strokeWidth: 2),
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    final post = viewModel.posts[index];
-                                    final isMe = post.authorId ==
-                                        viewModel.currentUserId;
-
-                                    return _CommunityPostCard(
-                                      post: post,
-                                      isMe: isMe,
-                                      isLiked: post.likedBy
-                                          .contains(viewModel.currentUserId),
-                                      onTap: () =>
-                                          viewModel.navigateToThread(post),
-                                      onLike: () => viewModel.toggleLike(post),
-                                    );
-                                  },
-                                ),
+                listBuilder: (context, bottomInset) {
+                  final pending = viewModel.pendingPosts;
+                  if (viewModel.isBusy && viewModel.posts.isEmpty) {
+                    return const CustomLottieLoader(fullScreen: true);
+                  }
+                  if (viewModel.posts.isEmpty && pending.isEmpty) {
+                    return _buildEmptyState();
+                  }
+                  return NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      // Trigger load-more as the user nears the bottom.
+                      if (notification.metrics.pixels >=
+                          notification.metrics.maxScrollExtent - 200) {
+                        viewModel.loadMore();
+                      }
+                      return false;
+                    },
+                    child: ListView.separated(
+                      // Bottom padding tracks the floating composer.
+                      padding: EdgeInsets.fromLTRB(12, 16, 12, bottomInset),
+                      // Pending "Posting…" cards render first (at the top).
+                      itemCount: pending.length +
+                          viewModel.posts.length +
+                          (viewModel.canLoadMore ? 1 : 0),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        if (index < pending.length) {
+                          return PendingCard(
+                            authorName: viewModel.currentUserName,
+                            content: pending[index].content,
+                          );
+                        }
+                        final postIndex = index - pending.length;
+                        if (postIndex >= viewModel.posts.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2),
                               ),
+                            ),
+                          );
+                        }
+                        final post = viewModel.posts[postIndex];
+                        final isMe = post.authorId == viewModel.currentUserId;
+
+                        return _CommunityPostCard(
+                          post: post,
+                          isMe: isMe,
+                          isLiked:
+                              post.likedBy.contains(viewModel.currentUserId),
+                          onTap: () => viewModel.navigateToThread(post),
+                          onLike: () => viewModel.toggleLike(post),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -188,64 +196,123 @@ class _PostComposer extends ViewModelWidget<CommunityChatViewModel> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(10.0),
-        child: Stack(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: viewModel.messageController,
-              keyboardType: TextInputType.multiline,
-              maxLines: 5,
-              minLines: 1,
-              cursorColor: AppColors.secondary,
-              style: GoogleFonts.crimsonPro(
-                color: AppColors.secondary,
-              ),
-              decoration: InputDecoration(
-                hintText: "Start a new thread... (@ to mention)",
-                hintStyle: GoogleFonts.crimsonPro(
-                  color: AppColors.secondary.withAlpha(150),
-                ),
-                filled: true,
-                fillColor: AppColors.secondaryVeryLight.withAlpha(240),
-                contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide:
-                      const BorderSide(color: AppColors.secondary, width: 2),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide:
-                      const BorderSide(color: AppColors.secondary, width: 2),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide:
-                      const BorderSide(color: AppColors.secondary, width: 2),
-                ),
-              ),
-              onSubmitted: (_) => viewModel.sendPost(),
-            ),
-            Positioned(
-              right: 8.0,
-              bottom: 5.5,
-              child: GestureDetector(
-                onTap: viewModel.sendPost,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryVeryLight.withAlpha(75),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.secondary, width: 2),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: Image.asset(
-                    AppConstants.send,
+            if (viewModel.threadCapReached) const _ThreadUpgradeButton(),
+            Stack(
+              children: [
+                TextField(
+                  controller: viewModel.messageController,
+                  keyboardType: TextInputType.multiline,
+                  maxLines: 5,
+                  minLines: 1,
+                  cursorColor: AppColors.secondary,
+                  style: GoogleFonts.crimsonPro(
                     color: AppColors.secondary,
-                    width: 25,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Start a new thread...",
+                    hintStyle: GoogleFonts.crimsonPro(
+                      color: AppColors.secondary.withAlpha(150),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.secondaryVeryLight.withAlpha(240),
+                    contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: const BorderSide(
+                          color: AppColors.secondary, width: 2),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: const BorderSide(
+                          color: AppColors.secondary, width: 2),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: const BorderSide(
+                          color: AppColors.secondary, width: 2),
+                    ),
+                  ),
+                  onSubmitted: (_) => viewModel.sendPost(),
+                ),
+                Positioned(
+                  right: 8.0,
+                  bottom: 5.5,
+                  child: GestureDetector(
+                    onTap: viewModel.sendPost,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryVeryLight.withAlpha(75),
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: AppColors.secondary, width: 2),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: Image.asset(
+                        AppConstants.send,
+                        color: AppColors.secondary,
+                        width: 25,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Persistent CTA shown above the composer once the free monthly thread cap is
+/// hit. Tapping it opens the Premium paywall.
+class _ThreadUpgradeButton extends ViewModelWidget<CommunityChatViewModel> {
+  const _ThreadUpgradeButton();
+
+  @override
+  Widget build(BuildContext context, CommunityChatViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(25),
+          onTap: viewModel.openThreadPaywall,
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.secondary, AppColors.secondaryLight],
+              ),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.secondary.withAlpha(70),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.workspace_premium,
+                    color: Colors.white, size: 20),
+                const SizedBox(width: 7),
+                Text(
+                  'Monthly limit reached · Unlock unlimited threads',
+                  style: GoogleFonts.crimsonPro(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -312,8 +379,9 @@ class _CommunityPostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeString =
         timeago.format(post.createdAt, locale: 'en_short'); // e.g., '5m', '2h'
-    final initial =
-        post.authorUsername.isNotEmpty ? post.authorUsername[0].toUpperCase() : '?';
+    final initial = post.authorUsername.isNotEmpty
+        ? post.authorUsername[0].toUpperCase()
+        : '?';
 
     return Material(
       color: Colors.transparent,
@@ -332,8 +400,8 @@ class _CommunityPostCard extends StatelessWidget {
                 AppColors.secondaryVeryLight.withAlpha(70),
               ],
             ),
-            border:
-                Border.all(color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
+            border: Border.all(
+                color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
             boxShadow: [
               BoxShadow(
                 color: AppColors.primaryVeryDark.withAlpha(20),

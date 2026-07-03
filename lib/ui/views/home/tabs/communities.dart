@@ -111,7 +111,7 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                             children: [
                               Text(
                                 'FIND YOUR PEOPLE',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.crimsonPro(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 1.5,
@@ -142,7 +142,7 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                               Space.verticalSpaceTiny(context),
                               Text(
                                 'Each community is a quiet circle for one shared experience.',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.crimsonPro(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w400,
                                   color: Colors.grey[700],

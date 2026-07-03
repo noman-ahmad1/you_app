@@ -1,35 +1,41 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/chat_request_model.dart';
-import 'package:flutter/material.dart';
 import 'package:you_app/services/analytics_service.dart';
+
+/// Outcome of requesting a volunteer chat. When [capReached] is true the free
+/// user has exhausted their welcome chats and should be shown the paywall.
+class ChatRequestResult {
+  final bool capReached;
+  const ChatRequestResult({required this.capReached});
+}
 
 class ChatRequestService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
   AnalyticsService get _analytics => locator<AnalyticsService>();
 
-  /// Creates a new chat request document in Firestore and creates an In-App Notification document for the Volunteer.
-  Future<void> sendChatRequest(ChatRequest request) async {
-    final docRef = await _firestore.collection('chat_requests').add(request.toJson());
-    
-    // Create the In-App Notification document inside the Volunteer's notifications subcollection
-    await _firestore
-        .collection('users')
-        .doc(request.volunteerId)
-        .collection('notifications')
-        .add({
-      'title': 'New Chat Request 💬',
-      'body': '${request.requesterName} wants to connect with you.',
-      'type': 'request_received',
-      'isRead': false,
-      'createdAt': FieldValue.serverTimestamp(),
-      'data': {
-        'requestId': docRef.id,
-        'route': 'volunteer_dashboard',
-      },
+  /// Requests a chat with a volunteer via the `requestVolunteerChat` callable.
+  /// The function atomically enforces the free-tier welcome-chat cap and creates
+  /// the request + volunteer notification server-side (direct client writes to
+  /// chat_requests are denied by security rules), which closes the concurrent-
+  /// request bypass a client-side counter would leave open.
+  Future<ChatRequestResult> sendChatRequest(ChatRequest request) async {
+    final result = await _functions.httpsCallable('requestVolunteerChat').call({
+      'volunteerId': request.volunteerId,
+      'requesterName': request.requesterName,
+      'requesterAvatarUrl': request.requesterAvatarUrl,
+      'topic': request.topic,
     });
 
+    final data = Map<String, dynamic>.from(result.data as Map);
+    if (data['capReached'] == true) {
+      return const ChatRequestResult(capReached: true);
+    }
+
     _analytics.logChatRequestSent();
+    return const ChatRequestResult(capReached: false);
   }
 
   /// Fetches chat requests for a specific volunteer.

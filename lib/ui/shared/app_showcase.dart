@@ -42,13 +42,13 @@ class AppShowcase {
       titlePadding: const EdgeInsets.only(bottom: 6),
       showArrow: true,
       // --- Typography (modern sans-serif) ---
-      titleTextStyle: GoogleFonts.inter(
+      titleTextStyle: GoogleFonts.crimsonPro(
         fontSize: 16.5,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.2,
         color: AppColors.primaryVeryDark,
       ),
-      descTextStyle: GoogleFonts.inter(
+      descTextStyle: GoogleFonts.crimsonPro(
         fontSize: 13.5,
         fontWeight: FontWeight.w400,
         height: 1.45,
@@ -65,7 +65,7 @@ class AppShowcase {
           name: 'Skip',
           backgroundColor: Colors.transparent,
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          textStyle: GoogleFonts.inter(
+          textStyle: GoogleFonts.crimsonPro(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: AppColors.primaryVeryDark.withAlpha(140),
@@ -77,7 +77,7 @@ class AppShowcase {
           backgroundColor: AppColors.secondary,
           borderRadius: BorderRadius.circular(30),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-          textStyle: GoogleFonts.inter(
+          textStyle: GoogleFonts.crimsonPro(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -89,7 +89,8 @@ class AppShowcase {
         ),
       ];
 
-  static TooltipActionConfig get globalActionConfig => const TooltipActionConfig(
+  static TooltipActionConfig get globalActionConfig =>
+      const TooltipActionConfig(
         alignment: MainAxisAlignment.spaceBetween,
         position: TooltipActionPosition.inside,
         gapBetweenContentAndAction: 16,

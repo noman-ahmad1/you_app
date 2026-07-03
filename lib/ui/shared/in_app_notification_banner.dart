@@ -166,7 +166,7 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
                         children: [
                           Text(
                             widget.title,
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.crimsonPro(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.primaryVeryDark,
@@ -175,7 +175,7 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
                           const SizedBox(height: 2),
                           Text(
                             widget.body,
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.crimsonPro(
                               fontSize: 12,
                               color: AppColors.primaryVeryDark.withAlpha(160),
                             ),

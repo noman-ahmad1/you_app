@@ -364,7 +364,7 @@ class _WeeklyMoodChartState extends State<WeeklyMoodChart> {
         const SizedBox(height: 12),
         Text(
           day,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.crimsonPro(
             fontSize: 14,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF7B7890),
@@ -405,7 +405,7 @@ class _WeeklyMoodChartState extends State<WeeklyMoodChart> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.crimsonPro(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: secondaryText,

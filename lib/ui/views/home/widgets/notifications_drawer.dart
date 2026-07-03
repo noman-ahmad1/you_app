@@ -63,7 +63,8 @@ class NotificationsDrawer extends StatelessWidget {
               if (requestId != null) {
                 onTap = () {
                   Navigator.of(context).pop(); // Close drawer
-                  locator<NavigationService>().replaceWithHomeView(initialIndex: 2);
+                  locator<NavigationService>()
+                      .replaceWithHomeView(initialIndex: 2);
                 };
               }
             } else if (type == 'new_message') {
@@ -72,7 +73,9 @@ class NotificationsDrawer extends StatelessWidget {
                 onTap = () {
                   Navigator.of(context).pop(); // Close drawer
                   final parts = chatId.split('_');
-                  final volunteerId = parts.firstWhere((id) => id != currentUserId, orElse: () => '');
+                  final volunteerId = parts.firstWhere(
+                      (id) => id != currentUserId,
+                      orElse: () => '');
                   locator<NavigationService>().navigateToChatView(
                     volunteerId: volunteerId,
                     volunteerName: "Volunteer",
@@ -129,7 +132,8 @@ class NotificationsDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerContent(BuildContext context, List<Map<String, dynamic>> notifications) {
+  Widget _buildDrawerContent(
+      BuildContext context, List<Map<String, dynamic>> notifications) {
     return Drawer(
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
@@ -162,7 +166,8 @@ class NotificationsDrawer extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                        border: Border.all(
+                            color: Colors.grey.withValues(alpha: 0.2)),
                       ),
                       child: const Icon(Icons.close,
                           size: 20, color: AppColors.secondary),
@@ -236,7 +241,7 @@ class NotificationsDrawer extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.crimsonPro(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppColors.primaryVeryDark,
@@ -246,7 +251,7 @@ class NotificationsDrawer extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           body,
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.crimsonPro(
                             fontSize: 13,
                             color: AppColors.primaryVeryDark.withAlpha(160),
                           ),
@@ -255,7 +260,7 @@ class NotificationsDrawer extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         time,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.crimsonPro(
                           fontSize: 12,
                           color: AppColors.primaryVeryDark.withAlpha(110),
                         ),

@@ -24,7 +24,11 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
 
   @override
   Widget build(BuildContext context, HomeViewModel viewModel) {
-    Widget _buildShowcase({required GlobalKey key, required String title, required String description, required Widget child}) {
+    Widget _buildShowcase(
+        {required GlobalKey key,
+        required String title,
+        required String description,
+        required Widget child}) {
       return AppShowcase.step(
         key: key,
         title: title,
@@ -153,7 +157,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                           children: [
                             _HomeAnnouncement(viewModel: viewModel),
                             ClipRRect(
-                                borderRadius: BorderRadius.circular(23),
+                              borderRadius: BorderRadius.circular(23),
                               child: BackdropFilter(
                                 filter:
                                     ImageFilter.blur(sigmaX: 200, sigmaY: 200),
@@ -201,110 +205,115 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                     ],
                                   ),
                                 ),
-                                ),
                               ),
+                            ),
                             Space.verticalSpaceTiny(context),
                             // Mood Card
                             _buildShowcase(
                               key: viewModel.moodKey,
                               title: 'Mood Tracker',
-                              description: 'Log how you feel and track your emotional journey.',
+                              description:
+                                  'Log how you feel and track your emotional journey.',
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(23),
-                              child: BackdropFilter(
-                                filter:
-                                    ImageFilter.blur(sigmaX: 200, sigmaY: 200),
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  width: width * 0.9,
-                                  height: height * 0.19,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.background.withAlpha(200),
-                                    // AppColors.secondaryVeryLight
-                                    //     .withAlpha(102),
-                                    border: Border.all(
-                                        color: AppColors.background, width: 2),
-                                    // AppColors.secondary,
-                                    // width: 2),
-                                    borderRadius: BorderRadius.circular(23),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withAlpha(25),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        'Feeling happy, meh, or down?\n Lock it in!',
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.crimsonPro(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.secondary),
-                                      ),
-                                      Space.verticalSpaceTiny(context),
-                                      // Space.verticalSpaceVTiny(context),
-                                      InkWell(
-                                        onTap: () {
-                                          viewModel.navigateToMoodTracker();
-                                        },
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(23),
-                                          child: BackdropFilter(
-                                            filter: ImageFilter.blur(
-                                                sigmaX: 200, sigmaY: 200),
-                                            child: Container(
-                                              width: width * 0.7,
-                                              height: height * 0.075,
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    // AppColors.background
-                                                    //     .withAlpha(200),
-                                                    AppColors.secondaryVeryLight
-                                                        .withAlpha(200),
-                                                border: Border.all(
-                                                    color:
-                                                        // AppColors
-                                                        //     .background,
-                                                        // width: 2),
-                                                        AppColors
-                                                            .secondaryVeryLight,
-                                                    width: 2),
-                                                borderRadius:
-                                                    BorderRadius.circular(23),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withAlpha(25),
-                                                    blurRadius: 20,
-                                                    offset: const Offset(0, 4),
-                                                  ),
-                                                ],
-                                                // image: DecorationImage(
-                                                //   image: AssetImage(
-                                                //       AppConstants.emo),
-                                                //   fit: BoxFit.contain,
-                                                // ),
-                                              ),
-                                              child: Center(
-                                                child: Image.asset(
-                                                    height: height * 0.055,
-                                                    width: width * 0.75,
-                                                    AppConstants.emo),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                      sigmaX: 200, sigmaY: 200),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(10),
+                                    width: width * 0.9,
+                                    height: height * 0.19,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          AppColors.background.withAlpha(200),
+                                      // AppColors.secondaryVeryLight
+                                      //     .withAlpha(102),
+                                      border: Border.all(
+                                          color: AppColors.background,
+                                          width: 2),
+                                      // AppColors.secondary,
+                                      // width: 2),
+                                      borderRadius: BorderRadius.circular(23),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(25),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Feeling happy, meh, or down?\n Lock it in!',
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.crimsonPro(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.secondary),
+                                        ),
+                                        Space.verticalSpaceTiny(context),
+                                        // Space.verticalSpaceVTiny(context),
+                                        InkWell(
+                                          onTap: () {
+                                            viewModel.navigateToMoodTracker();
+                                          },
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(23),
+                                            child: BackdropFilter(
+                                              filter: ImageFilter.blur(
+                                                  sigmaX: 200, sigmaY: 200),
+                                              child: Container(
+                                                width: width * 0.7,
+                                                height: height * 0.075,
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      // AppColors.background
+                                                      //     .withAlpha(200),
+                                                      AppColors
+                                                          .secondaryVeryLight
+                                                          .withAlpha(200),
+                                                  border: Border.all(
+                                                      color:
+                                                          // AppColors
+                                                          //     .background,
+                                                          // width: 2),
+                                                          AppColors
+                                                              .secondaryVeryLight,
+                                                      width: 2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(23),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withAlpha(25),
+                                                      blurRadius: 20,
+                                                      offset:
+                                                          const Offset(0, 4),
+                                                    ),
+                                                  ],
+                                                  // image: DecorationImage(
+                                                  //   image: AssetImage(
+                                                  //       AppConstants.emo),
+                                                  //   fit: BoxFit.contain,
+                                                  // ),
+                                                ),
+                                                child: Center(
+                                                  child: Image.asset(
+                                                      height: height * 0.055,
+                                                      width: width * 0.75,
+                                                      AppConstants.emo),
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
                                 ),
                               ),
                             ),
@@ -313,239 +322,250 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                             _buildShowcase(
                               key: viewModel.journalKey,
                               title: 'Journaling',
-                              description: 'Swipe to express your thoughts in a safe space.',
+                              description:
+                                  'Swipe to express your thoughts in a safe space.',
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(23),
-                              child: BackdropFilter(
-                                filter:
-                                    ImageFilter.blur(sigmaX: 200, sigmaY: 200),
-                                child: Container(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(10, 10, 0, 0),
-                                  width: width * 0.9,
-                                  height: height * 0.19,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.background.withAlpha(200),
-                                    // AppColors.secondaryVeryLight
-                                    //     .withAlpha(102),
-                                    border: Border.all(
-                                        color: AppColors.background, width: 2),
-                                    // AppColors.secondary,
-                                    // width: 2),
-                                    borderRadius: BorderRadius.circular(23),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withAlpha(25),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        'Today\'s Journal',
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.crimsonPro(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.secondary),
-                                      ),
-                                      Space.verticalSpaceVTiny(context),
-                                      Row(
-                                        children: [
-                                          Column(
-                                            children: [
-                                              Text(
-                                                'Your safe space to write',
-                                                textAlign: TextAlign.center,
-                                                style: GoogleFonts.crimsonPro(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: AppColors
-                                                        .primaryVeryDark),
-                                              ),
-                                              Space.verticalSpaceTiny(context),
-                                              ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(35),
-                                                child: BackdropFilter(
-                                                  filter: ImageFilter.blur(
-                                                      sigmaX: 200, sigmaY: 200),
-                                                  child: Container(
-                                                    padding: EdgeInsets.all(
-                                                        width * 0.007),
-                                                    width: width * 0.55,
-                                                    height: height * 0.065,
-                                                    decoration: BoxDecoration(
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                      sigmaX: 200, sigmaY: 200),
+                                  child: Container(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(10, 10, 0, 0),
+                                    width: width * 0.9,
+                                    height: height * 0.19,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          AppColors.background.withAlpha(200),
+                                      // AppColors.secondaryVeryLight
+                                      //     .withAlpha(102),
+                                      border: Border.all(
+                                          color: AppColors.background,
+                                          width: 2),
+                                      // AppColors.secondary,
+                                      // width: 2),
+                                      borderRadius: BorderRadius.circular(23),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(25),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Today\'s Journal',
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.crimsonPro(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.secondary),
+                                        ),
+                                        Space.verticalSpaceVTiny(context),
+                                        Row(
+                                          children: [
+                                            Column(
+                                              children: [
+                                                Text(
+                                                  'Your safe space to write',
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.crimsonPro(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                       color: AppColors
-                                                          .secondaryVeryLight
-                                                          .withAlpha(200),
-                                                      border: Border.all(
-                                                          color:
-                                                              AppColors.peach,
-                                                          width: 2),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              100),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.black
-                                                              .withAlpha(25),
-                                                          blurRadius: 20,
-                                                          offset: const Offset(
-                                                              0, 4),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    child: SwipeButton.expand(
-                                                      thumb: ClipRRect(
+                                                          .primaryVeryDark),
+                                                ),
+                                                Space.verticalSpaceTiny(
+                                                    context),
+                                                ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(35),
+                                                  child: BackdropFilter(
+                                                    filter: ImageFilter.blur(
+                                                        sigmaX: 200,
+                                                        sigmaY: 200),
+                                                    child: Container(
+                                                      padding: EdgeInsets.all(
+                                                          width * 0.007),
+                                                      width: width * 0.55,
+                                                      height: height * 0.065,
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors
+                                                            .secondaryVeryLight
+                                                            .withAlpha(200),
+                                                        border: Border.all(
+                                                            color:
+                                                                AppColors.peach,
+                                                            width: 2),
                                                         borderRadius:
                                                             BorderRadius
-                                                                .circular(35),
-                                                        child: BackdropFilter(
-                                                          filter:
-                                                              ImageFilter.blur(
-                                                                  sigmaX: 200,
-                                                                  sigmaY: 200),
-                                                          child: Container(
-                                                            width:
-                                                                height * 0.05,
-                                                            height:
-                                                                height * 0.05,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: AppColors
-                                                                  .secondaryVeryLight
-                                                                  .withAlpha(
-                                                                      200),
-                                                              border: Border.all(
-                                                                  color:
-                                                                      AppColors
-                                                                          .peach,
-                                                                  width: 2),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          35),
-                                                              boxShadow: [
-                                                                BoxShadow(
-                                                                  color: Colors
-                                                                      .black
-                                                                      .withAlpha(
-                                                                          25),
-                                                                  blurRadius:
-                                                                      20,
-                                                                  offset:
-                                                                      const Offset(
-                                                                          0, 4),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            child: Center(
-                                                              child:
-                                                                  Image.asset(
-                                                                AppConstants
-                                                                    .write,
+                                                                .circular(100),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black
+                                                                .withAlpha(25),
+                                                            blurRadius: 20,
+                                                            offset:
+                                                                const Offset(
+                                                                    0, 4),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: SwipeButton.expand(
+                                                        thumb: ClipRRect(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(35),
+                                                          child: BackdropFilter(
+                                                            filter: ImageFilter
+                                                                .blur(
+                                                                    sigmaX: 200,
+                                                                    sigmaY:
+                                                                        200),
+                                                            child: Container(
+                                                              width:
+                                                                  height * 0.05,
+                                                              height:
+                                                                  height * 0.05,
+                                                              decoration:
+                                                                  BoxDecoration(
                                                                 color: AppColors
-                                                                    .secondary,
-                                                                width: height *
-                                                                    0.025,
-                                                                height: height *
-                                                                    0.025,
-                                                                fit: BoxFit
-                                                                    .contain,
+                                                                    .secondaryVeryLight
+                                                                    .withAlpha(
+                                                                        200),
+                                                                border: Border.all(
+                                                                    color: AppColors
+                                                                        .peach,
+                                                                    width: 2),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            35),
+                                                                boxShadow: [
+                                                                  BoxShadow(
+                                                                    color: Colors
+                                                                        .black
+                                                                        .withAlpha(
+                                                                            25),
+                                                                    blurRadius:
+                                                                        20,
+                                                                    offset:
+                                                                        const Offset(
+                                                                            0,
+                                                                            4),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              child: Center(
+                                                                child:
+                                                                    Image.asset(
+                                                                  AppConstants
+                                                                      .write,
+                                                                  color: AppColors
+                                                                      .secondary,
+                                                                  width:
+                                                                      height *
+                                                                          0.025,
+                                                                  height:
+                                                                      height *
+                                                                          0.025,
+                                                                  fit: BoxFit
+                                                                      .contain,
+                                                                ),
                                                               ),
                                                             ),
                                                           ),
                                                         ),
-                                                      ),
-                                                      activeThumbColor:
-                                                          const Color.fromRGBO(
-                                                              0, 0, 0, 0),
-                                                      activeTrackColor:
-                                                          Colors.transparent,
-                                                      onSwipeStart: () async {
-                                                        HapticFeedback
-                                                            .lightImpact();
-                                                        // Play a gentle "swipe start" sound
-                                                        // await viewModel
-                                                        //     .playSwipeSound(
-                                                        //         isComplete:
-                                                        //             false);
-                                                      },
-                                                      onSwipe: () async {
-                                                        // While swiping, you could loop a soft whoosh sound
-                                                        // await viewModel
-                                                        //     .playSwipeSound(
-                                                        //         isComplete:
-                                                        //             false);
-                                                      },
-                                                      onSwipeEnd: () async {
-                                                        HapticFeedback
-                                                            .mediumImpact();
-                                                        // Stop swipe loop and play "completion chime"
-                                                        // viewModel
-                                                        //     .playSwipeSound(
-                                                        //         isComplete:
-                                                        //             true);
-                                                        viewModel
-                                                            .navigateToJournal();
-                                                      },
-                                                      child: FittedBox(
-                                                        fit: BoxFit.scaleDown,
-                                                        child: Row(
-                                                          children: [
-                                                            SizedBox(
-                                                                width: width *
-                                                                    0.14),
-                                                            Text(
-                                                              "Swipe to express",
-                                                              style: GoogleFonts
-                                                                  .crimsonPro(
-                                                                fontSize: 14,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                                color: AppColors
-                                                                    .secondary,
+                                                        activeThumbColor:
+                                                            const Color
+                                                                .fromRGBO(
+                                                                0, 0, 0, 0),
+                                                        activeTrackColor:
+                                                            Colors.transparent,
+                                                        onSwipeStart: () async {
+                                                          HapticFeedback
+                                                              .lightImpact();
+                                                          // Play a gentle "swipe start" sound
+                                                          // await viewModel
+                                                          //     .playSwipeSound(
+                                                          //         isComplete:
+                                                          //             false);
+                                                        },
+                                                        onSwipe: () async {
+                                                          // While swiping, you could loop a soft whoosh sound
+                                                          // await viewModel
+                                                          //     .playSwipeSound(
+                                                          //         isComplete:
+                                                          //             false);
+                                                        },
+                                                        onSwipeEnd: () async {
+                                                          HapticFeedback
+                                                              .mediumImpact();
+                                                          // Stop swipe loop and play "completion chime"
+                                                          // viewModel
+                                                          //     .playSwipeSound(
+                                                          //         isComplete:
+                                                          //             true);
+                                                          viewModel
+                                                              .navigateToJournal();
+                                                        },
+                                                        child: FittedBox(
+                                                          fit: BoxFit.scaleDown,
+                                                          child: Row(
+                                                            children: [
+                                                              SizedBox(
+                                                                  width: width *
+                                                                      0.14),
+                                                              Text(
+                                                                "Swipe to express",
+                                                                style: GoogleFonts
+                                                                    .crimsonPro(
+                                                                  fontSize: 14,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  color: AppColors
+                                                                      .secondary,
+                                                                ),
                                                               ),
-                                                            ),
-                                                            Lottie.asset(
-                                                              decoder:
-                                                                  customDecoder,
-                                                              AppConstants
-                                                                  .swipeRight,
-                                                              width:
-                                                                  width * 0.1,
-                                                              height:
-                                                                  height * 0.05,
-                                                            ),
-                                                          ],
+                                                              Lottie.asset(
+                                                                decoder:
+                                                                    customDecoder,
+                                                                AppConstants
+                                                                    .swipeRight,
+                                                                width:
+                                                                    width * 0.1,
+                                                                height: height *
+                                                                    0.05,
+                                                              ),
+                                                            ],
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                          Space.horizontalSpaceTiny(context),
-                                          Expanded(
-                                            child: Image.asset(
-                                              AppConstants.journalImg,
-                                              width: width * 0.21,
-                                              height: height * 0.13,
-                                              fit: BoxFit.contain,
+                                              ],
                                             ),
-                                          ),
-                                        ],
-                                      )
-                                    ],
+                                            Space.horizontalSpaceTiny(context),
+                                            Expanded(
+                                              child: Image.asset(
+                                                AppConstants.journalImg,
+                                                width: width * 0.21,
+                                                height: height * 0.13,
+                                                fit: BoxFit.contain,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      ],
+                                    ),
                                   ),
-                                ),
                                 ),
                               ),
                             ),
@@ -556,76 +576,79 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                 _buildShowcase(
                                   key: viewModel.communitiesKey,
                                   title: 'Communities',
-                                  description: 'Find your people and connect with others.',
+                                  description:
+                                      'Find your people and connect with others.',
                                   child: InkWell(
                                     onTap: () {
                                       viewModel.setTab(0);
                                     },
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(23),
-                                    child: BackdropFilter(
-                                      filter: ImageFilter.blur(
-                                          sigmaX: 200, sigmaY: 200),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(15),
-                                        width: width * 0.42,
-                                        height: height * 0.14,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.background
-                                              .withAlpha(200),
-                                          border: Border.all(
-                                              color: AppColors.background,
-                                              width: 2),
-                                          borderRadius:
-                                              BorderRadius.circular(23),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withAlpha(25),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Image.asset(
-                                              AppConstants.community2,
-                                              // color: AppColors.secondary,
-                                              width: width * 0.135,
-                                              height: height * 0.05,
-                                              fit: BoxFit.cover,
-                                            ),
-                                            Text(
-                                              'Communities',
-                                              style: GoogleFonts.crimsonPro(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: AppColors.secondary),
-                                            ),
-                                            Text(
-                                              'Find your people',
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.crimsonPro(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w300,
-                                                  color: AppColors
-                                                      .primaryVeryDark),
-                                            ),
-                                          ],
+                                      child: BackdropFilter(
+                                        filter: ImageFilter.blur(
+                                            sigmaX: 200, sigmaY: 200),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(15),
+                                          width: width * 0.42,
+                                          height: height * 0.14,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.background
+                                                .withAlpha(200),
+                                            border: Border.all(
+                                                color: AppColors.background,
+                                                width: 2),
+                                            borderRadius:
+                                                BorderRadius.circular(23),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color:
+                                                    Colors.black.withAlpha(25),
+                                                blurRadius: 20,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Image.asset(
+                                                AppConstants.community2,
+                                                // color: AppColors.secondary,
+                                                width: width * 0.135,
+                                                height: height * 0.05,
+                                                fit: BoxFit.cover,
+                                              ),
+                                              Text(
+                                                'Communities',
+                                                style: GoogleFonts.crimsonPro(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: AppColors.secondary),
+                                              ),
+                                              Text(
+                                                'Find your people',
+                                                textAlign: TextAlign.center,
+                                                style: GoogleFonts.crimsonPro(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w300,
+                                                    color: AppColors
+                                                        .primaryVeryDark),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                                ),
                                 _buildShowcase(
                                   key: viewModel.volunteersKey,
                                   title: 'Volunteers',
-                                  description: 'Caring listeners available to chat.',
+                                  description:
+                                      'Caring listeners available to chat.',
                                   child: InkWell(
                                     onTap: () {
                                       viewModel.setTab(2);
@@ -649,7 +672,8 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                                 BorderRadius.circular(23),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withAlpha(25),
+                                                color:
+                                                    Colors.black.withAlpha(25),
                                                 blurRadius: 20,
                                                 offset: const Offset(0, 4),
                                               ),
@@ -700,7 +724,8 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                 _buildShowcase(
                                   key: viewModel.soothingSoundsKey,
                                   title: 'Soothing Sounds',
-                                  description: 'Relax your mind with calming audio.',
+                                  description:
+                                      'Relax your mind with calming audio.',
                                   child: FeatureNavCard(
                                     title: 'Soothing Sounds',
                                     subtitle: 'Relax & Listen',
@@ -711,7 +736,8 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                 _buildShowcase(
                                   key: viewModel.breatheKey,
                                   title: 'Breathe',
-                                  description: 'Follow guided breathing exercises.',
+                                  description:
+                                      'Follow guided breathing exercises.',
                                   child: FeatureNavCard(
                                     title: 'Breathe',
                                     subtitle: 'Calm Your Mind',
@@ -739,7 +765,8 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
             child: _buildShowcase(
               key: viewModel.dodoKey,
               title: 'AI Dodo',
-              description: 'Tap here to chat with your compassionate AI companion.',
+              description:
+                  'Tap here to chat with your compassionate AI companion.',
               child: _AnimatedDodoIcon(
                 onTap: () async {
                   viewModel.navigateToChatbot();
@@ -826,37 +853,37 @@ class _AnimatedDodoIconState extends State<_AnimatedDodoIcon>
           offset: Offset(0, _animation.value),
           child: child,
         );
-          },
-          child: InkWell(
-            onTap: widget.onTap,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(100),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    image: const DecorationImage(
-                      image: AssetImage(AppConstants.dodoCut),
-                      fit: BoxFit.scaleDown,
-                    ),
-                    color: AppColors.pink.withAlpha(50),
-                    border: Border.all(color: AppColors.pink, width: 2),
-                    borderRadius: BorderRadius.circular(100),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(25),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
+      },
+      child: InkWell(
+        onTap: widget.onTap,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(100),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                image: const DecorationImage(
+                  image: AssetImage(AppConstants.dodoCut),
+                  fit: BoxFit.scaleDown,
                 ),
+                color: AppColors.pink.withAlpha(50),
+                border: Border.all(color: AppColors.pink, width: 2),
+                borderRadius: BorderRadius.circular(100),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(25),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
             ),
           ),
+        ),
+      ),
     );
   }
 }
@@ -900,7 +927,7 @@ class _HomeAnnouncementState extends State<_HomeAnnouncement> {
               Expanded(
                 child: Text(
                   message,
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.crimsonPro(
                     fontSize: 12.5,
                     height: 1.35,
                     color: AppColors.primaryVeryDark,

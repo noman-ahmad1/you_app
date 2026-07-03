@@ -210,7 +210,7 @@ class _BreatheAnimationContentState extends State<_BreatheAnimationContent> {
                             child: widget.viewModel.isActive
                                 ? Text(
                                     '${widget.viewModel.secondsRemaining}',
-                                    style: GoogleFonts.inter(
+                                    style: GoogleFonts.crimsonPro(
                                       fontSize: 64,
                                       fontWeight: FontWeight.w200,
                                       color: Colors.white,
@@ -249,7 +249,7 @@ class _BreatheAnimationContentState extends State<_BreatheAnimationContent> {
                   widget.viewModel.isActive
                       ? '4-7-8 Breathing Technique'
                       : 'Take a moment to focus on your breath. Inhale for 4s, hold for 7s, exhale for 8s.',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.crimsonPro(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
                     color: Colors.white70,
@@ -281,7 +281,7 @@ class _BreatheAnimationContentState extends State<_BreatheAnimationContent> {
                 //     ),
                 //     child: Text(
                 //       widget.viewModel.isActive ? 'Stop' : 'Start',
-                //       style: GoogleFonts.inter(
+                //       style: GoogleFonts.crimsonPro(
                 //         color: Colors.white,
                 //         fontSize: 18,
                 //         fontWeight: FontWeight.w600,

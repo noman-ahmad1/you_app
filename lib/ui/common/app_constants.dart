@@ -16,6 +16,15 @@ class AppConstants {
   static const int defaultVerificationForSignup = 0; // 0 = email // 1= phone
   static const int defaultShippingMethod = 0;
 
+  // Freemium free-tier limits — fallbacks used when the matching key is absent
+  // from app_settings/global_config (which is the live-tunable source of truth).
+  static const int dodoDailyCapDefault = 10; // Dodo AI messages per day (PKT)
+  static const int welcomeChatsDefault = 3; // lifetime volunteer welcome chats
+  static const int journalHistoryDaysDefault = 7; // journal history window
+  static const int moodWindowDaysDefault = 7; // mood tracker view window
+  static const int communityThreadsMonthlyDefault = 5; // new threads / month
+  static const int communityRepliesMonthlyDefault = 30; // replies / month
+
   //icons
   static const String add = 'assets/icons/add.png';
   static const String apple = 'assets/icons/Apple.png';
@@ -110,6 +119,7 @@ class AppConstants {
   static const String swipeLeft = 'assets/animations/swipe_left.lottie';
   static const String searchVolunteer =
       'assets/animations/search_volunteer.lottie';
+  static const String premium = 'assets/animations/premium.lottie';
 
   // Volunteer Tags
   static const List<String> volunteerTags = [

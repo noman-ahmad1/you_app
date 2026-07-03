@@ -17,6 +17,7 @@ import 'package:you_app/models/app_user.dart';
 import 'package:you_app/models/chat_request_model.dart';
 import 'package:you_app/models/mood_model.dart';
 import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/ui/views/paywall/paywall_helper.dart';
 import 'package:you_app/services/app_content_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
@@ -305,7 +306,16 @@ class HomeViewModel extends ReactiveViewModel {
         requesterAvatarUrl: currentUser.profilePictureUrl,
         volunteerId: volunteer.uid,
       );
-      await locator<ChatRequestService>().sendChatRequest(request);
+      final result =
+          await locator<ChatRequestService>().sendChatRequest(request);
+
+      // Free user is out of welcome chats — show the paywall instead.
+      if (result.capReached) {
+        locator<AnalyticsService>().logGateHit(feature: PaywallFeature.welcomeChat);
+        setBusy(false);
+        await PaywallHelper.show(feature: PaywallFeature.welcomeChat);
+        return;
+      }
       // Success is handled by the stream listener updating the UI state.
     } catch (e) {
       await _dialogService.showDialog(

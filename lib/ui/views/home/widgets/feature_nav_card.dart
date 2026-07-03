@@ -67,7 +67,7 @@ class FeatureNavCard extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.crimsonPro(
                       color: Colors.white70,
                       fontSize: 12,
                       fontWeight: FontWeight.w400,

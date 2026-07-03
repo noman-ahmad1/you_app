@@ -162,7 +162,7 @@ class _SoothingSoundsViewState extends State<SoothingSoundsView>
                                 const EdgeInsets.symmetric(horizontal: 24.0),
                             child: Text(
                               "Relax & Breathe",
-                              style: GoogleFonts.inter(
+                              style: GoogleFonts.crimsonPro(
                                 color: Colors.white70,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,

@@ -229,7 +229,7 @@ class DashboardScreen extends StatelessWidget {
             children: [
               Text(
                 "Welcome back,",
-                style: GoogleFonts.inter(
+                style: GoogleFonts.crimsonPro(
                   fontSize: 13,
                   color: AppColors.primaryVeryDark.withAlpha(150),
                 ),
@@ -254,7 +254,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 child: Text(
                   '🎧 Volunteer Listener',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.crimsonPro(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
                     color: AppColors.secondary,
@@ -306,7 +306,7 @@ class DashboardScreen extends StatelessWidget {
           ),
           Text(
             title,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.crimsonPro(
               fontSize: 12.5,
               fontWeight: FontWeight.w500,
               color: AppColors.primaryVeryDark.withAlpha(160),
@@ -422,7 +422,7 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     'Earn your verified listener experience certificate',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.crimsonPro(
                       fontSize: 12.5,
                       color: Colors.white.withAlpha(215),
                     ),
@@ -477,7 +477,7 @@ class DashboardScreen extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.crimsonPro(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: danger ? AppColors.error : AppColors.primaryVeryDark,

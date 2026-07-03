@@ -71,7 +71,9 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                 onTap = () {
                   Navigator.of(context).pop(); // Close drawer
                   final parts = chatId.split('_');
-                  final requesterId = parts.firstWhere((id) => id != currentUserId, orElse: () => '');
+                  final requesterId = parts.firstWhere(
+                      (id) => id != currentUserId,
+                      orElse: () => '');
                   locator<NavigationService>().navigateToChatView(
                     volunteerId: requesterId,
                     volunteerName: "User",
@@ -123,7 +125,8 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerContent(BuildContext context, List<Map<String, dynamic>> notifications) {
+  Widget _buildDrawerContent(
+      BuildContext context, List<Map<String, dynamic>> notifications) {
     return Drawer(
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
@@ -156,7 +159,8 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                        border: Border.all(
+                            color: Colors.grey.withValues(alpha: 0.2)),
                       ),
                       child: const Icon(Icons.close,
                           size: 20, color: AppColors.secondary),
@@ -230,7 +234,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.crimsonPro(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppColors.primaryVeryDark,
@@ -240,7 +244,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           body,
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.crimsonPro(
                             fontSize: 13,
                             color: AppColors.primaryVeryDark.withAlpha(160),
                           ),
@@ -249,7 +253,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         time,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.crimsonPro(
                           fontSize: 12,
                           color: AppColors.primaryVeryDark.withAlpha(110),
                         ),

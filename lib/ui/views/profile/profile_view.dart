@@ -76,7 +76,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                                   children: [
                                     Text(
                                       'Profile Completeness',
-                                      style: GoogleFonts.inter(
+                                      style: GoogleFonts.crimsonPro(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.primaryVeryDark,
@@ -84,7 +84,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                                     ),
                                     Text(
                                       '${(viewModel.completionPercentage * 100).toInt()}%',
-                                      style: GoogleFonts.inter(
+                                      style: GoogleFonts.crimsonPro(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
                                         color: AppColors.secondary,
@@ -148,6 +148,33 @@ class ProfileView extends StackedView<ProfileViewModel> {
                             color: AppColors.secondary,
                           ),
                         ),
+                        if (user.isPremium) ...[
+                          Space.verticalSpaceVTiny(context),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.darkYellow.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.workspace_premium,
+                                    size: 16, color: AppColors.camel),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Premium',
+                                  style: GoogleFonts.crimsonPro(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.camel,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         Space.verticalSpaceVTiny(context),
 
                         // Username / Role
@@ -162,7 +189,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                             user.username != null
                                 ? '@${user.username} • ${viewModel.displayRole}'
                                 : viewModel.displayRole,
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.crimsonPro(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.secondary,
@@ -242,7 +269,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                           activeThumbColor: AppColors.secondary,
                           title: Text(
                             'Share anonymous usage data',
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.crimsonPro(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.background,
@@ -250,7 +277,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                           ),
                           subtitle: Text(
                             'Helps us improve the app. Your journal, mood, and chat content is never collected.',
-                            style: GoogleFonts.inter(
+                            style: GoogleFonts.crimsonPro(
                               fontSize: 11.5,
                               color: AppColors.background.withAlpha(200),
                             ),
@@ -310,7 +337,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
             children: [
               Text(
                 title,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.crimsonPro(
                   fontSize: 13,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
@@ -319,7 +346,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
               const SizedBox(height: 4),
               Text(
                 value,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.crimsonPro(
                   fontSize: 16,
                   color: valueColor ?? AppColors.primaryVeryDark,
                   fontWeight: FontWeight.w600,

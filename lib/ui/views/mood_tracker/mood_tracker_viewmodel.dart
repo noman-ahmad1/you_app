@@ -20,12 +20,23 @@ import 'package:you_app/services/journal_service.dart';
 import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/services/community_service.dart';
+import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/monetization_service.dart';
 import 'package:you_app/models/mood_model.dart';
+import 'package:you_app/ui/views/paywall/paywall_helper.dart';
 
 class MoodTrackerViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _authenticationService = locator<AuthenticationService>();
+  final _monetizationService = locator<MonetizationService>();
   final AudioPlayer _fxPlayer = AudioPlayer();
+
+  // --- Freemium ---
+  bool get isPremium => _monetizationService.isPremium;
+  late bool _wasPremium = isPremium;
+
+  /// Advanced insights (deep patterns, reports) are Premium-only.
+  bool get insightsLocked => !isPremium;
   Key chartKey = UniqueKey();
 
   int moodStreak = 0;
@@ -52,16 +63,41 @@ class MoodTrackerViewModel extends BaseViewModel {
   MoodTrackerViewModel() {
     _initFxPlayer();
     _initializeData();
+    // React to live subscription changes (e.g. an admin grants Premium): widen
+    // the mood window and drop the insights teaser without needing a restart.
+    _authenticationService.addListener(_onSubscriptionChanged);
+  }
+
+  void _onSubscriptionChanged() {
+    if (isPremium != _wasPremium) {
+      _wasPremium = isPremium;
+      _subscribeMood(); // re-subscribe with the new window
+      notifyListeners(); // refresh the insights teaser
+    }
   }
 
   void _initializeData() {
     _setDailyQuote();
+    _subscribeMood();
+  }
+
+  void _subscribeMood() {
     final userId = _authenticationService.currentUser?.uid;
-    if (userId != null) {
-      _moodSubscription = locator<MoodService>().getUserMoodStream(userId).listen((entries) {
-        _calculateStreak(entries);
-      });
-    }
+    if (userId == null) return;
+    _moodSubscription?.cancel();
+    // Free tier sees a recent window; premium the full 30-day view.
+    final windowDays = isPremium ? 30 : _monetizationService.moodWindowDays;
+    _moodSubscription = locator<MoodService>()
+        .getUserMoodStream(userId, windowDays: windowDays)
+        .listen((entries) {
+      _calculateStreak(entries);
+    });
+  }
+
+  /// Free-tier "unlock advanced insights" action → gate analytics + paywall.
+  Future<void> onUnlockInsights() async {
+    locator<AnalyticsService>().logGateHit(feature: PaywallFeature.moodWindow);
+    await PaywallHelper.show(feature: PaywallFeature.moodWindow);
   }
 
   void _calculateStreak(List<MoodEntry> entries) {
@@ -261,6 +297,7 @@ class MoodTrackerViewModel extends BaseViewModel {
   @override
   void dispose() {
     _isDisposed = true;
+    _authenticationService.removeListener(_onSubscriptionChanged);
     _moodSubscription?.cancel();
 
     // Stop and dispose ticker

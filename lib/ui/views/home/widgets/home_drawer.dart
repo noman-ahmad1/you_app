@@ -36,8 +36,8 @@ class HomeDrawer extends StatelessWidget {
                     backgroundImage: user?.profilePictureUrl != null &&
                             user!.profilePictureUrl!.isNotEmpty
                         ? NetworkImage(user!.profilePictureUrl!)
-                        : AssetImage(user?.defaultAvatar ?? AppConstants.avatarBinary)
-                            as ImageProvider,
+                        : AssetImage(user?.defaultAvatar ??
+                            AppConstants.avatarBinary) as ImageProvider,
                     backgroundColor: AppColors.secondaryVeryLight,
                   ),
                   const SizedBox(width: 16),
@@ -56,7 +56,7 @@ class HomeDrawer extends StatelessWidget {
                         ),
                         Text(
                           viewModel.currentUserEmail,
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.crimsonPro(
                             fontSize: 14,
                             color: Colors.grey[600],
                           ),
@@ -96,7 +96,7 @@ class HomeDrawer extends StatelessWidget {
                       viewModel.moodStreak > 0
                           ? '${viewModel.moodStreak}-DAY STREAK 🔥'
                           : 'START YOUR STREAK 🌱',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.crimsonPro(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.5,
@@ -108,7 +108,7 @@ class HomeDrawer extends StatelessWidget {
                       viewModel.moodStreak > 0
                           ? "You've shown up for yourself ${viewModel.moodStreak == 1 ? 'today' : 'for ${viewModel.moodStreak} days'}."
                           : 'Log your mood today to begin your streak.',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.crimsonPro(
                         fontSize: 16,
                         height: 1.4,
                         color: AppColors.primaryVeryDark,
@@ -216,7 +216,7 @@ class HomeDrawer extends StatelessWidget {
           const SizedBox(width: 16),
           Text(
             title,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.crimsonPro(
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: AppColors.primaryVeryDark,

@@ -76,7 +76,7 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                                 ),
                                 child: Text(
                                   'Join Community to Reply',
-                                  style: GoogleFonts.inter(
+                                  style: GoogleFonts.crimsonPro(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
@@ -85,61 +85,79 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                             ),
                           ),
                 listBuilder: (context, bottomInset) => viewModel.isBusy
-                  ? const CustomLottieLoader(fullScreen: true)
-                  : CustomScrollView(slivers: [
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: _OriginalPostCard(
-                            post: post,
-                            isLiked:
-                                post.likedBy.contains(viewModel.currentUserId),
-                            onLike: viewModel.toggleLike,
-                          ),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0, vertical: 8.0),
-                          child: Text(
-                            'Replies',
-                            style: GoogleFonts.crimsonPro(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryVeryDark,
+                    ? const CustomLottieLoader(fullScreen: true)
+                    : CustomScrollView(slivers: [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: _OriginalPostCard(
+                              post: post,
+                              isLiked: post.likedBy
+                                  .contains(viewModel.currentUserId),
+                              onLike: viewModel.toggleLike,
                             ),
                           ),
                         ),
-                      ),
-                      viewModel.replies.isEmpty
-                          ? SliverToBoxAdapter(child: _buildEmptyState())
-                          : SliverList(
-                              delegate: SliverChildBuilderDelegate(
-                                (context, index) {
-                                  final reply = viewModel.replies[index];
-                                  final isMe =
-                                      reply.authorId == viewModel.currentUserId;
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12.0, vertical: 6.0),
-                                    child: _ReplyCard(
-                                      reply: reply,
-                                      isMe: isMe,
-                                      isLiked: reply.likedBy
-                                          .contains(viewModel.currentUserId),
-                                      onLike: () =>
-                                          viewModel.toggleReplyLike(reply),
-                                    ),
-                                  );
-                                },
-                                childCount: viewModel.replies.length,
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 8.0),
+                            child: Text(
+                              'Replies',
+                              style: GoogleFonts.crimsonPro(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryVeryDark,
                               ),
                             ),
-                      // Bottom padding tracks the floating composer's height.
-                      SliverToBoxAdapter(
-                          child: SizedBox(height: bottomInset)),
-                    ]),
+                          ),
+                        ),
+                        (viewModel.replies.isEmpty &&
+                                viewModel.pendingReplies.isEmpty)
+                            ? SliverToBoxAdapter(child: _buildEmptyState())
+                            : SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    final reply = viewModel.replies[index];
+                                    final isMe = reply.authorId ==
+                                        viewModel.currentUserId;
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12.0, vertical: 6.0),
+                                      child: _ReplyCard(
+                                        reply: reply,
+                                        isMe: isMe,
+                                        isLiked: reply.likedBy
+                                            .contains(viewModel.currentUserId),
+                                        onLike: () =>
+                                            viewModel.toggleReplyLike(reply),
+                                      ),
+                                    );
+                                  },
+                                  childCount: viewModel.replies.length,
+                                ),
+                              ),
+                        // Optimistic "Posting…" reply cards at the bottom, until
+                        // the real reply streams in.
+                        if (viewModel.pendingReplies.isNotEmpty)
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) => Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12.0, vertical: 6.0),
+                                child: PendingCard(
+                                  authorName: viewModel.currentUserName,
+                                  content:
+                                      viewModel.pendingReplies[index].content,
+                                ),
+                              ),
+                              childCount: viewModel.pendingReplies.length,
+                            ),
+                          ),
+                        // Bottom padding tracks the floating composer's height.
+                        SliverToBoxAdapter(
+                            child: SizedBox(height: bottomInset)),
+                      ]),
               ),
             ),
           ],
@@ -187,7 +205,19 @@ class _ReplyComposer extends ViewModelWidget<ThreadRepliesViewModel> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(10.0),
-        child: Stack(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Free monthly reply cap reached → persistent upgrade CTA.
+            if (viewModel.replyCapReached)
+              _ReplyUpgradeButton(viewModel: viewModel),
+            // Premium: live @-mention suggestions from thread participants.
+            if (viewModel.canMention && viewModel.mentionSuggestions.isNotEmpty)
+              _MentionSuggestions(viewModel: viewModel),
+            // Free: typing '@' surfaces a Premium upsell instead of a picker.
+            if (!viewModel.canMention && viewModel.mentionQuery != null)
+              _MentionPremiumChip(viewModel: viewModel),
+            Stack(
           children: [
             TextField(
               controller: viewModel.replyController,
@@ -199,7 +229,9 @@ class _ReplyComposer extends ViewModelWidget<ThreadRepliesViewModel> {
                 color: AppColors.secondary,
               ),
               decoration: InputDecoration(
-                hintText: "Reply... (@ to mention)",
+                hintText: viewModel.canMention
+                    ? "Reply... (@ to mention)"
+                    : "Reply...",
                 hintStyle: GoogleFonts.crimsonPro(
                   color: AppColors.secondary.withAlpha(150),
                 ),
@@ -245,6 +277,153 @@ class _ReplyComposer extends ViewModelWidget<ThreadRepliesViewModel> {
               ),
             ),
           ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Persistent CTA shown above the reply composer once the free monthly reply
+/// cap is hit. Tapping it opens the Premium paywall.
+class _ReplyUpgradeButton extends StatelessWidget {
+  final ThreadRepliesViewModel viewModel;
+  const _ReplyUpgradeButton({required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(25),
+          onTap: viewModel.openReplyPaywall,
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.secondary, AppColors.secondaryLight],
+              ),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.secondary.withAlpha(70),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.workspace_premium,
+                    color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Monthly reply limit reached · Unlock unlimited',
+                  style: GoogleFonts.crimsonPro(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium @-mention suggestion list, shown above the reply field.
+class _MentionSuggestions extends StatelessWidget {
+  final ThreadRepliesViewModel viewModel;
+  const _MentionSuggestions({required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      constraints: const BoxConstraints(maxHeight: 180),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.secondaryVeryLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ListView(
+        shrinkWrap: true,
+        padding: EdgeInsets.zero,
+        children: viewModel.mentionSuggestions
+            .map(
+              (c) => ListTile(
+                dense: true,
+                leading: const Icon(Icons.alternate_email,
+                    color: AppColors.secondary, size: 20),
+                title: Text(
+                  c.username,
+                  style: GoogleFonts.crimsonPro(
+                    color: AppColors.secondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onTap: () => viewModel.insertMention(c),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+/// Free-tier upsell shown when a non-premium user types '@' in a reply.
+class _MentionPremiumChip extends StatelessWidget {
+  final ThreadRepliesViewModel viewModel;
+  const _MentionPremiumChip({required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: viewModel.openMentionPaywall,
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withAlpha(20),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.secondary.withAlpha(60)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.workspace_premium,
+                    size: 16, color: AppColors.secondary),
+                const SizedBox(width: 6),
+                Text(
+                  'Mentioning is a Premium feature',
+                  style: GoogleFonts.crimsonPro(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.secondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -323,8 +502,8 @@ class _OriginalPostCard extends StatelessWidget {
             AppColors.secondaryVeryLight.withAlpha(85),
           ],
         ),
-        border:
-            Border.all(color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
+        border: Border.all(
+            color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryVeryDark.withAlpha(25),
@@ -438,8 +617,8 @@ class _ReplyCard extends StatelessWidget {
             AppColors.primaryLight.withAlpha(90),
           ],
         ),
-        border:
-            Border.all(color: AppColors.primaryVeryDark.withAlpha(15), width: 1),
+        border: Border.all(
+            color: AppColors.primaryVeryDark.withAlpha(15), width: 1),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryVeryDark.withAlpha(13),

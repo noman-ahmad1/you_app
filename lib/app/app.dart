@@ -46,6 +46,7 @@ import 'package:you_app/ui/views/edit_profile/edit_profile_view.dart';
 import 'package:you_app/ui/views/volunteer_edit_profile/volunteer_edit_profile_view.dart';
 import 'package:you_app/ui/views/soothing_sounds/soothing_sounds_view.dart';
 import 'package:you_app/ui/views/breathe/breathe_view.dart';
+import 'package:you_app/ui/views/paywall/paywall_view.dart';
 // @stacked-import
 import 'package:you_app/services/monetization_service.dart';
 
@@ -76,6 +77,7 @@ import 'package:you_app/services/monetization_service.dart';
     MaterialRoute(page: SoothingSoundsView),
     MaterialRoute(page: BreatheView),
     MaterialRoute(page: VolunteerEditProfileView),
+    MaterialRoute(page: PaywallView),
 // @stacked-route
   ],
   dependencies: [

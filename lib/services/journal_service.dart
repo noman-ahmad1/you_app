@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/journal_model.dart';
 import 'package:you_app/services/analytics_service.dart';
@@ -30,11 +31,26 @@ class JournalService with FirestoreServiceMixin {
     }
   }
 
-  Stream<List<JournalEntry>> getJournalEntriesStream({required String userId}) {
-    final journalCollection = db
+  /// Streams the user's journal entries, newest first. Free-tier callers pass
+  /// [sinceDays] to limit history to a recent window; premium passes null for
+  /// the full, unlimited history. (These are the user's OWN private entries, so
+  /// the window is a product gate, not a security boundary.)
+  Stream<List<JournalEntry>> getJournalEntriesStream({
+    required String userId,
+    int? sinceDays,
+  }) {
+    Query<Map<String, dynamic>> query = db
         .collection('users')
         .doc(userId)
-        .collection('journal') // The name you chose in your rules
+        .collection('journal'); // The name you chose in your rules
+
+    if (sinceDays != null) {
+      final cutoff = DateTime.now().subtract(Duration(days: sinceDays));
+      query = query.where('timestamp',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(cutoff));
+    }
+
+    final journalCollection = query
         .orderBy('timestamp', descending: true) // Sorts with latest on top
         .withConverter<JournalEntry>(
           fromFirestore: JournalEntry.fromFirestore,

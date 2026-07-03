@@ -36,14 +36,17 @@ class MoodService with FirestoreServiceMixin {
     }
   }
 
-  // Stream entries for the current user (filtered by userId)
-  Stream<List<MoodEntry>> getUserMoodStream(String userId) {
-    final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+  // Stream entries for the current user (filtered by userId). [windowDays] caps
+  // how far back to look — free tier passes the small free window, premium the
+  // full 30-day (or wider) view.
+  Stream<List<MoodEntry>> getUserMoodStream(String userId,
+      {int windowDays = 30}) {
+    final cutoff = DateTime.now().subtract(Duration(days: windowDays));
 
     return db
         .collection('mood')
         .where('userId', isEqualTo: userId)
-        .where('timestamp', isGreaterThanOrEqualTo: thirtyDaysAgo)
+        .where('timestamp', isGreaterThanOrEqualTo: cutoff)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs

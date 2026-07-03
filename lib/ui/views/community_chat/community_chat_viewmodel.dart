@@ -4,18 +4,22 @@ import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/ui/views/paywall/paywall_helper.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/escalation_service.dart';
 import 'package:you_app/services/moderation_flag_service.dart';
 import 'package:you_app/services/moderation_service.dart';
+import 'package:you_app/services/monetization_service.dart';
 import 'package:you_app/models/community_post.dart';
+import 'package:you_app/ui/views/community_chat/community_card_widgets.dart';
 import 'package:you_app/ui/views/community_chat/thread_replies_view.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
 
 class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   final _navigationService = locator<NavigationService>();
   final _authService = locator<AuthenticationService>();
+  final _monetizationService = locator<MonetizationService>();
   final _snackbarService = locator<SnackbarService>();
 
   final String communityId;
@@ -24,6 +28,47 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   final TextEditingController messageController = TextEditingController();
 
   List<CommunityPost> get posts => data ?? [];
+
+  /// True once the free monthly thread cap has been hit this session. Drives the
+  /// persistent "unlock unlimited threads" button above the composer.
+  bool _threadCapReached = false;
+  bool get threadCapReached => _threadCapReached;
+
+  /// Opens the Premium paywall from the thread cap-reached button.
+  Future<void> openThreadPaywall() async {
+    locator<AnalyticsService>().logGateHit(feature: PaywallFeature.communityThreads);
+    await PaywallHelper.show(feature: PaywallFeature.communityThreads);
+  }
+
+  // --- Optimistic "Posting…" cards (shown until the real thread streams in) ---
+  final List<PendingContent> _pendingPosts = [];
+  int _pendingCounter = 0;
+  List<PendingContent> get pendingPosts => List.unmodifiable(_pendingPosts);
+
+  void _removePending(int id) {
+    final before = _pendingPosts.length;
+    _pendingPosts.removeWhere((p) => p.id == id);
+    if (_pendingPosts.length != before) notifyListeners();
+  }
+
+  /// Drops pending cards whose content now exists as a real post by this user
+  /// (the seamless swap). Removes at most one pending per matched post.
+  void _reconcilePending(List<CommunityPost> posts) {
+    if (_pendingPosts.isEmpty) return;
+    final mine = posts
+        .where((p) => p.authorId == currentUserId)
+        .map((p) => p.content.trim())
+        .toList();
+    var changed = false;
+    for (final content in mine) {
+      final idx = _pendingPosts.indexWhere((p) => p.content.trim() == content);
+      if (idx != -1) {
+        _pendingPosts.removeAt(idx);
+        changed = true;
+      }
+    }
+    if (changed) notifyListeners();
+  }
 
   // --- Pagination (growing-limit) ---
   static const int _pageSize = 20;
@@ -60,6 +105,19 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
         notifyListeners();
       }
     });
+    // Show the "limit reached" button immediately if already capped (persists
+    // across restarts until Premium or the monthly reset), and keep it in sync
+    // when Premium is granted mid-session.
+    _refreshCapStatus();
+    _authService.addListener(_refreshCapStatus);
+  }
+
+  Future<void> _refreshCapStatus() async {
+    final capped = await _monetizationService.isCommunityThreadCapReached();
+    if (capped != _threadCapReached) {
+      _threadCapReached = capped;
+      notifyListeners();
+    }
   }
 
   // --- Lock state (admin can flip communities to read-only) ---
@@ -98,6 +156,7 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   @override
   void onData(List<CommunityPost>? data) {
     _isLoadingMore = false;
+    if (data != null) _reconcilePending(data);
     setBusy(false);
   }
 
@@ -111,6 +170,12 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   }
 
   Future<void> sendPost() async {
+    // Already capped this month — don't waste a call; nudge to the paywall.
+    if (_threadCapReached) {
+      await openThreadPaywall();
+      return;
+    }
+
     final text = messageController.text.trim();
     if (text.isEmpty) return;
 
@@ -160,22 +225,36 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
     }
 
     messageController.clear();
+
+    // Optimistic "Posting…" card shown instantly until the real thread streams
+    // in (reconciled in onData) — or removed on cap/error/timeout.
+    final pending = PendingContent(id: ++_pendingCounter, content: text);
+    _pendingPosts.add(pending);
     notifyListeners();
+    // Safety net: never leave a stuck card if the write never propagates.
+    Future.delayed(const Duration(seconds: 15), () => _removePending(pending.id));
 
     try {
-      // IMPORTANT: Currently we are storing the username as the mention string because we don't have
-      // an easy mapping to userId on the client. In a full implementation, you'd have a dropdown that assigns userIds.
-      // For this step, we will pass mentionedUsernames as mentionedUsers for now, or you'd search the DB to resolve IDs.
-      // However, the backend expects userIds. Since this is an MVP, we'll pass an empty list unless we resolve it.
-      // (Let's pass empty list to not crash the backend loop).
-      
-      await locator<CommunityService>().createPost(
+      // New-thread mentions are out of scope (premium @-mentions live in the
+      // reply composer); the callable enforces the free monthly thread cap.
+      final result = await locator<CommunityService>().createPost(
         communityId: communityId,
         content: text,
         authorUsername: currentUserName,
-        mentionedUsers: [], // Needs user search to resolve IDs
+        mentionedUsers: const [],
       );
+
+      // Free user is out of monthly threads — restore the text, show the
+      // persistent upgrade button, and open the paywall once immediately.
+      if (result.capReached) {
+        _removePending(pending.id);
+        messageController.text = text;
+        _threadCapReached = true;
+        notifyListeners();
+        await openThreadPaywall();
+      }
     } catch (e) {
+      _removePending(pending.id);
       _snackbarService.showSnackbar(
         title: 'Error',
         message: 'Could not create post. Please try again.',
@@ -217,6 +296,7 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   @override
   void dispose() {
     _communitySub?.cancel();
+    _authService.removeListener(_refreshCapStatus);
     messageController.dispose();
     super.dispose();
   }

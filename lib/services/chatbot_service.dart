@@ -1,134 +1,47 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:you_app/env.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:you_app/services/base/app_log.dart';
 
+/// Result of a Dodo turn. Either the free daily cap was hit ([capReached]) or a
+/// [reply] is available.
+class DodoResponse {
+  final bool capReached;
+  final String reply;
+  const DodoResponse({required this.capReached, this.reply = ''});
+}
+
+/// Talks to Dodo via the `sendDodoMessage` callable Cloud Function. The Groq API
+/// key now lives server-side (Functions secret), and the function enforces the
+/// free-tier daily cap authoritatively — the client no longer contacts Groq
+/// directly and cannot see or count around the limit.
 class ChatbotService {
-  final String _apiKey = Secrets.groqApiKey;
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
-  Future<String> generateResponse(List<Map<String, String>> history) async {
-    final url = Uri.parse('https://api.groq.com/openai/v1/chat/completions');
-
-    // 1. Explicitly initialize an empty List of Map<String, dynamic>
-    final List<Map<String, dynamic>> messages = [];
-
-    // 2. Prepend the System Prompt first
-    messages.add({
-      'role': 'system',
-      'content':
-          'You are Dodo, a comforting, empathetic, and exceptionally supportive mental health assistant. Do not break character. Provide short, practical, warm, and highly compassionate assistance to the user. Do not give medical diagnoses.'
-    });
-
-    // 3. Use an explicit for-loop to safely read and map the history
-    for (var msg in history) {
-      final role = msg['isMe'] == 'true' ? 'user' : 'assistant';
-
-      messages.add({
-        'role': role,
-        'content': msg['text'] ?? '', // Safeguard against null values
-      });
-    }
-
-    final payload = {
-      'model': 'llama-3.1-8b-instant',
-      'messages': messages,
-      'temperature': 0.7,
-    };
-
+  Future<DodoResponse> generateResponse(
+      List<Map<String, String>> history) async {
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(payload),
-      );
+      final result = await _functions.httpsCallable('sendDodoMessage').call({
+        'history': history
+            .map((m) => {
+                  'isMe': m['isMe'] ?? 'false',
+                  'text': m['text'] ?? '',
+                })
+            .toList(),
+      });
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        try {
-          final text = data['choices'][0]['message']['content'];
-          return text;
-        } catch (e) {
-          return "I'm having a little trouble focusing right now. Could you repeat that?";
-        }
-      } else {
-        AppLog.error('ChatbotService.generateResponse', 'Groq API ${response.statusCode}: ${response.body}');
-        throw Exception(
-            "Failed to contact Groq API. Status code: ${response.statusCode}");
+      final data = Map<String, dynamic>.from(result.data as Map);
+      if (data['capReached'] == true) {
+        return const DodoResponse(capReached: true);
       }
+      return DodoResponse(
+        capReached: false,
+        reply: (data['reply'] ?? '').toString(),
+      );
+    } on FirebaseFunctionsException catch (e) {
+      AppLog.error('ChatbotService.generateResponse', '${e.code}: ${e.message}');
+      rethrow;
     } catch (e) {
       AppLog.error('ChatbotService.generateResponse', e);
-      throw Exception("Network error occurred.");
+      rethrow;
     }
   }
 }
-
-// import 'dart:convert';
-// import 'dart:io';
-// import 'package:you_app/env.dart';
-
-// class ChatbotService {
-//   final String _apiKey = Environments.googleGeminiKey;
-
-//   /// Sends the conversation history to Gemini and retrieves the AI's response.
-//   /// The [history] list expects maps with two keys: 'isMe' (String 'true' or 'false') and 'text' (String).
-//   Future<String> generateResponse(List<Map<String, String>> history) async {
-//     final url = Uri.parse(
-//         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_apiKey');
-
-//     // Map our local history state to Gemini's expected format
-//     final contents = history.map((msg) {
-//       final role = msg['isMe'] == 'true' ? 'user' : 'model';
-//       return {
-//         'role': role,
-//         'parts': [
-//           {'text': msg['text']}
-//         ]
-//       };
-//     }).toList();
-
-//     // Payload configured with system instructions to mold 'Dodo's personality
-//     final payload = {
-//       'systemInstruction': {
-//         'parts': [
-//           {
-//             'text':
-//                 'You are Dodo, a comforting, empathetic, and exceptionally supportive mental health assistant. Do not break character. Provide short, practical, warm, and highly compassionate assistance to the user. Do not give medical diagnoses.'
-//           }
-//         ]
-//       },
-//       'contents': contents,
-//       'generationConfig': {
-//         'temperature': 0.7,
-//       }
-//     };
-
-//     try {
-//       final request = await HttpClient().postUrl(url);
-//       request.headers.set('Content-Type', 'application/json');
-//       request.add(utf8.encode(jsonEncode(payload)));
-
-//       final response = await request.close();
-//       final responseBody = await response.transform(utf8.decoder).join();
-
-//       if (response.statusCode == 200) {
-//         final data = jsonDecode(responseBody);
-//         try {
-//           final text = data['candidates'][0]['content']['parts'][0]['text'];
-//           return text;
-//         } catch (e) {
-//           return "I'm having a little trouble focusing right now. Could you repeat that?";
-//         }
-//       } else {
-//         print("Gemini API Error: $responseBody");
-//         throw Exception(
-//             "Failed to contact Gemini API. Status code: ${response.statusCode}");
-//       }
-//     } catch (e) {
-//       print("Error in ChatbotService: $e");
-//       throw Exception("Network error occurred.");
-//     }
-//   }
-// }

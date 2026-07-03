@@ -5,6 +5,131 @@ import 'package:you_app/ui/shared/lottie_like_button.dart';
 
 /// Reusable, theme-aligned building blocks for community post / reply cards.
 
+/// An optimistic thread/reply the user just submitted, shown as a "Posting…"
+/// card until the real doc arrives from the Firestore stream. [id] is a local
+/// key used for precise dedup/timeout removal.
+class PendingContent {
+  final int id;
+  final String content;
+  const PendingContent({required this.id, required this.content});
+}
+
+/// Animated "Posting…" placeholder card, styled like a real community card but
+/// visually in-flight (gentle shimmer + spinner). Reused for threads & replies.
+class PendingCard extends StatefulWidget {
+  final String authorName;
+  final String content;
+  const PendingCard({
+    super.key,
+    required this.authorName,
+    required this.content,
+  });
+
+  @override
+  State<PendingCard> createState() => _PendingCardState();
+}
+
+class _PendingCardState extends State<PendingCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = widget.authorName.isNotEmpty
+        ? widget.authorName[0].toUpperCase()
+        : '?';
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        // Pulse the whole card subtly to signal it's in-flight.
+        final opacity = 0.6 + 0.4 * _controller.value;
+        return Opacity(opacity: opacity, child: child);
+      },
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withAlpha(240),
+              AppColors.secondaryVeryLight.withAlpha(70),
+            ],
+          ),
+          border: Border.all(
+              color: AppColors.secondary.withAlpha(45), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                GradientAvatar(initial: initial, isMe: true, size: 42),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    widget.authorName,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.crimsonPro(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryVeryDark,
+                    ),
+                  ),
+                ),
+                const YouChip(),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              widget.content,
+              style: GoogleFonts.crimsonPro(
+                fontSize: 15,
+                color: AppColors.primaryVeryDark.withAlpha(220),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.secondary),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Posting…',
+                  style: GoogleFonts.crimsonPro(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.secondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Gradient circular avatar showing the author's initial.
 class GradientAvatar extends StatelessWidget {
   final String initial;
@@ -68,7 +193,7 @@ class YouChip extends StatelessWidget {
       ),
       child: Text(
         'You',
-        style: GoogleFonts.inter(
+        style: GoogleFonts.crimsonPro(
           fontSize: 10.5,
           fontWeight: FontWeight.w600,
           color: AppColors.secondary,
@@ -103,7 +228,7 @@ class StatChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.crimsonPro(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.primaryVeryDark.withAlpha(160),
@@ -144,7 +269,7 @@ class LikeChip extends StatelessWidget {
           const SizedBox(width: 2),
           Text(
             '$count',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.crimsonPro(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: isLiked

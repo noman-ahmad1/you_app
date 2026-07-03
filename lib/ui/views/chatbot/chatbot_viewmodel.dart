@@ -4,12 +4,17 @@ import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/chatbot_service.dart';
+import 'package:you_app/services/monetization_service.dart';
+import 'package:you_app/ui/views/paywall/paywall_helper.dart';
 
 class ChatbotViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _chatbotService = locator<ChatbotService>();
   final _analytics = locator<AnalyticsService>();
+  final _authService = locator<AuthenticationService>();
+  final _monetizationService = locator<MonetizationService>();
   final Box _box = Hive.box('chatbot_history');
 
   final TextEditingController messageController = TextEditingController();
@@ -26,8 +31,26 @@ class ChatbotViewModel extends BaseViewModel {
 
   List<Map<String, String>> get messages => _messages;
 
+  /// True once the free daily Dodo cap has been hit this session. Drives the
+  /// persistent "unlock unlimited Dodo" button in the chat.
+  bool _dailyCapReached = false;
+  bool get dailyCapReached => _dailyCapReached;
+
   ChatbotViewModel() {
     _loadMessages();
+    // Show the "limit reached" button immediately if the user is already capped
+    // (persists across restarts until Premium or the daily reset), and keep it
+    // in sync when Premium is granted mid-session.
+    _refreshCapStatus();
+    _authService.addListener(_refreshCapStatus);
+  }
+
+  Future<void> _refreshCapStatus() async {
+    final capped = await _monetizationService.isDodoDailyCapReached();
+    if (capped != _dailyCapReached) {
+      _dailyCapReached = capped;
+      notifyListeners();
+    }
   }
 
   /// Loads stored messages from Hive if available
@@ -57,8 +80,20 @@ class ChatbotViewModel extends BaseViewModel {
     _box.put('messages', serializable);
   }
 
+  /// Opens the Premium paywall from the Dodo cap-reached button.
+  Future<void> openPaywall() async {
+    _analytics.logGateHit(feature: PaywallFeature.dodo);
+    await PaywallHelper.show(feature: PaywallFeature.dodo);
+  }
+
   /// Sends the current message in the input field to Gemini API
   Future<void> sendMessage() async {
+    // Already capped today — don't waste a call; nudge to the paywall instead.
+    if (_dailyCapReached) {
+      await openPaywall();
+      return;
+    }
+
     final text = messageController.text.trim();
     if (text.isEmpty) return;
 
@@ -74,11 +109,30 @@ class ChatbotViewModel extends BaseViewModel {
     final stopwatch = Stopwatch()..start();
 
     try {
-      // 2. Fetch response from Gemini via Service Layer
-      String response = await _chatbotService.generateResponse(_messages);
+      // 2. Fetch Dodo's response via the callable (server enforces the cap).
+      final DodoResponse response =
+          await _chatbotService.generateResponse(_messages);
+
+      // 2a. Free daily cap reached — surface a gentle note + persistent upgrade
+      // button (via _dailyCapReached), and open the paywall once immediately.
+      if (response.capReached) {
+        _analytics.logGateHit(feature: PaywallFeature.dodo);
+        _dailyCapReached = true;
+        _messages.add({
+          'isMe': 'false',
+          'text':
+              "You've reached today's free messages with me. I'll be right here "
+                  "again tomorrow — or unlock unlimited chats with Premium. 💛"
+        });
+        _saveMessages();
+        setBusy(false);
+        notifyListeners();
+        await PaywallHelper.show(feature: PaywallFeature.dodo);
+        return;
+      }
 
       // 3. Add AI response to UI
-      _messages.add({'isMe': 'false', 'text': response});
+      _messages.add({'isMe': 'false', 'text': response.reply});
       _saveMessages();
       _analytics.logChatbotResponse(latencyMs: stopwatch.elapsedMilliseconds);
     } catch (e) {
@@ -102,6 +156,7 @@ class ChatbotViewModel extends BaseViewModel {
 
   @override
   void dispose() {
+    _authService.removeListener(_refreshCapStatus);
     messageController.dispose();
     super.dispose();
   }

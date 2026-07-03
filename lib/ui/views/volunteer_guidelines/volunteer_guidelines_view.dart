@@ -130,7 +130,7 @@ class VolunteerGuidelinesView extends StatelessWidget {
 
   Widget _paragraph(String text) => Text(
         text,
-        style: GoogleFonts.inter(
+        style: GoogleFonts.crimsonPro(
           fontSize: 14,
           height: 1.55,
           color: AppColors.primaryVeryDark.withAlpha(200),
@@ -158,7 +158,8 @@ class VolunteerGuidelinesView extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
+        border: Border.all(
+            color: AppColors.primaryVeryDark.withAlpha(20), width: 1),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryVeryDark.withAlpha(18),
@@ -174,8 +175,8 @@ class VolunteerGuidelinesView extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(9),
-                decoration:
-                    BoxDecoration(color: accent.withAlpha(36), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                    color: accent.withAlpha(36), shape: BoxShape.circle),
                 child: Icon(icon, color: accent, size: 22),
               ),
               const SizedBox(width: 12),
@@ -199,7 +200,7 @@ class VolunteerGuidelinesView extends StatelessWidget {
                   ),
                   child: Text(
                     tag,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.crimsonPro(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: accent,
@@ -218,7 +219,7 @@ class VolunteerGuidelinesView extends StatelessWidget {
               ),
               child: Text(
                 note,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.crimsonPro(
                   fontSize: 12.5,
                   height: 1.45,
                   fontWeight: FontWeight.w600,
@@ -251,7 +252,7 @@ class VolunteerGuidelinesView extends StatelessWidget {
                 children: [
                   TextSpan(
                     text: '${g.heading}. ',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.crimsonPro(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primaryVeryDark,
@@ -259,7 +260,7 @@ class VolunteerGuidelinesView extends StatelessWidget {
                   ),
                   TextSpan(
                     text: g.body,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.crimsonPro(
                       fontSize: 13.5,
                       height: 1.5,
                       color: AppColors.primaryVeryDark.withAlpha(190),

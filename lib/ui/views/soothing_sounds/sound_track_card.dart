@@ -82,7 +82,7 @@ class SoundTrackCard extends StatelessWidget {
                       ),
                       Text(
                         track.subtitle,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.crimsonPro(
                           color: Colors.white70,
                           fontSize: 12,
                           fontWeight: FontWeight.w400,

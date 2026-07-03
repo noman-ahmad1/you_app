@@ -98,7 +98,7 @@ class CommunityCard extends StatelessWidget {
                           title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.crimsonPro(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: AppColors.primaryVeryDark,
@@ -122,7 +122,7 @@ class CommunityCard extends StatelessWidget {
                               const SizedBox(width: 3),
                               Text(
                                 'Read-only',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.crimsonPro(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.secondary,
@@ -137,7 +137,7 @@ class CommunityCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     description,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.crimsonPro(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       color: Colors.grey[600],
@@ -154,7 +154,7 @@ class CommunityCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '$membersCount members',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.crimsonPro(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Colors.grey[600],
@@ -170,7 +170,7 @@ class CommunityCard extends StatelessWidget {
                       // const SizedBox(width: 8),
                       // Text(
                       //   '$postsToday posts today',
-                      //   style: GoogleFonts.inter(
+                      //   style: GoogleFonts.crimsonPro(
                       //     fontSize: 12,
                       //     fontWeight: FontWeight.w500,
                       //     color: Colors.grey[600],
@@ -206,7 +206,7 @@ class CommunityCard extends StatelessWidget {
                 ),
                 child: Text(
                   'Join',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.crimsonPro(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),

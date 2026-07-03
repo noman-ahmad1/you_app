@@ -87,74 +87,132 @@ class _MessageInputField extends ViewModelWidget<ChatbotViewModel> {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(10.0, 0, 10.0, 10.0),
-          child: Stack(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: viewModel.messageController,
-                keyboardType: TextInputType.multiline,
-                maxLines: 5,
-                minLines: 1,
-                cursorColor: AppColors.secondary,
-                style: GoogleFonts.crimsonPro(
-                  color: AppColors.secondary,
-                ),
-                decoration: InputDecoration(
-                  hintText: "Type a message...",
-                  hintStyle: GoogleFonts.crimsonPro(
-                    color: AppColors.secondary.withAlpha(150),
-                  ),
-                  filled: true,
-                  fillColor:
-                      const Color.fromARGB(255, 227, 177, 203).withAlpha(240),
-                  contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    borderSide: const BorderSide(
+              if (viewModel.dailyCapReached) const _DodoUpgradeButton(),
+              Stack(
+                children: [
+                  TextField(
+                    controller: viewModel.messageController,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: 5,
+                    minLines: 1,
+                    cursorColor: AppColors.secondary,
+                    style: GoogleFonts.crimsonPro(
                       color: AppColors.secondary,
-                      width: 2,
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    borderSide: const BorderSide(
-                      color: AppColors.secondary,
-                      width: 2,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    borderSide: const BorderSide(
-                      color: AppColors.secondary,
-                      width: 2,
-                    ),
-                  ),
-                ),
-                onSubmitted: (_) => viewModel.sendMessage(),
-              ),
-              Positioned(
-                right: 8.0,
-                bottom: 5.5,
-                child: GestureDetector(
-                  onTap: viewModel.sendMessage,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryVeryLight.withAlpha(75),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.secondary,
-                        width: 2,
+                    decoration: InputDecoration(
+                      hintText: "Type a message...",
+                      hintStyle: GoogleFonts.crimsonPro(
+                        color: AppColors.secondary.withAlpha(150),
+                      ),
+                      filled: true,
+                      fillColor: const Color.fromARGB(255, 227, 177, 203)
+                          .withAlpha(240),
+                      contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: const BorderSide(
+                          color: AppColors.secondary,
+                          width: 2,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: const BorderSide(
+                          color: AppColors.secondary,
+                          width: 2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: const BorderSide(
+                          color: AppColors.secondary,
+                          width: 2,
+                        ),
                       ),
                     ),
-                    padding: const EdgeInsets.all(8),
-                    child: Image.asset(
-                      AppConstants.send,
-                      color: AppColors.secondary,
-                      width: 25,
+                    onSubmitted: (_) => viewModel.sendMessage(),
+                  ),
+                  Positioned(
+                    right: 8.0,
+                    bottom: 5.5,
+                    child: GestureDetector(
+                      onTap: viewModel.sendMessage,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.secondaryVeryLight.withAlpha(75),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.secondary,
+                            width: 2,
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        child: Image.asset(
+                          AppConstants.send,
+                          color: AppColors.secondary,
+                          width: 25,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Persistent CTA shown above the composer once the free daily Dodo cap is hit.
+/// Tapping it opens the Premium paywall.
+class _DodoUpgradeButton extends ViewModelWidget<ChatbotViewModel> {
+  const _DodoUpgradeButton();
+
+  @override
+  Widget build(BuildContext context, ChatbotViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(25),
+          onTap: viewModel.openPaywall,
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.secondary, AppColors.secondaryLight],
+              ),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.secondary.withAlpha(70),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.workspace_premium,
+                    color: Colors.white, size: 20),
+                const SizedBox(width: 7),
+                Text(
+                  'Daily limit reached · Unlock unlimited Dodo',
+                  style: GoogleFonts.crimsonPro(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

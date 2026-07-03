@@ -28,7 +28,7 @@ class FloatingComposerLayout extends StatefulWidget {
     Key? key,
     required this.listBuilder,
     required this.composer,
-    this.gap = -30,
+    this.gap = -24,
     this.initialInset = 96,
   }) : super(key: key);
 

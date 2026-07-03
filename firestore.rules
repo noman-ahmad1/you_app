@@ -47,13 +47,30 @@ service cloud.firestore {
       // Signup writes own doc; admins create other accounts (e.g. createAdminUser).
       allow create: if isOwner(userId) || isAdmin();
       // Profile self-edits, plus admin actions (role change, status, soft-delete, verify).
-      allow update: if isOwner(userId) || isAdmin();
+      // SECURITY: the entitlement + billing-counter fields are NEVER writable by the
+      // owner — otherwise a free user could self-grant premium or zero out their
+      // welcome-chat count. Only admins (and the Admin SDK, which bypasses rules) may
+      // touch them. Everything else (profile, first_login_at, joinedCommunities) stays
+      // self-editable.
+      allow update: if isAdmin()
+                    || (isOwner(userId)
+                        && !request.resource.data.diff(resource.data).affectedKeys()
+                              .hasAny(['subscriptionTier', 'subscription_expiry',
+                                       'subscription_source', 'welcomeChatsUsed']));
       // SAFETY: never hard-delete a user (admins soft-delete via status:"deleted").
       allow delete: if false;
 
       // Private journal — owner only. Admins must NOT read journal content (privacy).
       match /journal/{journalId} {
         allow read, write: if isOwner(userId);
+      }
+
+      // Freemium usage counters (e.g. usage/dodo {date,count}). The owner may READ
+      // their own; ONLY the Admin SDK (Cloud Functions) writes them, so the counts
+      // stay authoritative and can't be reset by the client.
+      match /usage/{feature} {
+        allow read: if isOwner(userId);
+        allow write: if false;
       }
 
       // Notifications: anyone signed in may CREATE one (this is how the app — and the
@@ -176,8 +193,12 @@ service cloud.firestore {
     // chat_requests
     // =============================
     match /chat_requests/{requestId} {
-      allow create: if isSignedIn()
-                    && request.resource.data.requesterId == request.auth.uid;
+      // SECURITY / freemium: direct client creation is DENIED. All requests go
+      // through the requestVolunteerChat callable (Admin SDK, bypasses rules),
+      // which check-and-increments the free-tier welcome-chat counter atomically.
+      // Allowing client creates here would let a free user create chats without
+      // charging the counter — the exact bypass we're guarding against.
+      allow create: if false;
       allow read, update: if isSignedIn()
                           && (request.auth.uid == resource.data.requesterId
                               || request.auth.uid == resource.data.volunteerId);
@@ -214,16 +235,22 @@ service cloud.firestore {
     // =============================
     match /posts/{postId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn()
-                    && request.resource.data.authorId == request.auth.uid;
+      // SECURITY / freemium: direct client creation is DENIED. All new threads go
+      // through the createCommunityPost callable (Admin SDK, bypasses rules), which
+      // enforces the free-tier monthly cap atomically and strips free-user mentions.
+      // A client create here would skip the counter — the bypass we're guarding.
+      allow create: if false;
       // Author edits/deletes own; admins delete/edit for moderation.
       allow update, delete: if (isSignedIn() && resource.data.authorId == request.auth.uid)
                             || isAdmin();
 
       match /replies/{replyId} {
         allow read: if isSignedIn();
-        allow create: if isSignedIn()
-                      && request.resource.data.authorId == request.auth.uid;
+        // SECURITY / freemium: direct client creation is DENIED. All replies go
+        // through the createCommunityReply callable (Admin SDK), which enforces
+        // the free-tier monthly reply cap atomically and strips free-user
+        // mentions. A client create here would skip the counter.
+        allow create: if false;
         allow update, delete: if (isSignedIn() && resource.data.authorId == request.auth.uid)
                               || isAdmin();
       }

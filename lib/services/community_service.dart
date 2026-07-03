@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/community_post.dart';
@@ -6,8 +7,23 @@ import 'package:you_app/models/thread_reply.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/base/firestore_base.dart';
 
+/// Outcome of creating a community thread. When [capReached] is true the free
+/// user has used their monthly thread allowance and should see the paywall.
+class CreatePostResult {
+  final bool capReached;
+  const CreatePostResult({required this.capReached});
+}
+
+/// Outcome of creating a reply. When [capReached] is true the free user has used
+/// their monthly reply allowance and should see the paywall.
+class CreateReplyResult {
+  final bool capReached;
+  const CreateReplyResult({required this.capReached});
+}
+
 class CommunityService with FirestoreServiceMixin {
   AnalyticsService get _analytics => locator<AnalyticsService>();
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
 
   // 1. Fetch all available communities (capped to avoid unbounded reads)
@@ -57,28 +73,33 @@ class CommunityService with FirestoreServiceMixin {
             .toList());
   }
 
-  // 3. Create a new post in a community
-  Future<void> createPost({
+  // 3. Create a new post in a community via the createCommunityPost callable.
+  // The function enforces the free-tier monthly thread cap atomically and strips
+  // mentions from free users (direct client writes to `posts` are denied by
+  // rules). Returns capReached when the free monthly allowance is exhausted.
+  Future<CreatePostResult> createPost({
     required String communityId,
     required String content,
     required String authorUsername,
     List<String> mentionedUsers = const [],
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) return const CreatePostResult(capReached: false);
 
-    final post = CommunityPost(
-      id: '', // Will be assigned by Firestore
-      communityId: communityId,
-      authorId: uid,
-      authorUsername: authorUsername,
-      content: content,
-      createdAt: DateTime.now(), // Fallback for local, server handles it
-      mentionedUsers: mentionedUsers,
-    );
+    final result = await _functions.httpsCallable('createCommunityPost').call({
+      'communityId': communityId,
+      'content': content,
+      'authorUsername': authorUsername,
+      'mentionedUsers': mentionedUsers,
+    });
 
-    await db.collection('posts').add(post.toMap());
+    final data = Map<String, dynamic>.from(result.data as Map);
+    if (data['capReached'] == true) {
+      return const CreatePostResult(capReached: true);
+    }
+
     _analytics.logCommunityPost(communityId: communityId);
+    return const CreatePostResult(capReached: false);
   }
 
   // 4. Stream replies for a specific post (thread)
@@ -94,38 +115,34 @@ class CommunityService with FirestoreServiceMixin {
             .toList());
   }
 
-  // 5. Add a reply to a specific post
-  Future<void> createReply({
+  // 5. Add a reply to a specific post via the createCommunityReply callable.
+  // The function enforces the free-tier monthly reply cap atomically, increments
+  // the parent post's replyCount, and strips mentions from free users (direct
+  // client writes to the replies subcollection are denied by rules). Returns
+  // capReached when the free monthly reply allowance is exhausted.
+  Future<CreateReplyResult> createReply({
     required String postId,
     required String content,
     required String authorUsername,
     List<String> mentionedUsers = const [],
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) return const CreateReplyResult(capReached: false);
 
-    final reply = ThreadReply(
-      id: '',
-      postId: postId,
-      authorId: uid,
-      authorUsername: authorUsername,
-      content: content,
-      createdAt: DateTime.now(),
-      mentionedUsers: mentionedUsers,
-    );
+    final result = await _functions.httpsCallable('createCommunityReply').call({
+      'postId': postId,
+      'content': content,
+      'authorUsername': authorUsername,
+      'mentionedUsers': mentionedUsers,
+    });
 
-    final batch = db.batch();
-    
-    // Add the reply document
-    final replyRef = db.collection('posts').doc(postId).collection('replies').doc();
-    batch.set(replyRef, reply.toMap());
+    final data = Map<String, dynamic>.from(result.data as Map);
+    if (data['capReached'] == true) {
+      return const CreateReplyResult(capReached: true);
+    }
 
-    // Increment the reply count on the parent post
-    final postRef = db.collection('posts').doc(postId);
-    batch.update(postRef, {'replyCount': FieldValue.increment(1)});
-
-    await batch.commit();
     _analytics.logCommunityReply(postId: postId);
+    return const CreateReplyResult(capReached: false);
   }
 
   // 6. Toggle like on a post

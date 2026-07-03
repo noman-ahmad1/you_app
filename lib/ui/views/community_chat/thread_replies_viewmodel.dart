@@ -9,13 +9,20 @@ import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/escalation_service.dart';
 import 'package:you_app/services/moderation_flag_service.dart';
 import 'package:you_app/services/moderation_service.dart';
+import 'package:you_app/services/monetization_service.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:you_app/models/thread_reply.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
+import 'package:you_app/ui/views/community_chat/community_card_widgets.dart';
+import 'package:you_app/ui/views/paywall/paywall_helper.dart';
+
+/// A person who can be @-mentioned in this thread.
+typedef MentionCandidate = ({String id, String username});
 
 class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
   final _navigationService = locator<NavigationService>();
   final _authService = locator<AuthenticationService>();
+  final _monetizationService = locator<MonetizationService>();
   final _snackbarService = locator<SnackbarService>();
 
   final CommunityPost post;
@@ -26,6 +33,55 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
 
   String get currentUserId => _authService.currentUser?.uid ?? '';
   String get currentUserName => _authService.currentUser?.fullName ?? 'Anonymous';
+
+  // --- @-mentions (Premium only) ---
+  /// Whether this user may @-mention people in replies.
+  bool get canMention => _monetizationService.isPremium;
+  // Records the UID for each @username the user picked from the suggestions.
+  final Map<String, String> _pickedIdByUsername = {};
+  String? _lastMentionQuery;
+
+  // --- Monthly reply cap ---
+  /// True once the free monthly reply cap has been hit (persists across restarts
+  /// until Premium or the monthly reset). Drives the persistent upgrade button.
+  bool _replyCapReached = false;
+  bool get replyCapReached => _replyCapReached;
+
+  /// Opens the Premium paywall from the reply cap-reached button.
+  Future<void> openReplyPaywall() async {
+    locator<AnalyticsService>().logGateHit(feature: PaywallFeature.communityReplies);
+    await PaywallHelper.show(feature: PaywallFeature.communityReplies);
+  }
+
+  // --- Optimistic "Posting…" cards (shown until the real reply streams in) ---
+  final List<PendingContent> _pendingReplies = [];
+  int _pendingCounter = 0;
+  List<PendingContent> get pendingReplies => List.unmodifiable(_pendingReplies);
+
+  void _removePending(int id) {
+    final before = _pendingReplies.length;
+    _pendingReplies.removeWhere((p) => p.id == id);
+    if (_pendingReplies.length != before) notifyListeners();
+  }
+
+  /// Drops pending cards whose content now exists as a real reply by this user.
+  void _reconcilePending(List<ThreadReply> replies) {
+    if (_pendingReplies.isEmpty) return;
+    final mine = replies
+        .where((r) => r.authorId == currentUserId)
+        .map((r) => r.content.trim())
+        .toList();
+    var changed = false;
+    for (final content in mine) {
+      final idx =
+          _pendingReplies.indexWhere((p) => p.content.trim() == content);
+      if (idx != -1) {
+        _pendingReplies.removeAt(idx);
+        changed = true;
+      }
+    }
+    if (changed) notifyListeners();
+  }
 
   ThreadRepliesViewModel({
     required this.post,
@@ -39,6 +95,115 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
         notifyListeners();
       }
     });
+    // Recompute the mention suggestion state as the user types.
+    replyController.addListener(_onReplyChanged);
+    // Reflect live subscription changes (Premium granted mid-session).
+    _authService.addListener(_onSubscriptionChanged);
+    // Show the "limit reached" button immediately if already capped.
+    _refreshCapStatus();
+  }
+
+  Future<void> _refreshCapStatus() async {
+    final capped = await _monetizationService.isCommunityReplyCapReached();
+    if (capped != _replyCapReached) {
+      _replyCapReached = capped;
+      notifyListeners();
+    }
+  }
+
+  void _onReplyChanged() {
+    final q = mentionQuery;
+    if (q != _lastMentionQuery) {
+      _lastMentionQuery = q;
+      notifyListeners();
+    }
+  }
+
+  void _onSubscriptionChanged() {
+    _refreshCapStatus(); // Premium granted → hide the cap button
+    notifyListeners(); // refresh the mention affordance
+  }
+
+  /// The thread participants (post author + everyone who replied), deduped and
+  /// excluding the current user — the source of @-mention suggestions.
+  List<MentionCandidate> get mentionCandidates {
+    final byId = <String, String>{};
+    if (post.authorId.isNotEmpty && post.authorId != currentUserId) {
+      byId[post.authorId] = post.authorUsername;
+    }
+    for (final r in replies) {
+      if (r.authorId.isNotEmpty && r.authorId != currentUserId) {
+        byId[r.authorId] = r.authorUsername;
+      }
+    }
+    return byId.entries
+        .map((e) => (id: e.key, username: e.value))
+        .toList(growable: false);
+  }
+
+  /// The handle currently being typed after an unclosed `@`, or null when the
+  /// caret isn't in a mention token. Empty string means `@` was just typed.
+  String? get mentionQuery {
+    final sel = replyController.selection;
+    final text = replyController.text;
+    if (!sel.isValid || sel.baseOffset < 0 || sel.baseOffset > text.length) {
+      return null;
+    }
+    final upToCaret = text.substring(0, sel.baseOffset);
+    final at = upToCaret.lastIndexOf('@');
+    if (at < 0) return null;
+    final token = upToCaret.substring(at + 1);
+    if (token.contains(RegExp(r'\s'))) return null; // handle already ended
+    return token;
+  }
+
+  /// Suggestions matching the active mention query (Premium only).
+  List<MentionCandidate> get mentionSuggestions {
+    final q = mentionQuery;
+    if (!canMention || q == null) return const [];
+    final ql = q.toLowerCase();
+    return mentionCandidates
+        .where((c) => c.username.toLowerCase().contains(ql))
+        .take(6)
+        .toList(growable: false);
+  }
+
+  /// Replaces the active `@token` with `@username ` and records the picked UID.
+  void insertMention(MentionCandidate candidate) {
+    final sel = replyController.selection;
+    final text = replyController.text;
+    if (!sel.isValid) return;
+    final upToCaret = text.substring(0, sel.baseOffset);
+    final at = upToCaret.lastIndexOf('@');
+    if (at < 0) return;
+
+    final mentionText = '@${candidate.username} ';
+    final newText =
+        text.substring(0, at) + mentionText + text.substring(sel.baseOffset);
+    replyController.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: at + mentionText.length),
+    );
+    _pickedIdByUsername[candidate.username] = candidate.id;
+    notifyListeners();
+  }
+
+  /// Resolves the UIDs to notify: picked mentions whose `@username` still
+  /// appears in the sent text. Always empty for non-premium users (backstop:
+  /// the server also drops mentions from free authors).
+  List<String> _resolveMentions(String text) {
+    if (!canMention) return const [];
+    final ids = <String>{};
+    _pickedIdByUsername.forEach((username, id) {
+      if (text.contains('@$username')) ids.add(id);
+    });
+    return ids.toList();
+  }
+
+  /// Free-tier tap on the mention affordance → gate analytics + paywall.
+  Future<void> openMentionPaywall() async {
+    locator<AnalyticsService>().logGateHit(feature: PaywallFeature.mention);
+    await PaywallHelper.show(feature: PaywallFeature.mention);
   }
 
   // --- Lock state (admin can flip communities to read-only) ---
@@ -85,6 +250,7 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
 
   @override
   void onData(List<ThreadReply>? data) {
+    if (data != null) _reconcilePending(data);
     setBusy(false);
   }
 
@@ -98,6 +264,12 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
   }
 
   Future<void> sendReply() async {
+    // Already capped this month — don't waste a call; nudge to the paywall.
+    if (_replyCapReached) {
+      await openReplyPaywall();
+      return;
+    }
+
     final text = replyController.text.trim();
     if (text.isEmpty) return;
 
@@ -146,17 +318,37 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
           message: 'Please keep replies supportive and on-topic.');
     }
 
+    final mentionedUsers = _resolveMentions(text);
+
     replyController.clear();
+    _pickedIdByUsername.clear();
+
+    // Optimistic "Posting…" card shown instantly until the real reply streams
+    // in (reconciled in onData) — or removed on cap/error/timeout.
+    final pending = PendingContent(id: ++_pendingCounter, content: text);
+    _pendingReplies.add(pending);
     notifyListeners();
+    Future.delayed(const Duration(seconds: 15), () => _removePending(pending.id));
 
     try {
-      await locator<CommunityService>().createReply(
+      final result = await locator<CommunityService>().createReply(
         postId: post.id,
         content: text,
         authorUsername: currentUserName,
-        mentionedUsers: [], // Needs user search to resolve IDs
+        mentionedUsers: mentionedUsers, // premium only; free resolves to []
       );
+
+      // Free user is out of monthly replies — restore the text, show the
+      // persistent upgrade button, and open the paywall once immediately.
+      if (result.capReached) {
+        _removePending(pending.id);
+        replyController.text = text;
+        _replyCapReached = true;
+        notifyListeners();
+        await openReplyPaywall();
+      }
     } catch (e) {
+      _removePending(pending.id);
       _snackbarService.showSnackbar(
         title: 'Error',
         message: 'Could not send reply. Please try again.',
@@ -205,6 +397,8 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
   @override
   void dispose() {
     _communitySub?.cancel();
+    _authService.removeListener(_onSubscriptionChanged);
+    replyController.removeListener(_onReplyChanged);
     replyController.dispose();
     super.dispose();
   }

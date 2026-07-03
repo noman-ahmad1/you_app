@@ -213,7 +213,9 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
                       //       fontWeight: FontWeight.w700,
                       //       color: AppColors.secondary),
                       // ),
-                      WeeklyMoodChart(key: viewModel.chartKey)
+                      WeeklyMoodChart(key: viewModel.chartKey),
+                      if (viewModel.insightsLocked)
+                        _AdvancedInsightsTeaser(viewModel: viewModel),
                     ],
                   ),
                 ),
@@ -230,4 +232,59 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
     BuildContext context,
   ) =>
       MoodTrackerViewModel();
+}
+
+/// Premium teaser inviting free users into advanced mood insights (deep
+/// patterns, triggers, weekly/monthly reports).
+class _AdvancedInsightsTeaser extends StatelessWidget {
+  final MoodTrackerViewModel viewModel;
+  const _AdvancedInsightsTeaser({required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: viewModel.onUnlockInsights,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.secondary.withOpacity(0.25)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.insights_outlined,
+                color: AppColors.secondary, size: 26),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Advanced mood insights',
+                    style: GoogleFonts.crimsonPro(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.secondary,
+                    ),
+                  ),
+                  Text(
+                    'Deep patterns, triggers & personal reports with Premium.',
+                    style: GoogleFonts.crimsonPro(
+                      fontSize: 12,
+                      color: AppColors.secondary.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.lock_outline,
+                color: AppColors.secondary, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
 }

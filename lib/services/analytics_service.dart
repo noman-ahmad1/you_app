@@ -135,6 +135,19 @@ class AnalyticsService {
       _log('subscription_gate',
           {'required': required, 'days_since_login': daysSinceLogin});
 
+  /// A free user hit a premium gate for [feature] (e.g. 'dodo', 'welcome_chat',
+  /// 'journal_history', 'mood_window').
+  Future<void> logGateHit({required String feature}) =>
+      _log('premium_gate_hit', {'feature': feature});
+
+  /// The paywall screen was shown, attributed to the [feature] that triggered it.
+  Future<void> logPaywallShown({required String feature}) =>
+      _log('paywall_shown', {'feature': feature});
+
+  /// The user tapped the upgrade CTA on the paywall.
+  Future<void> logUpgradeCtaTapped({required String feature}) =>
+      _log('paywall_upgrade_tapped', {'feature': feature});
+
   // --- Onboarding ---
   Future<void> logOnboardingCompleted({required String tour}) =>
       _log('onboarding_completed', {'tour': tour});
