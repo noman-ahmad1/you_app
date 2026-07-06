@@ -9,6 +9,7 @@ class PaywallFeature {
   static const String dodo = 'dodo';
   static const String welcomeChat = 'welcome_chat';
   static const String journalHistory = 'journal_history';
+  static const String voiceJournal = 'voice_journal';
   static const String moodWindow = 'mood_window';
   static const String communityThreads = 'community_threads';
   static const String communityReplies = 'community_replies';

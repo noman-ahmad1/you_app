@@ -2,8 +2,10 @@ import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/journal_model.dart';
+import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
@@ -233,13 +235,16 @@ class JournalDetailsView extends StackedView<JournalDetailsViewModel> {
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(7.0),
-                                    child: Text(
-                                      viewModel.entry.content,
-                                      style: GoogleFonts.crimsonPro(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.primaryVeryDark),
-                                    ),
+                                    child: viewModel.isVoice
+                                        ? _VoicePlayer(viewModel: viewModel)
+                                        : Text(
+                                            viewModel.entry.content,
+                                            style: GoogleFonts.crimsonPro(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w600,
+                                                color:
+                                                    AppColors.primaryVeryDark),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -348,4 +353,99 @@ class JournalDetailsView extends StackedView<JournalDetailsViewModel> {
     BuildContext context,
   ) =>
       JournalDetailsViewModel(entry: journalEntry);
+
+  @override
+  void onViewModelReady(JournalDetailsViewModel viewModel) =>
+      viewModel.initAudio();
+}
+
+/// Inline audio player for a voice journal entry: a play/pause button, an
+/// animated waveform that comes alive while playing, and a countdown time.
+class _VoicePlayer extends StatelessWidget {
+  final JournalDetailsViewModel viewModel;
+  const _VoicePlayer({required this.viewModel});
+
+  static String _fmt(Duration d) {
+    final m = d.inMinutes.remainder(60).toString();
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final playing = viewModel.isPlaying;
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          InkWell(
+            onTap: viewModel.togglePlay,
+            borderRadius: BorderRadius.circular(80),
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.secondary,
+                border: Border.all(color: AppColors.background, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(25),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 240),
+                  child: Image.asset(
+                    playing ? AppConstants.pause : AppConstants.play,
+                    key: ValueKey(playing),
+                    width: 30,
+                    height: 30,
+                    color: AppColors.background,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+          // The waveform animates while playing and rests on a still frame when
+          // paused — replaces the old progress slider.
+          SizedBox(
+            height: 64,
+            width: double.infinity,
+            child: Lottie.asset(
+              AppConstants.wave,
+              decoder: customDecoder,
+              animate: playing,
+              repeat: true,
+              fit: BoxFit.fill,
+            ),
+          ),
+          const SizedBox(height: 18),
+          StreamBuilder<Duration>(
+            stream: viewModel.positionStream,
+            builder: (context, snapshot) {
+              final total = viewModel.totalDuration;
+              final pos = snapshot.data ?? Duration.zero;
+              Duration remaining = total - pos;
+              if (remaining.isNegative) remaining = Duration.zero;
+              final atRest = !playing && pos == Duration.zero;
+              return Text(
+                _fmt(atRest ? total : remaining),
+                style: GoogleFonts.crimsonPro(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.secondary,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }

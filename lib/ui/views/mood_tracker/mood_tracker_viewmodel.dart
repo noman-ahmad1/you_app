@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/views/mood_tracker/animated_mood.dart';
@@ -98,6 +99,12 @@ class MoodTrackerViewModel extends BaseViewModel {
   Future<void> onUnlockInsights() async {
     locator<AnalyticsService>().logGateHit(feature: PaywallFeature.moodWindow);
     await PaywallHelper.show(feature: PaywallFeature.moodWindow);
+  }
+
+  /// Premium members open the full Mood Insights screen instead of the basic
+  /// on-screen chart.
+  Future<void> navigateToMoodInsights() async {
+    await _navigationService.navigateToMoodInsightsView();
   }
 
   void _calculateStreak(List<MoodEntry> entries) {
@@ -285,6 +292,10 @@ class MoodTrackerViewModel extends BaseViewModel {
       );
     } catch (e) {
       debugPrint("Failed to handle emoji selection: $e");
+      locator<SnackbarService>().showSnackbar(
+        title: 'Could not save',
+        message: "We couldn't save your mood. Please try again.",
+      );
     }
   }
 

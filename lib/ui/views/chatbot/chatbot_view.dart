@@ -200,8 +200,8 @@ class _DodoUpgradeButton extends ViewModelWidget<ChatbotViewModel> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.workspace_premium,
-                    color: Colors.white, size: 20),
+                Image.asset(AppConstants.premiumBadgeFill,
+                    width: 20, height: 20, color: Colors.white),
                 const SizedBox(width: 7),
                 Text(
                   'Daily limit reached · Unlock unlimited Dodo',

@@ -122,13 +122,16 @@ class _TabItem extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: Container(
           alignment: Alignment.center,
-          child: Text(
-            text,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
             style: GoogleFonts.crimsonPro(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.secondary),
-            // color: isSelected ? AppColors.secondary : AppColors.secondary,
+              fontSize: isSelected ? 19 : 18,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+              color: AppColors.secondary
+                  .withOpacity(isSelected ? 1.0 : 0.6),
+            ),
+            child: Text(text),
           ),
         ),
       ),

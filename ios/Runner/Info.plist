@@ -45,6 +45,8 @@
 	<string>This app needs camera access to take photos for your profile</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs photo library access to pick photos for your profile</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to record voice journal entries</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

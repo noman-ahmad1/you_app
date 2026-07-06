@@ -4,8 +4,10 @@ import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
+import 'package:you_app/ui/shared/press_scale.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/shared/widgets.dart';
+import 'package:you_app/ui/views/premium/premium_helper.dart';
 import 'profile_viewmodel.dart';
 
 class ProfileView extends StackedView<ProfileViewModel> {
@@ -20,7 +22,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
     final user = viewModel.currentUser;
     if (user == null) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: CustomLottieLoader(fullScreen: true),
       );
     }
 
@@ -160,8 +162,10 @@ class ProfileView extends StackedView<ProfileViewModel> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.workspace_premium,
-                                    size: 16, color: AppColors.camel),
+                                Image.asset(AppConstants.premiumBadgeFill,
+                                    width: 16,
+                                    height: 16,
+                                    color: AppColors.camel),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Premium',
@@ -197,6 +201,10 @@ class ProfileView extends StackedView<ProfileViewModel> {
                           ),
                         ),
                         Space.verticalSpaceTiny(context),
+                        if (!user.isPremium) ...[
+                          const _PremiumUpsellCard(),
+                          Space.verticalSpaceTiny(context),
+                        ],
 
                         // Profile Details Container
                         Container(
@@ -361,4 +369,63 @@ class ProfileView extends StackedView<ProfileViewModel> {
 
   @override
   ProfileViewModel viewModelBuilder(BuildContext context) => ProfileViewModel();
+}
+
+/// Tappable upsell shown on the profile for non-premium users → Premium screen.
+class _PremiumUpsellCard extends StatelessWidget {
+  const _PremiumUpsellCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      onTap: () => PremiumHelper.open(source: 'profile'),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.secondary, AppColors.secondaryLight],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.secondary.withAlpha(60),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Image.asset(AppConstants.premiumBadgeFill,
+                width: 26, height: 26, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Unlock YOU Premium',
+                    style: GoogleFonts.crimsonPro(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    'Unlimited support & deeper insights',
+                    style: GoogleFonts.crimsonPro(
+                      fontSize: 12.5,
+                      color: Colors.white.withAlpha(220),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
 }

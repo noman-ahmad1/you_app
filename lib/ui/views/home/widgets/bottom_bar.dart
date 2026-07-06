@@ -127,11 +127,20 @@ class _TabItem extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: Container(
           alignment: Alignment.center,
-          child: Image.asset(
-            assetPath,
-            height: iconSize,
-            width: iconSize,
-            color: isSelected ? AppColors.secondary : AppColors.secondary,
+          child: AnimatedScale(
+            scale: isSelected ? 1.18 : 1.0,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            child: AnimatedOpacity(
+              opacity: isSelected ? 1.0 : 0.55,
+              duration: const Duration(milliseconds: 250),
+              child: Image.asset(
+                assetPath,
+                height: iconSize,
+                width: iconSize,
+                color: AppColors.secondary,
+              ),
+            ),
           ),
         ),
       ),

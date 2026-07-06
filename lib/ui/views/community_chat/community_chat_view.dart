@@ -8,12 +8,14 @@ import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/views/community_chat/community_card_widgets.dart';
 import 'package:you_app/ui/common/app_constants.dart';
+import 'package:you_app/ui/shared/busy_button.dart';
+import 'package:you_app/ui/shared/fade_slide_in.dart';
 import 'package:you_app/ui/shared/floating_composer_layout.dart';
+import 'package:you_app/ui/shared/skeleton.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'community_chat_viewmodel.dart';
-import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class CommunityChatView extends StackedView<CommunityChatViewModel> {
   final String communityId;
@@ -61,32 +63,18 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                         : SafeArea(
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
-                              child: ElevatedButton(
+                              child: BusyButton(
+                                busy: viewModel.joining,
                                 onPressed: viewModel.joinCommunity,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.secondary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  minimumSize: const Size(double.infinity, 50),
-                                ),
-                                child: Text(
-                                  'Join Community to Post',
-                                  style: GoogleFonts.crimsonPro(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
+                                label: 'Join Community to Post',
+                                busyLabel: 'Joining…',
                               ),
                             ),
                           ),
                 listBuilder: (context, bottomInset) {
                   final pending = viewModel.pendingPosts;
                   if (viewModel.isBusy && viewModel.posts.isEmpty) {
-                    return const CustomLottieLoader(fullScreen: true);
+                    return const SkeletonList();
                   }
                   if (viewModel.posts.isEmpty && pending.isEmpty) {
                     return _buildEmptyState();
@@ -133,13 +121,16 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                         final post = viewModel.posts[postIndex];
                         final isMe = post.authorId == viewModel.currentUserId;
 
-                        return _CommunityPostCard(
-                          post: post,
-                          isMe: isMe,
-                          isLiked:
-                              post.likedBy.contains(viewModel.currentUserId),
-                          onTap: () => viewModel.navigateToThread(post),
-                          onLike: () => viewModel.toggleLike(post),
+                        return FadeSlideIn(
+                          index: postIndex,
+                          child: _CommunityPostCard(
+                            post: post,
+                            isMe: isMe,
+                            isLiked:
+                                post.likedBy.contains(viewModel.currentUserId),
+                            onTap: () => viewModel.navigateToThread(post),
+                            onLike: () => viewModel.toggleLike(post),
+                          ),
                         );
                       },
                     ),
@@ -299,8 +290,8 @@ class _ThreadUpgradeButton extends ViewModelWidget<CommunityChatViewModel> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.workspace_premium,
-                    color: Colors.white, size: 20),
+                Image.asset(AppConstants.premiumBadgeFill,
+                    width: 20, height: 20, color: Colors.white),
                 const SizedBox(width: 7),
                 Text(
                   'Monthly limit reached · Unlock unlimited threads',

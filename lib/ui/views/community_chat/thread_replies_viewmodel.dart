@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
@@ -217,11 +218,17 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
     return user.joinedCommunities.contains(post.communityId);
   }
 
+  bool _joining = false;
+  bool get joining => _joining;
+
   Future<void> joinCommunity() async {
+    if (_joining) return;
+    _joining = true;
+    notifyListeners();
     try {
       await locator<CommunityService>().joinCommunity(post.communityId);
       await _authService.checkCurrentUserStatus(); // Refresh user data locally
-      notifyListeners();
+      HapticFeedback.lightImpact();
       InAppNotificationBanner.show(
         title: 'Joined Community!',
         body: 'You are now a member and can post threads.',
@@ -232,6 +239,9 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
         title: 'Error',
         message: 'Could not join community. Please try again.',
       );
+    } finally {
+      _joining = false;
+      notifyListeners();
     }
   }
 
@@ -356,10 +366,10 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
     }
   }
 
-  void toggleLike() {
+  Future<void> toggleLike() async {
     final uid = currentUserId;
     if (uid.isEmpty) return;
-    
+
     final isLiked = post.likedBy.contains(uid);
     if (isLiked) {
       post.likedBy.remove(uid);
@@ -369,14 +379,25 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
       post.likeCount += 1;
     }
     notifyListeners();
-    
-    locator<CommunityService>().toggleLikePost(post.id, isLiked);
+
+    try {
+      await locator<CommunityService>().toggleLikePost(post.id, isLiked);
+    } catch (_) {
+      if (isLiked) {
+        post.likedBy.add(uid);
+        post.likeCount += 1;
+      } else {
+        post.likedBy.remove(uid);
+        post.likeCount -= 1;
+      }
+      notifyListeners();
+    }
   }
 
-  void toggleReplyLike(ThreadReply reply) {
+  Future<void> toggleReplyLike(ThreadReply reply) async {
     final uid = currentUserId;
     if (uid.isEmpty) return;
-    
+
     final isLiked = reply.likedBy.contains(uid);
     if (isLiked) {
       reply.likedBy.remove(uid);
@@ -386,8 +407,19 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
       reply.likeCount += 1;
     }
     notifyListeners();
-    
-    locator<CommunityService>().toggleLikeReply(post.id, reply.id, isLiked);
+
+    try {
+      await locator<CommunityService>().toggleLikeReply(post.id, reply.id, isLiked);
+    } catch (_) {
+      if (isLiked) {
+        reply.likedBy.add(uid);
+        reply.likeCount += 1;
+      } else {
+        reply.likedBy.remove(uid);
+        reply.likeCount -= 1;
+      }
+      notifyListeners();
+    }
   }
 
   void back() {

@@ -1,22 +1,18 @@
-import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
-import 'package:you_app/models/journal_model.dart';
-import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
-import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
-import 'package:you_app/ui/views/journal/journal_card.dart';
-import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
+import 'package:you_app/ui/views/new_journal_entry/journal_entry_tabs/journal_save_row.dart';
 import 'package:you_app/ui/views/new_journal_entry/new_journal_entry_viewmodel.dart';
-import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
-// WorkEntriesView
-class NewWorkEntryView extends StatelessWidget {
+/// The typed-journal form (title + body + save row). Replaces the old, near
+/// identical work_entry/personal_entry duplicates — the Work/Personal category
+/// now lives in the shared [JournalSaveRow] dropdown, not a per-tab constant.
+class TextJournalEntryView extends StatelessWidget {
   final NewJournalEntryViewModel viewModel;
-  const NewWorkEntryView({super.key, required this.viewModel});
+  const TextJournalEntryView({super.key, required this.viewModel});
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -69,6 +65,7 @@ class NewWorkEntryView extends StatelessWidget {
                           color: AppColors.secondary),
                     ),
                     Space.verticalSpaceVTiny(context),
+                    // Title
                     ClipRRect(
                       borderRadius: BorderRadius.circular(23),
                       child: BackdropFilter(
@@ -79,8 +76,8 @@ class NewWorkEntryView extends StatelessWidget {
                           height: height * 0.065,
                           decoration: BoxDecoration(
                             color: AppColors.background.withAlpha(200),
-                            border: Border.all(
-                                color: AppColors.background, width: 2),
+                            border:
+                                Border.all(color: AppColors.background, width: 2),
                             borderRadius: BorderRadius.circular(23),
                             boxShadow: [
                               BoxShadow(
@@ -93,19 +90,17 @@ class NewWorkEntryView extends StatelessWidget {
                           child: TextField(
                             controller: viewModel.titleController,
                             cursorColor: AppColors.secondary,
-                            onChanged: (value) {},
                             maxLines: 1,
                             expands: false,
                             textAlignVertical: TextAlignVertical.top,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
                               color: AppColors.secondary,
                             ),
                             decoration: InputDecoration(
                               hintText: 'Title',
-                              fillColor: AppColors.secondary,
                               hintStyle: GoogleFonts.crimsonPro(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -119,6 +114,7 @@ class NewWorkEntryView extends StatelessWidget {
                       ),
                     ),
                     Space.verticalSpaceVTiny(context),
+                    // Body
                     Expanded(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(23),
@@ -127,7 +123,6 @@ class NewWorkEntryView extends StatelessWidget {
                           child: Container(
                             padding: EdgeInsets.all(width * 0.007),
                             width: width * 0.8,
-                            // height: height * 0.45,
                             decoration: BoxDecoration(
                               color: AppColors.background.withAlpha(200),
                               border: Border.all(
@@ -146,12 +141,10 @@ class NewWorkEntryView extends StatelessWidget {
                               child: TextField(
                                 controller: viewModel.contentController,
                                 cursorColor: AppColors.secondary,
-                                onChanged: (value) {},
                                 maxLines: 18,
                                 expands: false,
                                 textAlignVertical: TextAlignVertical.top,
-                                // textAlign: TextAlign.center,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w300,
                                   color: AppColors.primaryVeryDark,
@@ -177,60 +170,7 @@ class NewWorkEntryView extends StatelessWidget {
                     Space.verticalSpaceVTiny(context),
                     Align(
                       alignment: Alignment.bottomCenter,
-                      child: InkWell(
-                        onTap: () {
-                          if (viewModel.isEditing) {
-                            viewModel.updateJournalEntry();
-                          } else {
-                            viewModel.saveJournalEntry(
-                                label: JournalLabel.work);
-                          }
-                        },
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(35),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 200, sigmaY: 200),
-                            child: Container(
-                              padding: EdgeInsets.all(width * 0.007),
-                              width: width * 0.8,
-                              height: height * 0.065,
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryVeryDark,
-                                border: Border.all(
-                                    color: AppColors.background, width: 2),
-                                borderRadius: BorderRadius.circular(35),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withAlpha(25),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: viewModel.isBusy
-                                    ? const CustomLottieLoader(
-                                        width: 50,
-                                        height: 50,
-                                        loaderWidth: 200,
-                                        loaderHeight: 200,
-                                      )
-                                    // CircularProgressIndicator(
-                                    //     color: AppColors.secondary,
-                                    //   )
-                                    : Text(
-                                        viewModel.isEditing ? 'Update' : 'Save',
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.crimsonPro(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.background),
-                                      ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      child: JournalSaveRow(viewModel: viewModel),
                     ),
                   ],
                 ),

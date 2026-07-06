@@ -47,6 +47,9 @@ import 'package:you_app/ui/views/volunteer_edit_profile/volunteer_edit_profile_v
 import 'package:you_app/ui/views/soothing_sounds/soothing_sounds_view.dart';
 import 'package:you_app/ui/views/breathe/breathe_view.dart';
 import 'package:you_app/ui/views/paywall/paywall_view.dart';
+import 'package:you_app/ui/views/premium/premium_view.dart';
+import 'package:you_app/ui/views/mood_insights/mood_insights_view.dart';
+import 'package:you_app/ui/shared/page_transitions.dart';
 // @stacked-import
 import 'package:you_app/services/monetization_service.dart';
 
@@ -60,24 +63,28 @@ import 'package:you_app/services/monetization_service.dart';
     MaterialRoute(page: ResetPasswordView),
     MaterialRoute(page: UserInfoView),
     MaterialRoute(page: JournalView),
-    MaterialRoute(page: MoodTrackerView),
+    CustomRoute(
+        page: MoodTrackerView, transitionsBuilder: scaleFadeTransition),
     MaterialRoute(page: NewJournalEntryView),
-    MaterialRoute(page: ChatbotView),
+    CustomRoute(page: ChatbotView, transitionsBuilder: slideUpTransition),
     MaterialRoute(page: VolunteerSignupView),
     MaterialRoute(page: VolunteerSignupInfoView),
     MaterialRoute(page: VolunteerHomeView),
     MaterialRoute(page: VolunteerResetPasswordView),
     MaterialRoute(page: VolunteerOtpView),
     MaterialRoute(page: JournalDetailsView),
-    MaterialRoute(page: ChatView),
-    MaterialRoute(page: CommunityChatView),
+    CustomRoute(page: ChatView, transitionsBuilder: slideUpTransition),
+    CustomRoute(page: CommunityChatView, transitionsBuilder: slideUpTransition),
     MaterialRoute(page: VolunteerPendingVerificationView),
     MaterialRoute(page: ProfileView),
     MaterialRoute(page: EditProfileView),
     MaterialRoute(page: SoothingSoundsView),
-    MaterialRoute(page: BreatheView),
+    CustomRoute(page: BreatheView, transitionsBuilder: fadeTransition),
     MaterialRoute(page: VolunteerEditProfileView),
-    MaterialRoute(page: PaywallView),
+    CustomRoute(page: PaywallView, transitionsBuilder: slideUpTransition),
+    CustomRoute(page: PremiumView, transitionsBuilder: slideUpTransition),
+    CustomRoute(
+        page: MoodInsightsView, transitionsBuilder: slideUpTransition),
 // @stacked-route
   ],
   dependencies: [

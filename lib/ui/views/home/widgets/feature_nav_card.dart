@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/shared/press_scale.dart';
 
 class FeatureNavCard extends StatelessWidget {
   final String title;
@@ -22,7 +23,7 @@ class FeatureNavCard extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
 
-    return InkWell(
+    return PressScale(
       onTap: onTap,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(23),

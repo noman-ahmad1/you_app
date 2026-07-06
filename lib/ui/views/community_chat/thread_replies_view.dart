@@ -8,13 +8,14 @@ import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/views/community_chat/community_card_widgets.dart';
 import 'package:you_app/ui/common/app_constants.dart';
+import 'package:you_app/ui/shared/busy_button.dart';
 import 'package:you_app/ui/shared/floating_composer_layout.dart';
+import 'package:you_app/ui/shared/skeleton.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/models/community_post.dart';
 import 'package:you_app/models/thread_reply.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'thread_replies_viewmodel.dart';
-import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
   final CommunityPost post;
@@ -62,30 +63,16 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                         : SafeArea(
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
-                              child: ElevatedButton(
+                              child: BusyButton(
+                                busy: viewModel.joining,
                                 onPressed: viewModel.joinCommunity,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.secondary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  minimumSize: const Size(double.infinity, 50),
-                                ),
-                                child: Text(
-                                  'Join Community to Reply',
-                                  style: GoogleFonts.crimsonPro(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
+                                label: 'Join Community to Reply',
+                                busyLabel: 'Joining…',
                               ),
                             ),
                           ),
                 listBuilder: (context, bottomInset) => viewModel.isBusy
-                    ? const CustomLottieLoader(fullScreen: true)
+                    ? const SkeletonList()
                     : CustomScrollView(slivers: [
                         SliverToBoxAdapter(
                           child: Padding(
@@ -318,8 +305,8 @@ class _ReplyUpgradeButton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.workspace_premium,
-                    color: Colors.white, size: 20),
+                Image.asset(AppConstants.premiumBadgeFill,
+                    width: 20, height: 20, color: Colors.white),
                 const SizedBox(width: 8),
                 Text(
                   'Monthly reply limit reached · Unlock unlimited',
@@ -410,8 +397,8 @@ class _MentionPremiumChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.workspace_premium,
-                    size: 16, color: AppColors.secondary),
+                Image.asset(AppConstants.premiumBadge,
+                    width: 16, height: 16, color: AppColors.secondary),
                 const SizedBox(width: 6),
                 Text(
                   'Mentioning is a Premium feature',

@@ -12,6 +12,7 @@ import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
+import 'package:you_app/ui/shared/fade_slide_in.dart';
 import 'package:you_app/ui/views/journal/journal_card.dart';
 import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
 
@@ -213,23 +214,29 @@ class AllEntriesView extends ViewModelWidget<JournalViewModel> {
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
               final entry = entries[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 7.0),
-                child: JournalCard(
-                  onTap: () {
-                    viewModel.navigateToJournalDetails(entry);
-                  },
-                  category: entry.label.name[0].toUpperCase() +
-                      entry.label.name.substring(1),
-                  title: entry.title,
-                  description: entry.content,
-                  date: entry.timestamp != null
-                      ? DateFormat('d, MMMM, yyyy').format(entry.timestamp!)
-                      : 'No Date',
-                  showEdit: true,
-                  onEditTap: () {
-                    viewModel.navigateToEditJournalEntry(entry);
-                  },
+              return FadeSlideIn(
+                index: index,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 7.0),
+                  child: JournalCard(
+                    onTap: () {
+                      viewModel.navigateToJournalDetails(entry);
+                    },
+                    category: entry.label.name[0].toUpperCase() +
+                        entry.label.name.substring(1),
+                    title: entry.title,
+                    description: entry.content,
+                    isVoice: entry.isVoice,
+                    durationLabel: entry.audioDurationLabel,
+                    audioUrl: entry.audioUrl,
+                    date: entry.timestamp != null
+                        ? DateFormat('d, MMMM, yyyy').format(entry.timestamp!)
+                        : 'No Date',
+                    showEdit: true,
+                    onEditTap: () {
+                      viewModel.navigateToEditJournalEntry(entry);
+                    },
+                  ),
                 ),
               );
             },

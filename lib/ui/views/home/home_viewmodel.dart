@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,7 @@ import 'package:you_app/models/chat_request_model.dart';
 import 'package:you_app/models/mood_model.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/ui/views/paywall/paywall_helper.dart';
+import 'package:you_app/ui/views/premium/premium_helper.dart';
 import 'package:you_app/services/app_content_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
@@ -232,6 +234,10 @@ class HomeViewModel extends ReactiveViewModel {
     locator<NavigationService>().navigateToBreatheView();
   }
 
+  void navigateToPremium() {
+    PremiumHelper.open(source: 'home_drawer');
+  }
+
   void setIndex(int value) {
     _counter++;
     rebuildUi();
@@ -248,12 +254,20 @@ class HomeViewModel extends ReactiveViewModel {
     return user.joinedCommunities.contains(communityId);
   }
 
+  // Per-community join-in-progress tracking so each card shows its own spinner.
+  final Set<String> _joiningCommunities = {};
+  bool isJoiningCommunity(String communityId) =>
+      _joiningCommunities.contains(communityId);
+
   Future<void> joinCommunity(String communityId) async {
+    if (_joiningCommunities.contains(communityId)) return;
+    _joiningCommunities.add(communityId);
+    notifyListeners();
     try {
       await locator<CommunityService>().joinCommunity(communityId);
       await _authenticationService
           .checkCurrentUserStatus(); // Refresh user data locally
-      notifyListeners();
+      HapticFeedback.lightImpact();
       InAppNotificationBanner.show(
         title: 'Joined Community!',
         body: 'You can now participate and post threads.',
@@ -261,6 +275,9 @@ class HomeViewModel extends ReactiveViewModel {
       );
     } catch (e) {
       debugPrint("Error joining community: $e");
+    } finally {
+      _joiningCommunities.remove(communityId);
+      notifyListeners();
     }
   }
 

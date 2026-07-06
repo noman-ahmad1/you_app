@@ -403,8 +403,8 @@ class DashboardScreen extends StatelessWidget {
                 color: Colors.white.withAlpha(45),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.workspace_premium_rounded,
-                  color: Colors.white, size: 28),
+              child: Image.asset(AppConstants.premiumBadgeFill,
+                  width: 28, height: 28, color: Colors.white),
             ),
             const SizedBox(width: 14),
             Expanded(

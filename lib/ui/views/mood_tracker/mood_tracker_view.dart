@@ -56,25 +56,6 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Space.verticalSpaceTiny(context),
-                      if (viewModel.moodStreak > 0)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.4)),
-                          ),
-                          child: Text(
-                            '🔥 ${viewModel.moodStreak} Day Streak!',
-                            style: GoogleFonts.crimsonPro(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.secondary),
-                          ),
-                        ),
                       Text(
                         'Track your mood journey',
                         style: GoogleFonts.crimsonPro(
@@ -213,9 +194,15 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
                       //       fontWeight: FontWeight.w700,
                       //       color: AppColors.secondary),
                       // ),
-                      WeeklyMoodChart(key: viewModel.chartKey),
-                      if (viewModel.insightsLocked)
+                      // Premium members get the full insights screen instead of
+                      // the basic on-screen chart; free members keep the chart
+                      // (and the upgrade teaser) as before.
+                      if (viewModel.isPremium)
+                        _ViewInsightsButton(viewModel: viewModel)
+                      else ...[
+                        WeeklyMoodChart(key: viewModel.chartKey),
                         _AdvancedInsightsTeaser(viewModel: viewModel),
+                      ],
                     ],
                   ),
                 ),
@@ -232,6 +219,86 @@ class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
     BuildContext context,
   ) =>
       MoodTrackerViewModel();
+}
+
+/// Premium members' entry point to the full Mood Insights screen (replaces the
+/// basic chart for YOU+).
+class _ViewInsightsButton extends StatelessWidget {
+  final MoodTrackerViewModel viewModel;
+  const _ViewInsightsButton({required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(26),
+          onTap: viewModel.navigateToMoodInsights,
+          child: Ink(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(26),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.secondary, AppColors.secondaryLight],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.secondary.withAlpha(70),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.background.withAlpha(45),
+                  ),
+                  child: const Icon(Icons.insights,
+                      color: AppColors.background, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'View your insights',
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.background,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Your patterns, gently mapped',
+                        style: GoogleFonts.crimsonPro(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.background.withAlpha(220),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right,
+                    color: AppColors.background, size: 26),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Premium teaser inviting free users into advanced mood insights (deep

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
@@ -131,11 +132,17 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
     return user.joinedCommunities.contains(communityId);
   }
 
+  bool _joining = false;
+  bool get joining => _joining;
+
   Future<void> joinCommunity() async {
+    if (_joining) return;
+    _joining = true;
+    notifyListeners();
     try {
       await locator<CommunityService>().joinCommunity(communityId);
       await _authService.checkCurrentUserStatus(); // Refresh user data locally
-      notifyListeners();
+      HapticFeedback.lightImpact();
       InAppNotificationBanner.show(
         title: 'Joined Community!',
         body: 'You are now a member of $communityName.',
@@ -146,6 +153,9 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
         title: 'Error',
         message: 'Could not join community. Please try again.',
       );
+    } finally {
+      _joining = false;
+      notifyListeners();
     }
   }
 
@@ -272,11 +282,12 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
     );
   }
 
-  void toggleLike(CommunityPost post) {
+  Future<void> toggleLike(CommunityPost post) async {
     final uid = currentUserId;
     if (uid.isEmpty) return;
-    
+
     final isLiked = post.likedBy.contains(uid);
+    // Optimistic update.
     if (isLiked) {
       post.likedBy.remove(uid);
       post.likeCount -= 1;
@@ -285,8 +296,20 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
       post.likeCount += 1;
     }
     notifyListeners();
-    
-    locator<CommunityService>().toggleLikePost(post.id, isLiked);
+
+    try {
+      await locator<CommunityService>().toggleLikePost(post.id, isLiked);
+    } catch (_) {
+      // Roll back the optimistic change if the write failed.
+      if (isLiked) {
+        post.likedBy.add(uid);
+        post.likeCount += 1;
+      } else {
+        post.likedBy.remove(uid);
+        post.likeCount -= 1;
+      }
+      notifyListeners();
+    }
   }
 
   void back() {

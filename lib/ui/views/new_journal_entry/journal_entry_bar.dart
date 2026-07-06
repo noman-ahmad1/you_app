@@ -6,11 +6,13 @@ import 'package:you_app/ui/common/app_colors.dart';
 class JournalEntryBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final bool isPremium;
 
   const JournalEntryBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.isPremium = true,
   });
 
   @override
@@ -63,13 +65,14 @@ class JournalEntryBar extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _TabItem(
-                    text: 'Work',
+                    text: 'Text',
                     isSelected: currentIndex == 0,
                     onTap: () => onTap(0),
                   ),
                   _TabItem(
-                    text: 'Personal',
+                    text: 'Voice',
                     isSelected: currentIndex == 1,
+                    locked: !isPremium,
                     onTap: () => onTap(1),
                   ),
                 ],
@@ -96,32 +99,40 @@ class JournalEntryBar extends StatelessWidget {
 class _TabItem extends StatelessWidget {
   final String text;
   final bool isSelected;
+  final bool locked;
   final VoidCallback onTap;
 
   const _TabItem({
     required this.text,
     required this.isSelected,
     required this.onTap,
+    this.locked = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final barHeight =
-        MediaQuery.of(context).size.height * 0.06; // match BottomBar height
-    final iconSize = barHeight * 0.6; // 60% of bar height
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
           alignment: Alignment.center,
-          child: Text(
-            text,
-            style: GoogleFonts.crimsonPro(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.secondary),
-            // color: isSelected ? AppColors.secondary : AppColors.secondary,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                text,
+                style: GoogleFonts.crimsonPro(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.secondary),
+              ),
+              if (locked) ...[
+                const SizedBox(width: 5),
+                Icon(Icons.lock_outline,
+                    size: 15, color: AppColors.secondary.withAlpha(200)),
+              ],
+            ],
           ),
         ),
       ),

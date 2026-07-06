@@ -11,6 +11,7 @@ class CommunityCard extends StatelessWidget {
   final String assetPath;
   final String? coverPhotoUrl;
   final bool isJoined;
+  final bool isJoining;
   final bool isLocked;
   final VoidCallback onTap;
   final VoidCallback onJoin;
@@ -24,6 +25,7 @@ class CommunityCard extends StatelessWidget {
     required this.assetPath,
     this.coverPhotoUrl,
     this.isJoined = true,
+    this.isJoining = false,
     this.isLocked = false,
     required this.onTap,
     required this.onJoin,
@@ -192,10 +194,11 @@ class CommunityCard extends StatelessWidget {
               )
             else if (!isJoined)
               ElevatedButton(
-                onPressed: onJoin,
+                onPressed: isJoining ? null : onJoin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.secondary,
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.secondary.withAlpha(150),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -204,13 +207,23 @@ class CommunityCard extends StatelessWidget {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Text(
-                  'Join',
-                  style: GoogleFonts.crimsonPro(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
+                child: isJoining
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        'Join',
+                        style: GoogleFonts.crimsonPro(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
               )
             else
               Image.asset(

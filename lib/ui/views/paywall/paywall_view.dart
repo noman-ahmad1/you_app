@@ -8,6 +8,9 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/views/paywall/paywall_viewmodel.dart';
 
+/// A focused, contextual upsell: it elaborates the ONE feature the user was
+/// gated on, hints that You+ includes much more, and sends them to the full
+/// You+ screen. No pricing here — that lives on the You+ screen.
 class PaywallView extends StackedView<PaywallViewModel> {
   /// The gate that triggered this paywall (see PaywallFeature.*).
   final String feature;
@@ -44,12 +47,13 @@ class PaywallView extends StackedView<PaywallViewModel> {
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _Header(viewModel: viewModel, width: width),
-                      Space.verticalSpaceSmall(context),
+                      _Header(viewModel: viewModel),
+                      Space.verticalSpaceTiny(context),
+                      Space.verticalSpaceTiny(context),
                       Text(
                         viewModel.headline,
                         textAlign: TextAlign.center,
@@ -60,24 +64,42 @@ class PaywallView extends StackedView<PaywallViewModel> {
                           height: 1.2,
                         ),
                       ),
+                      Space.verticalSpaceSmall(context),
+                      _UpsellCard(viewModel: viewModel),
                       Space.verticalSpaceTiny(context),
-                      Text(
-                        viewModel.subheadline,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.crimsonPro(
-                          fontSize: width * 0.038,
-                          color: AppColors.textSecondary,
+                      _MoreNote(viewModel: viewModel),
+                      Space.verticalSpaceSmall(context),
+                      _UpgradeButton(viewModel: viewModel),
+                      Space.verticalSpaceTiny(context),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.shield_outlined,
+                              size: 14, color: AppColors.textSecondary),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Crisis support is always free, for everyone.',
+                            style: GoogleFonts.crimsonPro(
+                              fontSize: width * 0.03,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      TextButton(
+                        onPressed: viewModel.close,
+                        child: Text(
+                          'Maybe later',
+                          style: GoogleFonts.crimsonPro(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      Space.verticalSpaceSmall(context),
-                      ...viewModel.benefits.map((b) =>
-                          _BenefitCard(benefit: b, accent: viewModel.accent)),
-                      Space.verticalSpaceSmall(context),
                     ],
                   ),
                 ),
               ),
-              _Footer(viewModel: viewModel, width: width),
             ],
           ),
         ),
@@ -86,197 +108,122 @@ class PaywallView extends StackedView<PaywallViewModel> {
   }
 }
 
-/// Premium badge header — a soft glow behind a crown + "PREMIUM" pill.
+/// Animated You+ mark.
 class _Header extends StatelessWidget {
   final PaywallViewModel viewModel;
-  final double width;
-  const _Header({required this.viewModel, required this.width});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                viewModel.accent.withOpacity(0.20),
-                viewModel.accent.withOpacity(0.06),
-              ],
-            ),
-          ),
-          child: Lottie.asset(
-            AppConstants.premium,
-            decoder: customDecoder,
-            width: 88,
-            height: 88,
-            fit: BoxFit.contain,
-          ),
-        ),
-        // Space.verticalSpaceVTiny(context),
-        // Container(
-        //   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-        //   decoration: BoxDecoration(
-        //     color: viewModel.accent,
-        //     borderRadius: BorderRadius.circular(20),
-        //   ),
-        //   child: Text(
-        //     'YOU PREMIUM',
-        //     style: GoogleFonts.crimsonPro(
-        //       fontSize: width * 0.03,
-        //       fontWeight: FontWeight.w800,
-        //       letterSpacing: 1.5,
-        //       color: AppColors.background,
-        //     ),
-        //   ),
-        // ),
-      ],
-    );
-  }
-}
-
-/// A single benefit rendered as a soft card with an asset illustration.
-class _BenefitCard extends StatelessWidget {
-  final PremiumBenefit benefit;
-  final Color accent;
-  const _BenefitCard({required this.benefit, required this.accent});
+  const _Header({required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            viewModel.accent.withOpacity(0.20),
+            viewModel.accent.withOpacity(0.06),
+          ],
+        ),
+      ),
+      child: Lottie.asset(
+        AppConstants.plus,
+        decoder: customDecoder,
+        width: 84,
+        height: 84,
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+}
+
+/// The one feature the user unlocks — icon, title, and an elaboration of the
+/// extra they get by upgrading.
+class _UpsellCard extends StatelessWidget {
+  final PaywallViewModel viewModel;
+  const _UpsellCard({required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    final upsell = viewModel.upsell;
+    return Container(
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: accent.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Image.asset(benefit.imageAsset, fit: BoxFit.contain),
-          ),
-          Space.horizontalSpaceSmall(context),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  benefit.title,
-                  style: GoogleFonts.crimsonPro(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  benefit.subtitle,
-                  style: GoogleFonts.crimsonPro(
-                    fontSize: 12.5,
-                    height: 1.3,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Space.horizontalSpaceTiny(context),
-          Icon(Icons.check_circle_rounded, color: accent, size: 22),
-        ],
-      ),
-    );
-  }
-}
-
-/// Price, upgrade CTA, and the always-free crisis reassurance.
-class _Footer extends StatelessWidget {
-  final PaywallViewModel viewModel;
-  final double width;
-  const _Footer({required this.viewModel, required this.width});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
-      decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 16,
-            offset: const Offset(0, -4),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '${AppConstants.defaultCurrencyCode} 300',
-                  style: GoogleFonts.crimsonPro(
-                    fontSize: width * 0.06,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
+          Container(
+            width: 75,
+            height: 75,
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+                // color: upsell.tint.withAlpha(38),
+                // borderRadius: BorderRadius.circular(16),
                 ),
-                TextSpan(
-                  text: ' / month',
-                  style: GoogleFonts.crimsonPro(
-                    fontSize: width * 0.04,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+            child: Image.asset(upsell.imageAsset, fit: BoxFit.contain),
+          ),
+          Space.verticalSpaceVTiny(context),
+          Text(
+            upsell.title,
+            style: GoogleFonts.crimsonPro(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              height: 1.1,
             ),
           ),
-          Space.verticalSpaceTiny(context),
           Space.verticalSpaceVTiny(context),
-          _UpgradeButton(viewModel: viewModel),
-          Space.verticalSpaceTiny(context),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.shield_outlined,
-                  size: 14, color: AppColors.textSecondary),
-              const SizedBox(width: 5),
-              Text(
-                'Crisis support is always free, for everyone.',
-                style: GoogleFonts.crimsonPro(
-                  fontSize: width * 0.03,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+          Text(
+            upsell.description,
+            style: GoogleFonts.crimsonPro(
+              fontSize: 15,
+              height: 1.45,
+              color: AppColors.textSecondary,
+            ),
           ),
-          TextButton(
-            onPressed: viewModel.close,
+        ],
+      ),
+    );
+  }
+}
+
+/// Subtle "there's much more in You+" reminder.
+class _MoreNote extends StatelessWidget {
+  final PaywallViewModel viewModel;
+  const _MoreNote({required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: viewModel.accent.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.auto_awesome, size: 18, color: viewModel.accent),
+          const SizedBox(width: 10),
+          Expanded(
             child: Text(
-              'Maybe later',
+              viewModel.moreNote,
               style: GoogleFonts.crimsonPro(
-                color: AppColors.textSecondary,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w600,
+                height: 1.35,
+                color: viewModel.accent,
               ),
             ),
           ),
@@ -286,7 +233,7 @@ class _Footer extends StatelessWidget {
   }
 }
 
-/// Full-width gradient upgrade CTA.
+/// Full-width gradient "Upgrade to YOU+" CTA.
 class _UpgradeButton extends StatelessWidget {
   final PaywallViewModel viewModel;
   const _UpgradeButton({required this.viewModel});
@@ -311,7 +258,7 @@ class _UpgradeButton extends StatelessWidget {
             onTap: viewModel.onUpgrade,
             child: Center(
               child: Text(
-                'Upgrade to Premium',
+                'Upgrade to YOU+',
                 style: GoogleFonts.crimsonPro(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,

@@ -1,19 +1,12 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_swipe_button/flutter_swipe_button.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/journal_model.dart';
-import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
-import 'package:you_app/ui/dialogs/info_alert/info_alert_dialog.dart';
-import 'package:you_app/ui/views/journal/filter_bar.dart';
 import 'package:you_app/ui/views/new_journal_entry/journal_entry_bar.dart';
-import 'package:you_app/ui/views/new_journal_entry/journal_entry_tabs/personal_entry.dart';
-import 'package:you_app/ui/views/new_journal_entry/journal_entry_tabs/work_entry.dart';
+import 'package:you_app/ui/views/new_journal_entry/journal_entry_tabs/text_entry.dart';
+import 'package:you_app/ui/views/new_journal_entry/journal_entry_tabs/voice_entry.dart';
 
 import 'new_journal_entry_viewmodel.dart';
 
@@ -30,9 +23,6 @@ class NewJournalEntryView extends StackedView<NewJournalEntryViewModel> {
     NewJournalEntryViewModel viewModel,
     Widget? child,
   ) {
-    final mediaQuery = MediaQuery.of(context);
-    final width = mediaQuery.size.width;
-    final height = mediaQuery.size.height;
     return Scaffold(
         body: Container(
             width: double.infinity,
@@ -56,6 +46,7 @@ class NewJournalEntryView extends StackedView<NewJournalEntryViewModel> {
                 Space.verticalSpaceTiny(context),
                 JournalEntryBar(
                     currentIndex: viewModel.currentIndex,
+                    isPremium: viewModel.isPremium,
                     onTap: (viewModel.setTab)),
                 Expanded(
                   child: AnimatedSwitcher(
@@ -70,10 +61,11 @@ class NewJournalEntryView extends StackedView<NewJournalEntryViewModel> {
   Widget _buildTabContent(NewJournalEntryViewModel viewModel) {
     switch (viewModel.currentIndex) {
       case 0:
-        return NewWorkEntryView(viewModel: viewModel, key: ValueKey('Work'));
+        return TextJournalEntryView(
+            viewModel: viewModel, key: const ValueKey('Text'));
       case 1:
-        return NewPersonalEntryView(
-            viewModel: viewModel, key: ValueKey('Personal'));
+        return VoiceJournalEntryView(
+            viewModel: viewModel, key: const ValueKey('Voice'));
       default:
         return const SizedBox.shrink();
     }

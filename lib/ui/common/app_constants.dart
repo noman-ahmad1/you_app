@@ -76,10 +76,15 @@ class AppConstants {
   static const String phone = 'assets/icons/phone.png';
   static const String gift = 'assets/icons/gift.png';
   static const String moon = 'assets/icons/moon.png';
+  static const String mic = 'assets/icons/mic.png';
+  static const String tick = 'assets/icons/tick.png';
+  static const String refresh = 'assets/icons/refresh.png';
   static const String brain = 'assets/icons/brain.png';
   static const String community2 = 'assets/icons/community2.png';
   static const String avatarFemale = 'assets/icons/avatar_female.png';
   static const String avatarBinary = 'assets/icons/avatar_binary.png';
+  static const String premiumBadge = 'assets/icons/premium.png'; // outline
+  static const String premiumBadgeFill = 'assets/icons/premium_fill.png';
 
   //images
   static const String register = 'assets/images/1.png';
@@ -120,6 +125,8 @@ class AppConstants {
   static const String searchVolunteer =
       'assets/animations/search_volunteer.lottie';
   static const String premium = 'assets/animations/premium.lottie';
+  static const String plus = 'assets/animations/plus.lottie';
+  static const String wave = 'assets/animations/wave.lottie';
 
   // Volunteer Tags
   static const List<String> volunteerTags = [

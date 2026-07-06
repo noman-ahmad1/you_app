@@ -2,81 +2,130 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
+import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
-/// A single premium selling point shown on the paywall. [imageAsset] is an
-/// asset path (icon/illustration) rendered in the benefit card.
-class PremiumBenefit {
+/// The single premium perk this paywall elaborates — tied to the gate the user
+/// hit. [tint] colours the icon box.
+class FeatureUpsell {
   final String imageAsset;
   final String title;
-  final String subtitle;
-  const PremiumBenefit(this.imageAsset, this.title, this.subtitle);
+  final String description;
+  final Color tint;
+  const FeatureUpsell(this.imageAsset, this.title, this.description, this.tint);
 }
 
 class PaywallViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
-  final _dialogService = locator<DialogService>();
   final _analytics = locator<AnalyticsService>();
 
-  /// The gate that triggered this paywall (see PaywallFeature.*). Drives the
-  /// headline and is attached to analytics so we can see which gates convert.
+  /// The gate that triggered this paywall (see PaywallFeature.*).
   final String feature;
 
   PaywallViewModel({required this.feature});
 
-  /// Context-specific headline for the gate that brought the user here.
+  Color get accent => AppColors.secondary;
+
+  /// Why the user landed here — the gate they hit.
   String get headline {
     switch (feature) {
       case 'dodo':
-        return "You've reached today's free Dodo messages";
+        return 'You and Dodo have covered a lot today.';
       case 'welcome_chat':
-        return "You've used all your free welcome chats";
+        return "We're glad you reached out.";
       case 'journal_history':
-        return 'See your full journaling history';
+        return "Look how much you've written.";
+      case 'voice_journal':
+        return 'Journaling out loud is a YOU+ thing.';
       case 'mood_window':
-        return 'Unlock your deeper mood insights';
+        return "There's a bigger picture here.";
       case 'community_threads':
-        return "You've used your free threads this month";
+        return "You've got things worth sharing.";
       case 'community_replies':
-        return "You've used your free replies this month";
+        return "You've been showing up for people today.";
       case 'mention':
         return 'Mentioning people is a Premium feature';
       default:
-        return 'Unlock YOU Premium';
+        return 'Unlock YOU+';
     }
   }
 
-  String get subheadline =>
-      'Upgrade to Premium for unlimited support — whenever you need it.';
+  /// The specific perk the user unlocks for the feature they were gated on —
+  /// this is the ONE card + elaboration the paywall focuses on.
+  FeatureUpsell get upsell {
+    switch (feature) {
+      case 'dodo':
+        return FeatureUpsell(
+          AppConstants.dodoCut,
+          'Unlimited Dodo',
+          "Dodo's here for your daily check-ins for free. With YOU+, there's no "
+              "limit — talk it through anytime, day or night, for as long as "
+              "you need.",
+          AppColors.pink,
+        );
+      case 'welcome_chat':
+        return FeatureUpsell(
+          AppConstants.brain,
+          'Unlimited listener chats',
+          "Your welcome chats helped you connect with a real person. YOU+ keeps "
+              "that door open — reach a trained listener whenever you need one, "
+              "with less waiting.",
+          AppColors.secondary,
+        );
+      // Voice journaling shares the "advanced journaling" card (its copy already
+      // covers capturing thoughts by voice); only the headline above differs.
+      case 'journal_history':
+      case 'voice_journal':
+        return FeatureUpsell(
+          AppConstants.journalImg,
+          'Access to advanced journaling',
+          "Not every feeling belongs on a keyboard. Capture your thoughts by voice and keep them in your journal. Recent entries are always free, and YOU+ unlocks your full journal history so you can revisit every step of your journey.",
+          AppColors.green,
+        );
+      case 'mood_window':
+        return FeatureUpsell(
+          AppConstants.emoji_2,
+          'Advanced mood insights',
+          "Your last week is always free to explore. YOU+ reveals your "
+              "longer-term patterns and gentle monthly reflections — a deeper "
+              "look at what shapes how you feel.",
+          AppColors.teal,
+        );
+      // Threads, replies and mentions are all the same community feature, so
+      // they share one card (the headline above still differs per gate).
+      case 'community_threads':
+      case 'community_replies':
+      case 'mention':
+        return FeatureUpsell(
+          AppConstants.community2,
+          'Do more in the community',
+          "Reading and following along is always free. With YOU+, the monthly "
+              "limits are gone — post as many threads and replies as you like, "
+              "and mention people directly to bring them into the conversation.",
+          AppColors.secondary,
+        );
+      default:
+        return FeatureUpsell(
+          AppConstants.premiumBadgeFill,
+          'YOU+',
+          'Unlock everything You offers — unlimited, and a little more personal.',
+          AppColors.secondary,
+        );
+    }
+  }
 
-  /// The Premium value proposition (Phase-1 subset of the product plan).
-  List<PremiumBenefit> get benefits => const [
-        PremiumBenefit(AppConstants.dodoCut, 'Unlimited Dodo',
-            'Chat with your AI companion with no daily cap'),
-        PremiumBenefit(AppConstants.brain, 'Priority listener chats',
-            'Skip the queue with unlimited volunteer sessions'),
-        PremiumBenefit(AppConstants.journalImg, 'Full journaling history',
-            'Unlimited entries, forever — nothing hidden'),
-        PremiumBenefit(AppConstants.emoji_2, 'Advanced mood insights',
-            'Deep patterns, triggers and personal reports'),
-      ];
+  /// Gentle reminder that You+ is far more than this one feature.
+  String get moreNote =>
+      'Plus everything else in You+ — unlimited journaling, priority listeners, '
+      'deeper mood insights and more.';
 
-  Color get accent => AppColors.secondary;
-
-  /// MVP upgrade action. Real billing is a later phase, so for now we log intent
-  /// and let the user know Premium is on the way.
+  /// Sends the user from the contextual gate to the full YOU+ screen, which
+  /// holds the plans and (later) the subscription flow.
   Future<void> onUpgrade() async {
     _analytics.logUpgradeCtaTapped(feature: feature);
-    await _dialogService.showDialog(
-      title: 'Premium is coming soon',
-      description:
-          'Thanks for your interest in YOU Premium! We\'re putting the '
-          'finishing touches on it. Reach out to our team and we\'ll help you '
-          'get early access.',
-      buttonTitle: 'Got it',
-    );
+    await _navigationService.navigateToPremiumView();
   }
 
   void close() => _navigationService.back();

@@ -5,6 +5,7 @@ import 'package:stacked/stacked.dart';
 import 'package:you_app/app/app.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/shared/fade_slide_in.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
@@ -164,8 +165,7 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                     child: CustomLottieLoader());
                               }
                               if (!snapshot.hasData) {
-                                return const Center(
-                                    child: Text("No communities found."));
+                                return const _EmptyCommunities();
                               }
 
                               // Show only communities allowed for the user's
@@ -173,8 +173,7 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                               final communities =
                                   viewModel.visibleCommunities(snapshot.data!);
                               if (communities.isEmpty) {
-                                return const Center(
-                                    child: Text("No communities found."));
+                                return const _EmptyCommunities();
                               }
 
                               return ListView.separated(
@@ -189,7 +188,9 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                   final isJoined =
                                       viewModel.isCommunityJoined(communityId);
 
-                                  return CommunityCard(
+                                  return FadeSlideIn(
+                                    index: index,
+                                    child: CommunityCard(
                                     title: community['name'] ?? 'Unknown',
                                     description: community['description'] ??
                                         'A quiet circle for those carrying heavy hearts.',
@@ -203,6 +204,8 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                         AppConstants.lonliness,
                                     coverPhotoUrl: community['cover_photo'],
                                     isJoined: isJoined,
+                                    isJoining: viewModel
+                                        .isJoiningCommunity(communityId),
                                     isLocked: community['isLocked'] == true,
                                     onJoin: () {
                                       viewModel.joinCommunity(communityId);
@@ -214,6 +217,7 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                         communityName: community['name'],
                                       );
                                     },
+                                  ),
                                   );
                                 },
                               );
@@ -229,6 +233,37 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Friendly empty state for the communities list.
+class _EmptyCommunities extends StatelessWidget {
+  const _EmptyCommunities();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Lottie.asset(
+            AppConstants.empty,
+            decoder: customDecoder,
+            width: 200,
+            height: 200,
+          ),
+          Text(
+            'No communities yet.\nCheck back soon.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.crimsonPro(
+              color: AppColors.primaryVeryDark.withAlpha(150),
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
