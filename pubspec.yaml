@@ -1,7 +1,7 @@
 name: you_app
 description: A new Flutter project.
 publish_to: 'none'
-version: 0.2.1+6
+version: 0.2.3+8
 
 environment:
   sdk: '>=3.0.3 <4.0.0'
@@ -50,6 +50,7 @@ dependencies:
   firebase_analytics: ^12.0.0
   firebase_crashlytics: ^5.0.0
   cloud_functions: ^6.0.2
+  purchases_ui_flutter: ^10.4.0
 
 # `record 5.2.1` caps record_linux <1.0.0 (0.7.2), which is built against an
 # older record_platform_interface and fails to compile against the 1.6.0 that

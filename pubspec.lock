@@ -1328,6 +1328,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "10.4.0"
+  purchases_ui_flutter:
+    dependency: "direct main"
+    description:
+      name: purchases_ui_flutter
+      sha256: "8816c082f4bc300ae8cd9b2615ae37c7085ddf94a27020828d1608eb1edcb3c3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.4.0"
   recase:
     dependency: transitive
     description:

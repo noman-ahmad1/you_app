@@ -713,7 +713,13 @@ exports.refreshEntitlement = onCall(
             throw new HttpsError("unavailable", "Couldn't verify right now.");
         }
 
-        await applyEntitlement(uid, entitled, expiryMs, "google_play");
+        // Grant-only: a client-triggered refresh may confirm entitlement and
+        // unlock, but must NEVER revoke — a misconfigured REST key or a
+        // transient error would otherwise strip a legitimate user. Revocation
+        // is the webhook's authoritative job (EXPIRATION / REFUND).
+        if (entitled) {
+            await applyEntitlement(uid, true, expiryMs, "google_play");
+        }
         return { isPremium: entitled };
     },
 );
