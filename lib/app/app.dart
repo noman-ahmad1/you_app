@@ -1,6 +1,7 @@
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/app_content_service.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/billing_service.dart';
 import 'package:you_app/services/block_service.dart';
 import 'package:you_app/services/country_code_service.dart';
 import 'package:you_app/services/escalation_service.dart';
@@ -106,6 +107,7 @@ import 'package:you_app/services/monetization_service.dart';
     LazySingleton(classType: StorageService),
     // @stacked-service
     LazySingleton(classType: MonetizationService),
+    LazySingleton(classType: BillingService),
     LazySingleton(classType: AnalyticsService),
     LazySingleton(classType: ModerationService),
     LazySingleton(classType: ModerationFlagService),

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/billing_service.dart';
 import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/services/push_notification_service.dart';
 import 'package:you_app/app/app.bottomsheets.dart';
@@ -48,6 +49,14 @@ Future<void> main() async {
     await chatbotBox.clear();
 
     await setupLocator();
+
+    // Configure RevenueCat billing (fail-soft: a missing key just leaves the
+    // purchase UI unavailable, it must not crash startup).
+    try {
+      await locator<BillingService>().configure();
+    } catch (e) {
+      debugPrint('Error configuring BillingService: $e');
+    }
 
     // Apply persisted analytics/crash consent (on by default) before logging.
     await locator<AnalyticsService>().init();

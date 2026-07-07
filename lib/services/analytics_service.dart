@@ -148,6 +148,23 @@ class AnalyticsService {
   Future<void> logUpgradeCtaTapped({required String feature}) =>
       _log('paywall_upgrade_tapped', {'feature': feature});
 
+  /// A purchase flow was launched for [plan] ('monthly' | 'yearly'). No amounts
+  /// or payment/PII data are ever logged.
+  Future<void> logPurchaseStarted({required String plan}) =>
+      _log('purchase_started', {'plan': plan});
+
+  /// A purchase completed for [plan].
+  Future<void> logPurchaseCompleted({required String plan}) =>
+      _log('purchase_completed', {'plan': plan});
+
+  /// A purchase failed. [reason] is a coarse code (e.g. 'cancelled', 'network',
+  /// 'store_error') — never a raw message or payment detail.
+  Future<void> logPurchaseFailed({required String reason}) =>
+      _log('purchase_failed', {'reason': reason});
+
+  /// The user tapped "Restore purchase".
+  Future<void> logRestoreTapped() => _log('restore_tapped', null);
+
   // --- Onboarding ---
   Future<void> logOnboardingCompleted({required String tour}) =>
       _log('onboarding_completed', {'tour': tour});

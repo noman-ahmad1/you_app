@@ -1,8 +1,13 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/analytics_service.dart';
+import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/base/app_log.dart';
+import 'package:you_app/services/billing_service.dart';
 import 'package:you_app/services/monetization_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
@@ -27,14 +32,40 @@ class PlanRow {
   const PlanRow(this.feature, {required this.free, required this.premium});
 }
 
-class PremiumViewModel extends BaseViewModel {
+class PremiumViewModel extends ReactiveViewModel {
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
   final _analytics = locator<AnalyticsService>();
   final _monetizationService = locator<MonetizationService>();
+  final _billing = locator<BillingService>();
+  final _authService = locator<AuthenticationService>();
+
+  // React to the live user doc so premium unlock (written by the backend after
+  // purchase) flips this screen to the member block automatically.
+  @override
+  List<ListenableServiceMixin> get listenableServices => [_authService];
 
   bool get isPremium => _monetizationService.isPremium;
   Color get accent => AppColors.secondary;
+
+  // --- Store packages (loaded from RevenueCat offerings) ---
+  Package? _monthlyPkg;
+  Package? _yearlyPkg;
+
+  // --- Purchase flow state ---
+  bool _purchasing = false; // store purchase sheet in flight
+  bool _activating = false; // verifying entitlement with the backend
+  bool get isWorking => _purchasing || _activating;
+  String? _purchaseError;
+  String? get purchaseError => _purchaseError;
+
+  /// Load the store offerings so the plan cards show real, localized prices.
+  Future<void> init() async {
+    final plans = await _billing.loadPlans();
+    _monthlyPkg = plans.monthly;
+    _yearlyPkg = plans.yearly;
+    notifyListeners();
+  }
 
   // --- Billing plan selection ---
   BillingPeriod _selected = BillingPeriod.yearly; // yearly = best value, default
@@ -46,19 +77,17 @@ class PremiumViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  // --- Pricing (easily tunable placeholders) ---
-  // Monthly is our established PKR 300; yearly is a ~17%-off annual plan.
-  // TODO(premium-pricing): confirm final numbers with the business.
+  // --- Pricing: real localized store prices, with placeholders as fallback
+  // if offerings haven't loaded (offline / not yet configured). ---
   String get currency => AppConstants.defaultCurrencyCode; // 'PKR'
-  String get monthlyPrice => '$currency 300';
-  String get yearlyPrice => '$currency 3,000';
+  String get monthlyPrice =>
+      _monthlyPkg?.storeProduct.priceString ?? '$currency 300';
+  String get yearlyPrice =>
+      _yearlyPkg?.storeProduct.priceString ?? '$currency 3,000';
   String get yearlyPerMonth => '$currency 250 / mo';
   String get yearlySaveLabel => 'Save 17%';
 
-  /// Primary CTA. Our free tier already lets people use the app, and billing
-  /// isn't wired yet, so instead of a time-boxed "7-day free trial" we use a
-  /// straightforward, honest subscribe CTA.
-  String get ctaLabel => 'Subscribe to You+';
+  String get ctaLabel => _activating ? 'Activating…' : 'Subscribe to You+';
   String get ctaSubline => _selected == BillingPeriod.yearly
       ? 'Billed $yearlyPrice / year · Cancel anytime'
       : 'Billed $monthlyPrice / month · Cancel anytime';
@@ -106,23 +135,118 @@ class PremiumViewModel extends BaseViewModel {
         PlanRow('Crisis support', free: 'Always free', premium: 'Always free'),
       ];
 
-  /// THE subscription entry point. Real billing (RevenueCat / store IAP) plugs
-  /// in here for the selected plan; on success the entitlement propagates via
-  /// the users-doc listener. For now it logs intent and reassures the user.
+  /// THE subscription entry point — launches the real Google Play purchase via
+  /// RevenueCat. On success it asks the backend to verify + write entitlement;
+  /// the app unlocks only from that Firestore state (never from the client).
   Future<void> subscribe() async {
-    _analytics.logUpgradeCtaTapped(feature: 'premium_screen:${_selected.name}');
-    // TODO(premium-billing): start the purchase flow for [_selected] here.
-    await _dialogService.showDialog(
-      title: 'Premium is coming soon',
-      description:
-          "Thanks for wanting You+! We're putting the finishing touches on "
-          "payments. Reach out to our team and we'll help you get early access.",
-      buttonTitle: 'Got it',
+    if (isWorking) return;
+    final plan = _selected;
+    final package = plan == BillingPeriod.yearly ? _yearlyPkg : _monthlyPkg;
+    if (package == null) {
+      await _dialogService.showDialog(
+        title: 'Just a moment',
+        description:
+            "This plan isn't available right now. Please check your connection "
+            'and try again shortly.',
+        buttonTitle: 'OK',
+      );
+      return;
+    }
+
+    _purchaseError = null;
+    _purchasing = true;
+    notifyListeners();
+    _analytics.logPurchaseStarted(plan: plan.name);
+
+    final result = await _billing.purchase(package);
+    _purchasing = false;
+
+    switch (result.outcome) {
+      case PurchaseOutcome.cancelled:
+        _analytics.logPurchaseFailed(reason: 'cancelled');
+        notifyListeners(); // silent — user backed out, no scolding
+        return;
+      case PurchaseOutcome.error:
+        _analytics.logPurchaseFailed(reason: 'store_error');
+        _purchaseError =
+            result.message ?? 'Something went wrong. Please try again.';
+        notifyListeners();
+        return;
+      case PurchaseOutcome.success:
+        _analytics.logPurchaseCompleted(plan: plan.name);
+        break;
+    }
+
+    await _activateAndReassure(
+      title: "You're all set 💛",
+      pending:
+          "Thank you for supporting You. We're activating your YOU+ now — it'll "
+          'appear in just a moment.',
     );
   }
 
-  /// Placeholder for the legal / restore links until billing is integrated.
+  /// Real "Restore purchase" flow (reinstall / new device).
+  Future<void> _restore() async {
+    if (isWorking) return;
+    _analytics.logRestoreTapped();
+    _purchaseError = null;
+    _purchasing = true;
+    notifyListeners();
+
+    final result = await _billing.restore();
+    _purchasing = false;
+
+    if (result.outcome == PurchaseOutcome.error) {
+      _purchaseError = result.message;
+      notifyListeners();
+      return;
+    }
+
+    await _activateAndReassure(
+      title: 'Welcome back 💛',
+      pending: "We're checking your subscription — it'll refresh in a moment.",
+      noneFound:
+          "We didn't find an active subscription on this account. If you think "
+          'this is a mistake, reach out and we’ll help.',
+    );
+  }
+
+  /// Ask the backend to verify entitlement with RevenueCat and write it to
+  /// Firestore (instant, server-verified). The users-doc listener then flips
+  /// `isPremium`, re-rendering this screen. If it hasn't landed yet, reassure.
+  Future<void> _activateAndReassure({
+    required String title,
+    required String pending,
+    String? noneFound,
+  }) async {
+    _activating = true;
+    notifyListeners();
+    await _syncEntitlement();
+    _activating = false;
+    notifyListeners();
+
+    if (isPremium) return; // view already swapped to the member block
+    await _dialogService.showDialog(
+      title: noneFound != null ? 'Nothing to restore' : title,
+      description: noneFound ?? pending,
+      buttonTitle: 'OK',
+    );
+  }
+
+  Future<void> _syncEntitlement() async {
+    try {
+      await FirebaseFunctions.instance.httpsCallable('refreshEntitlement').call();
+    } catch (e) {
+      // Non-fatal: the webhook path will still unlock shortly.
+      AppLog.error('PremiumViewModel.refreshEntitlement', e);
+    }
+  }
+
   Future<void> onLegalTap(String which) async {
+    if (which == 'Restore purchase') {
+      await _restore();
+      return;
+    }
     await _dialogService.showDialog(
       title: which,
       description: 'This will be available once subscriptions go live.',

@@ -11,6 +11,16 @@ const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { defineSecret } = require("firebase-functions/params");
 const GROQ_API_KEY = defineSecret("GROQ_API_KEY");
 
+// RevenueCat billing secrets.
+// - WEBHOOK_SECRET: the exact Authorization header value configured on the
+//   RevenueCat dashboard webhook; verified on every incoming event.
+// - REST_API_KEY: a RevenueCat secret (v1) API key used to server-verify a
+//   subscriber's entitlement after a purchase/restore.
+// Set with: firebase functions:secrets:set REVENUECAT_WEBHOOK_SECRET
+//           firebase functions:secrets:set REVENUECAT_REST_API_KEY
+const REVENUECAT_WEBHOOK_SECRET = defineSecret("REVENUECAT_WEBHOOK_SECRET");
+const REVENUECAT_REST_API_KEY = defineSecret("REVENUECAT_REST_API_KEY");
+
 // Import the Firebase Admin SDK
 const admin = require("firebase-admin");
 
@@ -564,6 +574,149 @@ function isUserPremium(userData) {
         return true;
     }
 }
+
+// The RevenueCat entitlement that unlocks YOU+ (matches the app + dashboard).
+const YOU_PLUS_ENTITLEMENT = "you_plus";
+
+/**
+ * Write an entitlement decision to a user doc via Admin SDK — the ONLY server
+ * path that mutates subscription fields. Grants set premium + expiry + source;
+ * revokes set free, but NEVER downgrade an admin-granted user (manual / early
+ * supporter / partner grants stay intact regardless of store events).
+ * @param {string} uid Firebase UID (== RevenueCat app_user_id after logIn).
+ * @param {boolean} entitled Whether the store says the user is entitled.
+ * @param {number|null} expiryMs Entitlement expiry in epoch ms, or null.
+ * @param {string} source Source label to record (e.g. "google_play").
+ * @return {Promise<void>}
+ */
+async function applyEntitlement(uid, entitled, expiryMs, source) {
+    const userRef = db.collection("users").doc(uid);
+    if (entitled) {
+        const update = {
+            subscriptionTier: "premium",
+            subscription_source: source,
+            subscription_expiry: expiryMs ?
+                admin.firestore.Timestamp.fromMillis(expiryMs) : null,
+        };
+        await userRef.set(update, { merge: true });
+        return;
+    }
+    // Revoke path — protect admin grants from being flipped to free.
+    const snap = await userRef.get();
+    const data = snap.data() || {};
+    if (data.subscription_source === "admin") {
+        logger.info(`applyEntitlement: skip revoke for admin grant ${uid}`);
+        return;
+    }
+    await userRef.set({ subscriptionTier: "free" }, { merge: true });
+}
+
+/**
+ * RevenueCat webhook → Firestore entitlement writer (the authoritative path).
+ * Verifies the shared Authorization secret, then grants/revokes premium by
+ * event type. Returns 2xx for handled events so RevenueCat does not retry.
+ */
+exports.revenueCatWebhook = onRequest(
+    { secrets: [REVENUECAT_WEBHOOK_SECRET] },
+    async (req, res) => {
+        const expected = REVENUECAT_WEBHOOK_SECRET.value();
+        const provided = req.get("Authorization") || "";
+        if (!expected || provided !== expected) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        const event = req.body && req.body.event;
+        if (!event || !event.type) {
+            res.status(400).json({ error: "Bad event" });
+            return;
+        }
+
+        const uid = event.app_user_id;
+        // Skip anonymous ids (user not yet aliased to a Firebase UID via logIn).
+        if (!uid || uid.indexOf("$RCAnonymousID") === 0) {
+            res.status(200).json({ ok: true, skipped: "anonymous" });
+            return;
+        }
+
+        const grant = ["INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE",
+            "UNCANCELLATION", "NON_RENEWING_PURCHASE"];
+        const revoke = ["EXPIRATION", "REFUND"];
+
+        try {
+            if (grant.indexOf(event.type) !== -1) {
+                await applyEntitlement(
+                    uid, true, event.expiration_at_ms || null, "google_play");
+            } else if (revoke.indexOf(event.type) !== -1) {
+                await applyEntitlement(uid, false, null, "google_play");
+            } else {
+                // CANCELLATION (auto-renew off — still entitled until expiry),
+                // BILLING_ISSUE (grace), TRANSFER, etc. — no entitlement change.
+                logger.info(`revenueCatWebhook: no-op ${event.type} for ${uid}`);
+            }
+            res.status(200).json({ ok: true });
+        } catch (error) {
+            logger.error("revenueCatWebhook failed:", error);
+            res.status(500).json({ ok: false });
+        }
+    },
+);
+
+/**
+ * Server-verified entitlement refresh. The app calls this right after a
+ * purchase/restore for an instant, trustworthy unlock (and to self-heal a
+ * missed webhook). Queries RevenueCat's REST API for the CALLER's subscriber —
+ * the client is never trusted to assert its own entitlement.
+ * @return {Promise<{isPremium: boolean}>}
+ */
+exports.refreshEntitlement = onCall(
+    { secrets: [REVENUECAT_REST_API_KEY] },
+    async (request) => {
+        const uid = request.auth && request.auth.uid;
+        if (!uid) {
+            throw new HttpsError("unauthenticated", "Sign in first.");
+        }
+        const key = REVENUECAT_REST_API_KEY.value();
+        if (!key) {
+            throw new HttpsError("failed-precondition", "Billing not configured.");
+        }
+
+        let entitled = false;
+        let expiryMs = null;
+        try {
+            const url = "https://api.revenuecat.com/v1/subscribers/" +
+                encodeURIComponent(uid);
+            const resp = await fetch(url, {
+                headers: { "Authorization": `Bearer ${key}` },
+            });
+            if (resp.ok) {
+                const body = await resp.json();
+                const subscriber = body && body.subscriber;
+                const entitlements = subscriber && subscriber.entitlements;
+                const ent = entitlements && entitlements[YOU_PLUS_ENTITLEMENT];
+                if (ent) {
+                    if (ent.expires_date) {
+                        const ms = Date.parse(ent.expires_date);
+                        if (!Number.isNaN(ms) && ms > Date.now()) {
+                            entitled = true;
+                            expiryMs = ms;
+                        }
+                    } else {
+                        entitled = true; // non-expiring entitlement
+                    }
+                }
+            } else {
+                logger.warn(`refreshEntitlement: RC REST ${resp.status} ${uid}`);
+            }
+        } catch (error) {
+            logger.error("refreshEntitlement REST failed:", error);
+            throw new HttpsError("unavailable", "Couldn't verify right now.");
+        }
+
+        await applyEntitlement(uid, entitled, expiryMs, "google_play");
+        return { isPremium: entitled };
+    },
+);
 
 /**
  * Dodo AI gateway. Free users are capped at `dodo_daily_cap` messages per PKT

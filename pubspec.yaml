@@ -28,6 +28,7 @@ dependencies:
   liquid_glass_renderer: ^0.1.1-dev.10
   permission_handler: ^12.0.1
   pin_code_fields: ^8.0.1
+  purchases_flutter: ^10.4.0
   record: ^5.1.2
   shared_preferences: ^2.5.3
   stacked: ^3.5.0

@@ -6,6 +6,7 @@ import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
+import 'package:you_app/ui/shared/custom_lottie_loader.dart';
 import 'package:you_app/ui/views/premium/premium_viewmodel.dart';
 
 /// Standard horizontal inset for the screen's content sections.
@@ -20,6 +21,9 @@ class PremiumView extends StackedView<PremiumViewModel> {
 
   @override
   PremiumViewModel viewModelBuilder(BuildContext context) => PremiumViewModel();
+
+  @override
+  void onViewModelReady(PremiumViewModel viewModel) => viewModel.init();
 
   @override
   Widget builder(
@@ -84,6 +88,18 @@ class PremiumView extends StackedView<PremiumViewModel> {
                             color: Colors.white.withAlpha(235),
                           ),
                         )),
+                        if (viewModel.purchaseError != null) ...[
+                          Space.verticalSpaceVTiny(context),
+                          _hPad(Text(
+                            viewModel.purchaseError!,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.crimsonPro(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.lightPink,
+                            ),
+                          )),
+                        ],
                         Space.verticalSpaceTiny(context),
                         _hPad(_LegalRow(viewModel: viewModel)),
                       ] else
@@ -483,16 +499,23 @@ class _Cta extends StatelessWidget {
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(30),
-            onTap: viewModel.subscribe,
+            onTap: viewModel.isWorking ? null : viewModel.subscribe,
             child: Center(
-              child: Text(
-                viewModel.ctaLabel,
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
+              child: viewModel.isWorking
+                  ? const CustomLottieLoader(
+                      width: 46,
+                      height: 46,
+                      loaderWidth: 170,
+                      loaderHeight: 170,
+                    )
+                  : Text(
+                      viewModel.ctaLabel,
+                      style: GoogleFonts.crimsonPro(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
         ),

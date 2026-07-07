@@ -16,6 +16,7 @@ import 'package:stacked_shared/stacked_shared.dart';
 import '../services/analytics_service.dart';
 import '../services/app_content_service.dart';
 import '../services/auth_service.dart';
+import '../services/billing_service.dart';
 import '../services/block_service.dart';
 import '../services/chat_request_service.dart';
 import '../services/chat_service.dart';
@@ -60,6 +61,7 @@ Future<void> setupLocator(
   locator.registerLazySingleton(() => PushNotificationService());
   locator.registerLazySingleton(() => StorageService());
   locator.registerLazySingleton(() => MonetizationService());
+  locator.registerLazySingleton(() => BillingService());
   locator.registerLazySingleton(() => AnalyticsService());
   locator.registerLazySingleton(() => ModerationService());
   locator.registerLazySingleton(() => ModerationFlagService());

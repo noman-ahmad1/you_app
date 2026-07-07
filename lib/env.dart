@@ -12,4 +12,9 @@ class Environments {
 class Secrets {
   static String get groqApiKey => dotenv.env['GROQ_API_KEY'] ?? '';
   static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
+
+  /// RevenueCat public SDK key (Android / Google Play). Safe to ship in the
+  /// app, but kept with the other keys for consistency.
+  static String get revenueCatAndroidKey =>
+      dotenv.env['REVENUECAT_ANDROID_KEY'] ?? '';
 }

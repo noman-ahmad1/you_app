@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/base/app_log.dart';
+import 'package:you_app/services/billing_service.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -107,6 +108,18 @@ class AuthenticationService with ListenableServiceMixin {
         // Keep the user in sync with their Firestore doc (subscription, profile).
         _listenToUserDoc(firebaseUser);
 
+        // Alias RevenueCat's app_user_id to our Firebase UID so billing webhook
+        // events / entitlement lookups carry the UID we key premium on.
+        Future.microtask(() {
+          try {
+            if (locator.isRegistered<BillingService>()) {
+              locator<BillingService>().logIn(firebaseUser.uid);
+            }
+          } catch (e) {
+            AppLog.error('AuthenticationService.billingLogIn', e);
+          }
+        });
+
         // Identify the user for analytics/crash segmentation (no content/PII).
         _analytics.setUser(
           uid: appUser.uid,
@@ -155,6 +168,17 @@ class AuthenticationService with ListenableServiceMixin {
       _currentUser.value = null;
       _allUsers.value = []; // Clear users list on logout
       _authStatus.value = AuthStatus.unauthenticated;
+
+      // Return RevenueCat to an anonymous id so the next user isn't aliased.
+      Future.microtask(() {
+        try {
+          if (locator.isRegistered<BillingService>()) {
+            locator<BillingService>().logOut();
+          }
+        } catch (e) {
+          AppLog.error('AuthenticationService.billingLogOut', e);
+        }
+      });
     }
 
     _isLoading.value = false;
