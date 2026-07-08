@@ -48,6 +48,27 @@ class PremiumViewModel extends ReactiveViewModel {
   bool get isPremium => _monetizationService.isPremium;
   Color get accent => AppColors.secondary;
 
+  // A one-shot celebration overlay shown right after a successful subscribe.
+  bool _showCelebration = false;
+  bool get showCelebration => _showCelebration;
+  bool _disposed = false;
+
+  void celebrate() {
+    _showCelebration = true;
+    notifyListeners();
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (_disposed) return;
+      _showCelebration = false;
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   // --- Store packages (loaded from RevenueCat offerings) ---
   Package? _monthlyPkg;
   Package? _yearlyPkg;
@@ -177,12 +198,14 @@ class PremiumViewModel extends ReactiveViewModel {
         break;
     }
 
-    await _activateAndReassure(
-      title: "You're all set 💛",
-      pending:
-          "Thank you for supporting You. We're activating your YOU+ now — it'll "
-          'appear in just a moment.',
-    );
+    // Celebrate the moment — the member block appears reactively once the
+    // backend entitlement lands.
+    celebrate();
+    _activating = true;
+    notifyListeners();
+    await _syncEntitlement();
+    _activating = false;
+    notifyListeners();
   }
 
   /// Real "Restore purchase" flow (reinstall / new device).
@@ -209,6 +232,7 @@ class PremiumViewModel extends ReactiveViewModel {
           "We didn't find an active subscription on this account. If you think "
           'this is a mistake, reach out and we’ll help.',
     );
+    if (isPremium) celebrate();
   }
 
   /// Ask the backend to verify entitlement with RevenueCat and write it to

@@ -30,6 +30,7 @@ import '../services/moderation_service.dart';
 import '../services/monetization_service.dart';
 import '../services/mood_service.dart';
 import '../services/push_notification_service.dart';
+import '../services/security_log_service.dart';
 import '../services/storage_service.dart';
 import '../services/user_service.dart';
 import '../services/volunteer_service.dart';
@@ -68,5 +69,6 @@ Future<void> setupLocator(
   locator.registerLazySingleton(() => EscalationService());
   locator.registerLazySingleton(() => AppContentService());
   locator.registerLazySingleton(() => BlockService());
+  locator.registerLazySingleton(() => SecurityLogService());
   locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }

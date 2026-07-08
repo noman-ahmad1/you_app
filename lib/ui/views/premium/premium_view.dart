@@ -31,87 +31,94 @@ class PremiumView extends StackedView<PremiumViewModel> {
     final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.primary,
-              AppColors.backgroundGradient,
-              AppColors.peachDark,
-              AppColors.secondary
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.textPrimary),
-                  onPressed: viewModel.close,
-                ),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primary,
+                  AppColors.backgroundGradient,
+                  AppColors.peachDark,
+                  AppColors.secondary
+                ],
               ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _hPad(_Hero(viewModel: viewModel, width: width)),
-                      Space.verticalSpaceTiny(context),
-                      ...viewModel.highlights
-                          .map((h) => _hPad(_FeatureTile(highlight: h))),
-                      Space.verticalSpaceVTiny(context),
-                      _hPad(_CompareButton(
-                        onTap: () => _showCompareSheet(context, viewModel),
-                      )),
-                      Space.verticalSpaceVTiny(context),
-                      if (!viewModel.isPremium) ...[
-                        // Plans span nearly the full safe-area width (a small side
-                        // margin) with just a small gap between the two cards.
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 17),
-                          child: _PlansRow(viewModel: viewModel),
-                        ),
-                        Space.verticalSpaceTiny(context),
-                        _hPad(_Cta(viewModel: viewModel)),
-                        Space.verticalSpaceTiny(context),
-                        _hPad(Text(
-                          viewModel.ctaSubline,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.crimsonPro(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withAlpha(235),
-                          ),
-                        )),
-                        if (viewModel.purchaseError != null) ...[
-                          Space.verticalSpaceVTiny(context),
-                          _hPad(Text(
-                            viewModel.purchaseError!,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.crimsonPro(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.lightPink,
-                            ),
-                          )),
-                        ],
-                        Space.verticalSpaceTiny(context),
-                        _hPad(_LegalRow(viewModel: viewModel)),
-                      ] else
-                        _hPad(_PremiumMemberBlock(viewModel: viewModel)),
-                      Space.verticalSpaceTiny(context),
-                    ],
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      icon:
+                          const Icon(Icons.close, color: AppColors.textPrimary),
+                      onPressed: viewModel.close,
+                    ),
                   ),
-                ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _hPad(_Hero(viewModel: viewModel, width: width)),
+                          Space.verticalSpaceTiny(context),
+                          ...viewModel.highlights
+                              .map((h) => _hPad(_FeatureTile(highlight: h))),
+                          Space.verticalSpaceVTiny(context),
+                          _hPad(_CompareButton(
+                            onTap: () => _showCompareSheet(context, viewModel),
+                          )),
+                          Space.verticalSpaceVTiny(context),
+                          if (!viewModel.isPremium) ...[
+                            // Plans span nearly the full safe-area width (a small side
+                            // margin) with just a small gap between the two cards.
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 17),
+                              child: _PlansRow(viewModel: viewModel),
+                            ),
+                            Space.verticalSpaceTiny(context),
+                            _hPad(_Cta(viewModel: viewModel)),
+                            Space.verticalSpaceTiny(context),
+                            _hPad(Text(
+                              viewModel.ctaSubline,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.crimsonPro(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withAlpha(235),
+                              ),
+                            )),
+                            if (viewModel.purchaseError != null) ...[
+                              Space.verticalSpaceVTiny(context),
+                              _hPad(Text(
+                                viewModel.purchaseError!,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.crimsonPro(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.lightPink,
+                                ),
+                              )),
+                            ],
+                            Space.verticalSpaceTiny(context),
+                            _hPad(_LegalRow(viewModel: viewModel)),
+                          ] else
+                            _hPad(_PremiumMemberBlock(viewModel: viewModel)),
+                          Space.verticalSpaceTiny(context),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          if (viewModel.showCelebration) const _CelebrationOverlay(),
+        ],
       ),
     );
   }
@@ -212,7 +219,7 @@ class _Hero extends StatelessWidget {
       ],
     );
     if (viewModel.isPremium) {
-      return Text("You're YOU+ member 💛",
+      return Text("You're YOU+ member",
           textAlign: TextAlign.center, style: base);
     }
     return RichText(
@@ -574,7 +581,7 @@ class _PremiumMemberBlock extends StatelessWidget {
             borderRadius: BorderRadius.circular(30),
             child: InkWell(
               borderRadius: BorderRadius.circular(30),
-              onTap: viewModel.close,
+              onTap: viewModel.celebrate,
               child: Center(
                 child: Text(
                   "You're YOU+ member 💛",
@@ -589,6 +596,88 @@ class _PremiumMemberBlock extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A brief (~2s) full-screen celebration shown after a successful subscribe:
+/// a birthday-blast success animation behind the logo-with-plus mark.
+class _CelebrationOverlay extends StatelessWidget {
+  const _CelebrationOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AbsorbPointer(
+        child: Container(
+          color: Colors.black.withAlpha(105),
+          child: Stack(
+            children: [
+              // Birthday-blast background (plays once).
+              Positioned.fill(
+                child: Lottie.asset(
+                  AppConstants.success,
+                  decoder: customDecoder,
+                  fit: BoxFit.cover,
+                  repeat: false,
+                ),
+              ),
+              // Centered logo + animated plus mark and welcome line.
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 120,
+                      height: 120,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          ClipOval(
+                            child: Image.asset(
+                              AppConstants.logoRound,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: -8,
+                            right: -8,
+                            child: Lottie.asset(
+                              AppConstants.plus,
+                              decoder: customDecoder,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Welcome to YOU+',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.crimsonPro(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            color: AppColors.secondary.withAlpha(140),
+                            blurRadius: 14,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

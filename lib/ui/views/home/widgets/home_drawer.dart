@@ -131,7 +131,7 @@ class HomeDrawer extends StatelessWidget {
               const SizedBox(height: 24),
               _buildMenuItem(
                 iconPath: AppConstants.premiumBadgeFill,
-                title: 'YOU Premium',
+                title: 'YOU+',
                 onTap: () {
                   Navigator.pop(context);
                   viewModel.navigateToPremium();

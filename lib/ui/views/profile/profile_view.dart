@@ -405,7 +405,7 @@ class _PremiumUpsellCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Unlock YOU Premium',
+                    'Unlock YOU+',
                     style: GoogleFonts.crimsonPro(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,

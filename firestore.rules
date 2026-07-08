@@ -289,6 +289,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // =============================
+    // security_logs  (minimal IP+timestamp safety trail for misconduct cases)
+    // =============================
+    // Fully denied to ALL clients — including the owner and admins. Only the
+    // Admin SDK (Cloud Functions) writes it; admins READ it via the Firebase
+    // console / Admin SDK, never the client. NOT analytics, NO GPS, NO content.
+    match /security_logs/{docId} {
+      allow read, write: if false;
+    }
+
     // NO catch-all. Anything not matched above is denied by default.
   }
 }

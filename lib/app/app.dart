@@ -16,6 +16,7 @@ import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/chatbot_service.dart';
 import 'package:you_app/services/push_notification_service.dart';
+import 'package:you_app/services/security_log_service.dart';
 import 'package:you_app/services/storage_service.dart';
 import 'package:you_app/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:you_app/ui/dialogs/info_alert/info_alert_dialog.dart';
@@ -114,6 +115,7 @@ import 'package:you_app/services/monetization_service.dart';
     LazySingleton(classType: EscalationService),
     LazySingleton(classType: AppContentService),
     LazySingleton(classType: BlockService),
+    LazySingleton(classType: SecurityLogService),
 
     LazySingleton(classType: VolunteerSignupViewModel),
   ],

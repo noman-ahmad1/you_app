@@ -7,6 +7,7 @@ import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/billing_service.dart';
+import 'package:you_app/services/security_log_service.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
@@ -540,6 +541,7 @@ class AuthenticationService with ListenableServiceMixin {
       final appUser = _createAppUser(userCredential.user!, userData);
 
       _analytics.logSignUp(method: 'email', role: 'user');
+      locator<SecurityLogService>().log(SecurityAction.signup);
       return appUser;
     } on FirebaseAuthException catch (e) {
       _error.value = _handleAuthError(e);
@@ -594,6 +596,7 @@ class AuthenticationService with ListenableServiceMixin {
       _resetPhoneAuthState();
 
       _analytics.logSignUp(method: 'email', role: 'volunteer');
+      locator<SecurityLogService>().log(SecurityAction.signup);
       return appUser;
     } on FirebaseAuthException catch (e) {
       _error.value = _handleAuthError(e);
@@ -622,6 +625,7 @@ class AuthenticationService with ListenableServiceMixin {
       final appUser = _createAppUser(userCredential.user!, userData);
 
       _analytics.logLogin(method: 'email');
+      locator<SecurityLogService>().log(SecurityAction.signin);
       return appUser;
     } on FirebaseAuthException catch (e) {
       _error.value = _handleAuthError(e);
@@ -692,10 +696,12 @@ class AuthenticationService with ListenableServiceMixin {
         // Use FirestoreService via locator to set user data
         await locator<UserService>().set(userCredential.user!.uid, newUserData);
         _analytics.logSignUp(method: 'google', role: 'user');
+        locator<SecurityLogService>().log(SecurityAction.signup);
       } else {
         // Update last login for existing user
         // Use FirestoreService via locator to update last login
         await locator<UserService>().updateLastLogin(userCredential.user!.uid);
+        locator<SecurityLogService>().log(SecurityAction.signin);
       }
 
       // Get updated user data (if it was just created)

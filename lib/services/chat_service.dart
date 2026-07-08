@@ -8,6 +8,7 @@ import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/base/firestore_base.dart';
+import 'package:you_app/services/security_log_service.dart';
 
 class ChatService with FirestoreServiceMixin {
   AnalyticsService get _analytics => locator<AnalyticsService>();
@@ -203,6 +204,8 @@ class ChatService with FirestoreServiceMixin {
     });
     await batch.commit();
     _analytics.logChatMessageSent();
+    // Safety trail (separate from analytics; server captures the IP).
+    locator<SecurityLogService>().log(SecurityAction.messageSent);
 
     // Notify the recipient off the critical path so a notification failure
     // (or the presence-check read) never blocks or fails the message send.

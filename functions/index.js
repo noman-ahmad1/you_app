@@ -895,6 +895,16 @@ exports.requestVolunteerChat = onCall(async (request) => {
         logger.error("requestVolunteerChat notification failed:", e);
     }
 
+    // Safety metadata (best-effort; isolated from analytics). chat_created is
+    // logged here since this is the one chat action with a server touchpoint.
+    try {
+        await writeSecurityLog(
+            uid, await roleOf(uid),
+            extractClientIp(request.rawRequest), "chat_created");
+    } catch (e) {
+        logger.error("requestVolunteerChat security log failed:", e);
+    }
+
     return { capReached: false, requestId: outcome.requestId };
 });
 
@@ -1086,5 +1096,181 @@ exports.onPostDeleted = onDocumentDeleted("posts/{postId}", async (event) => {
     } catch (error) {
         logger.error(`Error cleaning up replies for post ${postId}:`, error);
     }
+});
+
+// ============================================================================
+// Safety metadata: minimal, disclosed IP + timestamp trail for misconduct
+// accountability. This is NOT analytics and NOT location tracking — IP + coarse
+// action + timestamp only, in the isolated `security_logs` collection, written
+// solely by the Admin SDK and readable by admins only (via console / Admin SDK).
+// See docs/SECURITY_LOGS.md. NO GPS. NO message content.
+// ============================================================================
+
+const SECURITY_LOG_RETENTION_DAYS_DEFAULT = 90;
+// Actions the client may self-report via logSecurityEvent. `chat_created` is
+// logged server-side inside requestVolunteerChat, so it is intentionally absent.
+const CLIENT_SECURITY_ACTIONS = [
+    "signup", "signin", "message_sent", "report_filed",
+];
+
+/**
+ * The authoritative client IP for a callable/HTTPS request. Never trust a
+ * client-sent IP — this reads it from the edge request metadata.
+ * @param {Object} rawRequest The Express request (request.rawRequest).
+ * @return {string} The source IP, or "unknown".
+ */
+function extractClientIp(rawRequest) {
+    if (!rawRequest) return "unknown";
+    const fwd = rawRequest.headers && rawRequest.headers["x-forwarded-for"];
+    if (fwd && typeof fwd === "string") {
+        const first = fwd.split(",")[0].trim();
+        if (first) return first;
+    }
+    return rawRequest.ip || "unknown";
+}
+
+/**
+ * The role recorded on a user's doc, defaulting to "user".
+ * @param {string} uid The user id.
+ * @return {Promise<string>} 'user' | 'volunteer' | 'admin'.
+ */
+async function roleOf(uid) {
+    try {
+        const snap = await db.collection("users").doc(uid).get();
+        const role = snap.exists ? snap.data().role : null;
+        return role || "user";
+    } catch (e) {
+        return "user";
+    }
+}
+
+/**
+ * Append one safety-log document (Admin SDK; bypasses the deny-all rules).
+ * @param {string} uid Acting user.
+ * @param {string} role Their role at the time.
+ * @param {string} ip Server-captured IP.
+ * @param {string} action Coarse action label.
+ * @return {Promise<void>}
+ */
+async function writeSecurityLog(uid, role, ip, action) {
+    await db.collection("security_logs").add({
+        uid,
+        role: role || "user",
+        ip: ip || "unknown",
+        action,
+        retainForCase: false,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+}
+
+/**
+ * Client-invoked safety logger. Captures the IP server-side (un-spoofable) for
+ * the direct-write actions that have no other server touchpoint. Soft-fails so
+ * it can never break a user flow.
+ */
+exports.logSecurityEvent = onCall(async (request) => {
+    const uid = request.auth && request.auth.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
+    const action = request.data && request.data.action;
+    if (CLIENT_SECURITY_ACTIONS.indexOf(action) === -1) {
+        throw new HttpsError("invalid-argument", "Unknown action.");
+    }
+    try {
+        const ip = extractClientIp(request.rawRequest);
+        const role = await roleOf(uid);
+        await writeSecurityLog(uid, role, ip, action);
+    } catch (e) {
+        logger.error("logSecurityEvent failed:", e);
+    }
+    return { ok: true };
+});
+
+/**
+ * Retention cleanup: delete security logs older than the configured window
+ * (app_settings/global_config.security_log_retention_days, default 90) EXCEPT
+ * docs pinned to an open case (retainForCase === true).
+ */
+exports.cleanupSecurityLogs = onSchedule(
+    { schedule: "30 0 * * *", timeZone: "Asia/Karachi" },
+    async () => {
+        let days = SECURITY_LOG_RETENTION_DAYS_DEFAULT;
+        try {
+            const snap = await db.collection("app_settings")
+                .doc("global_config").get();
+            const data = snap.exists ? snap.data() : {};
+            const raw = data.security_log_retention_days;
+            const n = typeof raw === "number" ? Math.trunc(raw) : parseInt(raw, 10);
+            if (Number.isFinite(n) && n > 0) days = n;
+        } catch (e) {
+            logger.error("cleanupSecurityLogs config read failed:", e);
+        }
+
+        const cutoff = admin.firestore.Timestamp.fromMillis(
+            Date.now() - days * 24 * 60 * 60 * 1000);
+        const writer = db.bulkWriter();
+        let deleted = 0;
+        let last = null;
+        // Page forward past retained docs (which we never delete) so the loop
+        // can't stall on them.
+        for (let i = 0; i < 100; i++) {
+            let q = db.collection("security_logs")
+                .where("timestamp", "<", cutoff)
+                .orderBy("timestamp")
+                .limit(400);
+            if (last) q = q.startAfter(last);
+            const page = await q.get();
+            if (page.empty) break;
+            page.docs.forEach((doc) => {
+                if (doc.get("retainForCase") === true) return;
+                writer.delete(doc.ref);
+                deleted++;
+            });
+            last = page.docs[page.docs.length - 1];
+            if (page.size < 400) break;
+        }
+        await writer.close();
+        logger.log(
+            `cleanupSecurityLogs: deleted ${deleted} logs older than ${days}d`);
+    },
+);
+
+/**
+ * Admin-only: pin (or release) every security log for a user so retention keeps
+ * them while a misconduct case is open. Callers must have role 'admin'.
+ * Request: { uid, retain }  (retain defaults to true unless explicitly false).
+ */
+exports.flagUserLogsForCase = onCall(async (request) => {
+    const callerUid = request.auth && request.auth.uid;
+    if (!callerUid) throw new HttpsError("unauthenticated", "Sign in first.");
+    if ((await roleOf(callerUid)) !== "admin") {
+        throw new HttpsError("permission-denied", "Admins only.");
+    }
+    const { uid, retain } = request.data || {};
+    if (!uid || typeof uid !== "string") {
+        throw new HttpsError("invalid-argument", "A target uid is required.");
+    }
+    const retainForCase = retain !== false;
+
+    const writer = db.bulkWriter();
+    let updated = 0;
+    let last = null;
+    for (let i = 0; i < 100; i++) {
+        // Order by document id to avoid needing a composite index.
+        let q = db.collection("security_logs")
+            .where("uid", "==", uid)
+            .orderBy(admin.firestore.FieldPath.documentId())
+            .limit(400);
+        if (last) q = q.startAfter(last);
+        const page = await q.get();
+        if (page.empty) break;
+        page.docs.forEach((doc) => {
+            writer.update(doc.ref, { retainForCase });
+            updated++;
+        });
+        last = page.docs[page.docs.length - 1];
+        if (page.size < 400) break;
+    }
+    await writer.close();
+    return { ok: true, uid, retainForCase, updated };
 });
 

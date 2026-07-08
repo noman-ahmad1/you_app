@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/base/firestore_base.dart';
+import 'package:you_app/services/security_log_service.dart';
 
 /// Writes `escalations` documents that the supervisor web dashboard listens to
 /// in real time (status == "open"). Two triggers:
@@ -34,6 +36,8 @@ class EscalationService with FirestoreServiceMixin {
         'status': 'open',
         'createdAt': FieldValue.serverTimestamp(),
       });
+      // Safety trail (fire-and-forget; server captures the IP).
+      locator<SecurityLogService>().log(SecurityAction.reportFiled);
     } catch (e) {
       AppLog.error('EscalationService.escalateChat', e);
       rethrow; // the volunteer flow shows a failure dialog and can retry
@@ -60,6 +64,8 @@ class EscalationService with FirestoreServiceMixin {
         'status': 'open',
         'createdAt': FieldValue.serverTimestamp(),
       });
+      // Safety trail (fire-and-forget; server captures the IP).
+      locator<SecurityLogService>().log(SecurityAction.reportFiled);
     } catch (e) {
       AppLog.error('EscalationService.escalateModeration', e);
     }

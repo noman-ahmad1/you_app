@@ -127,6 +127,7 @@ class AppConstants {
   static const String premium = 'assets/animations/premium.lottie';
   static const String plus = 'assets/animations/plus.lottie';
   static const String wave = 'assets/animations/wave.lottie';
+  static const String success = 'assets/animations/success.lottie';
 
   // Volunteer Tags
   static const List<String> volunteerTags = [
