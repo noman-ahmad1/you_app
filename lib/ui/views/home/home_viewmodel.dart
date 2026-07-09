@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
+import 'package:you_app/ui/shared/verify_email_nudge.dart';
+import 'package:you_app/ui/views/verify_email/email_verification_gate.dart';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
@@ -87,6 +89,30 @@ class HomeViewModel extends ReactiveViewModel {
   ChatRequest? _activeChatRequest; // Holds the user's single accepted request
   ChatRequest? get activeChatRequest => _activeChatRequest;
 
+  /// A recently-completed chat the user hasn't reviewed yet. When set (and the
+  /// volunteers tab is showing), the volunteers screen displays the review
+  /// dialog over the volunteer list; resolving it returns to the normal list.
+  ChatRequest? _pendingReviewRequest;
+  ChatRequest? get pendingReviewRequest => _pendingReviewRequest;
+
+  /// Guards the volunteers screen against opening more than one review dialog.
+  bool _isReviewDialogOpen = false;
+  bool get isReviewDialogOpen => _isReviewDialogOpen;
+
+  /// How long after the volunteer accepts a chat stays active before it
+  /// auto-expires. The server-side [expireStaleChats] function is authoritative;
+  /// the client also ends locally-detected expired chats so the user is freed
+  /// (and prompted to review) the moment they return, without waiting on it.
+  static const Duration chatLifetime = Duration(hours: 24);
+
+  /// Requests currently being auto-ended, so the write isn't fired repeatedly
+  /// while it's in flight and the stream keeps emitting the still-accepted doc.
+  final Set<String> _expiringRequestIds = {};
+
+  /// Requests whose review prompt the user has already resolved this session,
+  /// so a stream re-emit of the pre-write snapshot can't re-open the dialog.
+  final Set<String> _reviewedRequestIds = {};
+
   StreamSubscription? _notificationsSubscription;
   int _unreadNotificationsCount = 0;
   int get unreadNotificationsCount => _unreadNotificationsCount;
@@ -152,6 +178,30 @@ class HomeViewModel extends ReactiveViewModel {
     listenForNotifications();
     listenForMoodStreak();
     fetchTodayWhisper();
+    _loadVerifyNudgeDismissal();
+  }
+
+  // --- Email-verification soft nudge (non-blocking, dismissible) ---
+  // Shown only to unverified email/password users (Google → needsEmailVerification
+  // is false). Auto-hides when verified, since this ReactiveViewModel listens to
+  // the auth service.
+  bool _verifyNudgeDismissed = false;
+  bool get showVerifyEmailNudge =>
+      _authenticationService.needsEmailVerification && !_verifyNudgeDismissed;
+
+  Future<void> _loadVerifyNudgeDismissal() async {
+    _verifyNudgeDismissed = await VerifyEmailNudgePrefs.isDismissedActive();
+    if (_verifyNudgeDismissed) notifyListeners();
+  }
+
+  Future<void> dismissVerifyEmailNudge() async {
+    _verifyNudgeDismissed = true;
+    notifyListeners();
+    await VerifyEmailNudgePrefs.dismissForCooldown();
+  }
+
+  void openVerifyEmail() {
+    EmailVerificationGate.ensure(context: 'nudge_home');
   }
 
   /// Listens to the user's mood entries and keeps [moodStreak] (consecutive
@@ -358,8 +408,17 @@ class HomeViewModel extends ReactiveViewModel {
       ChatRequest? foundPendingRequest; // Temporary variable
 
       if (acceptedRequest != null) {
-        _activeChatRequest = acceptedRequest;
-        _pendingRequest = null;
+        if (_isChatExpired(acceptedRequest)) {
+          // Past the 24-hour window — end it now so the user is freed and can
+          // review. Treat it as no-longer-active immediately; the resulting
+          // 'completed' write re-emits the stream and surfaces the review.
+          _activeChatRequest = null;
+          _pendingRequest = null;
+          _autoEndExpiredChat(acceptedRequest);
+        } else {
+          _activeChatRequest = acceptedRequest;
+          _pendingRequest = null;
+        }
       } else {
         _activeChatRequest = null;
         // Use the temporary variable here
@@ -368,6 +427,18 @@ class HomeViewModel extends ReactiveViewModel {
         );
         _pendingRequest = foundPendingRequest;
       }
+
+      // A completed chat that ended through the new end/expiry flow (so it
+      // carries `endedAt`) and hasn't been reviewed yet earns a review prompt —
+      // but only once the user is back in the browsing state, and never for a
+      // prompt already resolved this session.
+      _pendingReviewRequest = hasActiveInteraction
+          ? null
+          : requests.firstWhereOrNull((req) =>
+              req.status == 'completed' &&
+              !req.userReviewed &&
+              req.endedAt != null &&
+              !_reviewedRequestIds.contains(req.id));
 
       // --- Update volunteer list visibility ---
       if (hasActiveInteraction) {
@@ -405,6 +476,107 @@ class HomeViewModel extends ReactiveViewModel {
         await _dialogService.showDialog(
             title: 'Error', description: 'Could not cancel request.');
       }
+    }
+  }
+
+  /// Whether an accepted chat has passed its 24-hour lifetime. Anchored on
+  /// `acceptedAt` (accept time); requests without it (legacy accepts) are left
+  /// for the server-side [expireStaleChats] function to clean up.
+  bool _isChatExpired(ChatRequest request) {
+    final acceptedAt = request.acceptedAt;
+    if (acceptedAt == null) return false;
+    return DateTime.now().difference(acceptedAt) >= chatLifetime;
+  }
+
+  /// Ends an expired chat client-side (mirrors the server function) so the user
+  /// isn't blocked waiting on the scheduler. Deduped per request while in flight.
+  Future<void> _autoEndExpiredChat(ChatRequest request) async {
+    final userId = currentUser?.uid;
+    final requestId = request.id;
+    if (userId == null || requestId == null) return;
+    if (!_expiringRequestIds.add(requestId)) return; // already in flight
+    try {
+      final ids = [userId, request.volunteerId]..sort();
+      final chatId = ids.join('_');
+      await locator<ChatService>().endChatAndRequest(
+        chatId: chatId,
+        requestId: requestId,
+        endedBy: 'system',
+        markReviewed: false,
+      );
+    } catch (e) {
+      AppLog.error('HomeViewModel._autoEndExpiredChat', e);
+    } finally {
+      _expiringRequestIds.remove(requestId);
+    }
+  }
+
+  /// The name to show in the review dialog for the pending review request,
+  /// falling back to the roster and then a generic label.
+  String get reviewVolunteerName {
+    final request = _pendingReviewRequest;
+    if (request == null) return 'the volunteer';
+    final stamped = request.volunteerName;
+    if (stamped != null && stamped.trim().isNotEmpty) return stamped;
+    final volunteer =
+        _volunteers.firstWhereOrNull((v) => v.uid == request.volunteerId);
+    return volunteer?.fullName ?? 'the volunteer';
+  }
+
+  /// Called by the view right before it opens the review dialog, so a rebuild
+  /// mid-dialog doesn't open a second one.
+  void markReviewDialogOpen() => _isReviewDialogOpen = true;
+
+  /// Submits the user's review for the just-completed chat, then clears the
+  /// prompt and returns the user to the normal volunteer list.
+  Future<void> submitVolunteerReview(double rating, String comment) async {
+    final request = _pendingReviewRequest;
+    final userId = currentUser?.uid;
+    if (request?.id == null || userId == null) {
+      _dismissReviewPrompt(request?.id);
+      return;
+    }
+    _dismissReviewPrompt(request!.id);
+    try {
+      // Passing requestId flips `userReviewed` inside the same transaction as
+      // the rating, so the review is atomic — no partial state that could let
+      // this chat be rated twice.
+      await locator<VolunteerService>().addReviewAndCompleteChat(
+        volunteerId: request.volunteerId,
+        userId: userId,
+        rating: rating,
+        comment: comment,
+        requestId: request.id,
+      );
+    } catch (e) {
+      AppLog.error('HomeViewModel.submitVolunteerReview', e);
+    }
+  }
+
+  /// Skips the review for the just-completed chat and returns to the list.
+  Future<void> skipVolunteerReview() async {
+    final request = _pendingReviewRequest;
+    _dismissReviewPrompt(request?.id);
+    final requestId = request?.id;
+    if (requestId != null) {
+      await _markRequestReviewed(requestId);
+    }
+  }
+
+  /// Clears the on-screen prompt immediately (and remembers it as resolved) so
+  /// the dialog can't be re-triggered before the Firestore write lands.
+  void _dismissReviewPrompt(String? requestId) {
+    if (requestId != null) _reviewedRequestIds.add(requestId);
+    _pendingReviewRequest = null;
+    _isReviewDialogOpen = false;
+    notifyListeners();
+  }
+
+  Future<void> _markRequestReviewed(String requestId) async {
+    try {
+      await locator<ChatRequestService>().markRequestReviewed(requestId);
+    } catch (e) {
+      AppLog.error('HomeViewModel._markRequestReviewed', e);
     }
   }
 

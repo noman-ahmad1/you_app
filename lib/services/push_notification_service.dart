@@ -5,6 +5,7 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:you_app/app/app.router.dart';
+import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
 import 'package:you_app/ui/views/chat/chat_viewmodel.dart';
@@ -46,13 +47,11 @@ class PushNotificationService {
 
       // 3. Handle messages when the app is in the foreground
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        debugPrint('Got a message whilst in the foreground!');
-        debugPrint('Message data: ${message.data}');
+        // Never log message.data / notification content — it can carry PII or
+        // a message preview. Keep only a release-gated breadcrumb.
+        AppLog.info('PushNotification', 'Foreground message received');
 
         if (message.notification != null) {
-          debugPrint(
-              'Message also contained a notification: ${message.notification}');
-
           // Display our custom elegant sliding notification banner
           InAppNotificationBanner.show(
             title: message.notification?.title ?? 'Notification',
@@ -81,7 +80,8 @@ class PushNotificationService {
       // 6. Token management: Get initial token and watch for refreshes
       await _saveDeviceToken();
       _fcm.onTokenRefresh.listen((token) async {
-        debugPrint('FCM Token Refreshed: $token');
+        // Never log the token value (device secret); breadcrumb only.
+        AppLog.info('PushNotification', 'FCM token refreshed');
         await _updateTokenInFirestore(token);
       });
 
@@ -94,7 +94,8 @@ class PushNotificationService {
     try {
       String? token = await _fcm.getToken();
       if (token != null) {
-        debugPrint('FCM Token obtained: $token');
+        // Never log the token value (device secret); breadcrumb only.
+        AppLog.info('PushNotification', 'FCM token obtained');
         await _updateTokenInFirestore(token);
       }
     } catch (e) {
@@ -129,7 +130,8 @@ class PushNotificationService {
   }
 
   void _handleNotificationClick(RemoteMessage message) {
-    debugPrint('Handling notification click: ${message.data}');
+    // Don't log the full payload (may carry PII); breadcrumb only.
+    AppLog.info('PushNotification', 'Notification tapped');
     final type = message.data['type'] as String?;
     final navigationService = locator<NavigationService>();
     if (type == 'request_accepted') {

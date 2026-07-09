@@ -260,6 +260,10 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
     );
 
     if (response?.confirmed == true) {
+      // Track whether the inline review dialog was actually presented. Only
+      // then do we mark the request reviewed — otherwise the user should still
+      // be offered the review from the volunteers screen.
+      bool reviewHandledInline = false;
       // If the current user is NOT the volunteer, prompt for a review
       if (!isVolunteer && _navigationService.navigatorKey?.currentContext != null) {
         final context = _navigationService.navigatorKey!.currentContext!;
@@ -268,9 +272,12 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
           barrierDismissible: false,
           builder: (context) => ReviewDialog(volunteerName: volunteerName),
         );
+        // The dialog was shown (whether they submitted or skipped), so the user
+        // has had their chance to review.
+        reviewHandledInline = true;
 
         if (reviewResult != null) {
-          final rating = reviewResult['rating'] as double;
+          final rating = (reviewResult['rating'] as num).toDouble();
           final comment = reviewResult['comment'] as String;
           setBusy(true);
           try {
@@ -289,9 +296,14 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
       _isDeleting = true;
       setBusy(true);
       try {
+        // Mark reviewed only if the inline dialog actually ran. When the
+        // volunteer ends the chat — or the dialog couldn't be shown — leave it
+        // unreviewed so the user is still prompted from the volunteers screen.
         await locator<ChatService>().endChatAndRequest(
           chatId: _chatId!,
           requestId: requestId,
+          endedBy: isVolunteer ? 'volunteer' : 'user',
+          markReviewed: reviewHandledInline,
         );
         _navigateAway();
       } catch (e) {

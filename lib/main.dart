@@ -50,23 +50,9 @@ Future<void> main() async {
 
     await setupLocator();
 
-    // Configure RevenueCat billing (fail-soft: a missing key just leaves the
-    // purchase UI unavailable, it must not crash startup).
-    try {
-      await locator<BillingService>().configure();
-    } catch (e) {
-      debugPrint('Error configuring BillingService: $e');
-    }
-
     // Apply persisted analytics/crash consent (on by default) before logging.
+    // Cheap + local, so it stays on the critical path.
     await locator<AnalyticsService>().init();
-
-    // Initialize Push Notifications
-    try {
-      await locator<PushNotificationService>().initialise();
-    } catch (e) {
-      debugPrint('Error initializing PushNotificationService: $e');
-    }
 
     // Live-listen to the remote moderation config so admin edits (banned
     // keywords / enabled toggle) apply without an app update. The first
@@ -90,6 +76,27 @@ Future<void> main() async {
     setupDialogUi();
     setupBottomSheetUi();
     runApp(const MainApp());
+
+    // Kick off the network/Play-Services-heavy, non-critical initialisations
+    // AFTER the first frame so they never delay startup. Both are fail-soft:
+    // billing just leaves the purchase UI unavailable until it's ready; push
+    // sets up its listeners a moment later. (These were previously awaited
+    // before runApp, which blocked the splash — badly so on devices/emulators
+    // with slow or unavailable Google Play Services / billing.)
+    unawaited(() async {
+      try {
+        await locator<BillingService>().configure();
+      } catch (e) {
+        debugPrint('Error configuring BillingService: $e');
+      }
+    }());
+    unawaited(() async {
+      try {
+        await locator<PushNotificationService>().initialise();
+      } catch (e) {
+        debugPrint('Error initializing PushNotificationService: $e');
+      }
+    }());
   }, (error, stack) {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
   });

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:stacked/stacked.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/models/app_user.dart';
@@ -12,7 +13,6 @@ import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
 import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/push_notification_service.dart';
@@ -211,6 +211,72 @@ class AuthenticationService with ListenableServiceMixin {
       await firebaseUser.reload();
       await _onAuthStateChanged(firebaseUser);
     }
+  }
+
+  /// Applies a just-saved profile change to the in-memory [currentUser] with NO
+  /// network round-trip. The live user-doc listener ([_listenToUserDoc]) is the
+  /// authoritative sync and reconciles right after; this only keeps the UI
+  /// instant so callers (e.g. completing sign-up) don't have to block on a
+  /// `firebaseUser.reload()` + full re-init, which can stall for a long time on
+  /// a poor connection.
+  void applyLocalProfileUpdate({
+    String? username,
+    String? gender,
+    DateTime? dateOfBirth,
+    String? status,
+  }) {
+    final current = _currentUser.value;
+    if (current == null) return;
+    _currentUser.value = current.copyWith(
+      username: username,
+      gender: gender,
+      dateOfBirth: dateOfBirth,
+      status: status,
+    );
+    notifyListeners();
+  }
+
+  // --- Email verification (single source of truth for gate/nudge/block) ---
+
+  /// Whether the current user signed in with the email/password provider.
+  /// Google users use the 'google.com' provider (already verified by Google),
+  /// so they are never asked to verify.
+  bool get isPasswordUser =>
+      _auth.currentUser?.providerData
+          .any((p) => p.providerId == 'password') ??
+      false;
+
+  /// Live email-verified state straight from the FirebaseUser.
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+
+  /// The ONE flag the gate, nudge, and volunteer block read: an email/password
+  /// user whose email is not yet verified. Google users → false (verified).
+  bool get needsEmailVerification => isPasswordUser && !isEmailVerified;
+
+  /// Sends (or re-sends) the verification email. Lets [FirebaseAuthException]
+  /// (e.g. `too-many-requests`) propagate so the UI can handle throttling.
+  Future<void> sendVerificationEmail() async {
+    await _auth.currentUser?.sendEmailVerification();
+  }
+
+  /// Reloads the FirebaseUser (its `emailVerified` flag is cached locally, so a
+  /// reload is required after the link is clicked) and, if now verified,
+  /// rebuilds the cached [currentUser] losslessly from the reloaded FirebaseUser
+  /// + Firestore doc via [_createAppUser] — this also picks up a changed email.
+  /// Returns whether the email is verified after the reload. Network failures
+  /// throw (callers show a calm retry); the cached state is left untouched.
+  Future<bool> refreshEmailVerified() async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) return false;
+    await firebaseUser.reload();
+    final refreshed = _auth.currentUser;
+    if (refreshed == null) return false;
+    if (refreshed.emailVerified) {
+      final userData = await _getUserData(refreshed.uid);
+      _currentUser.value = _createAppUser(refreshed, userData);
+      notifyListeners();
+    }
+    return refreshed.emailVerified;
   }
 
   bool hasPermission(String permission) {
@@ -445,13 +511,35 @@ class AuthenticationService with ListenableServiceMixin {
       return null;
     }
 
-    try {
-      // Fetch the user document directly from Firestore
-      final userData = await locator<UserService>().get(firebaseUser.uid);
+    // Fast path: the auth-state listener usually has the user loaded already,
+    // so we can route the splash without any Firestore read at all.
+    final loaded = _currentUser.value;
+    if (loaded != null && loaded.uid == firebaseUser.uid) {
+      return loaded.role.name;
+    }
 
-      // Return the role string (e.g., 'volunteer', 'user', 'admin')
-      // If userData is null or 'role' is missing, it returns null
-      return userData?['role'] as String?;
+    final docRef =
+        FirebaseFirestore.instance.collection('users').doc(firebaseUser.uid);
+
+    // Cache-first: a returning user's doc is already in Firestore's local cache,
+    // so this resolves instantly and the splash never blocks on a slow server
+    // round-trip (Firestore's streaming reads can stall for a long time on some
+    // networks even when plain HTTPS works). The live user-doc listener keeps
+    // the data fresh once signed in.
+    try {
+      final cached = await docRef.get(const GetOptions(source: Source.cache));
+      if (cached.exists) {
+        return cached.data()?['role'] as String?;
+      }
+    } catch (_) {
+      // Not in cache yet (e.g. first login on this device) — fall through.
+    }
+
+    try {
+      // Bounded server read so a stalled Firestore connection can't freeze the
+      // splash for minutes.
+      final fresh = await docRef.get().timeout(const Duration(seconds: 10));
+      return fresh.data()?['role'] as String?;
     } catch (e) {
       // Log the error but return null to prevent app crash on startup
       AppLog.error('AuthenticationService.getCurrentUserRole', e);
@@ -760,104 +848,41 @@ class AuthenticationService with ListenableServiceMixin {
       throw Exception('No user is currently signed in.');
     }
 
-    final lastSignInTime = firebaseUser.metadata.lastSignInTime;
-    if (lastSignInTime == null || DateTime.now().difference(lastSignInTime) > const Duration(minutes: 5)) {
-      throw Exception(
-        'For security reasons, this sensitive operation requires a recent login. Please log out and log back in, then try again.',
-      );
-    }
-
     try {
       _isLoading.value = true;
       _error.value = null;
       notifyListeners();
 
-      final uid = user.uid;
-      final firestore = FirebaseFirestore.instance;
-      final batch = firestore.batch();
-
-      // 1. Delete journal subcollection
-      final journalDocs = await firestore.collection('users').doc(uid).collection('journal').get();
-      for (var doc in journalDocs.docs) {
-        batch.delete(doc.reference);
-      }
-
-      // 2. Delete notifications subcollection
-      final notificationDocs = await firestore.collection('users').doc(uid).collection('notifications').get();
-      for (var doc in notificationDocs.docs) {
-        batch.delete(doc.reference);
-      }
-
-      // 3. If volunteer, delete volunteer_info and its reviews subcollection
-      if (user.isVolunteer) {
-        final volunteerRef = firestore.collection('volunteer_info').doc(uid);
-        final reviews = await volunteerRef.collection('reviews').get();
-        for (var doc in reviews.docs) {
-          batch.delete(doc.reference);
-        }
-        batch.delete(volunteerRef);
-      }
-
-      // 4. Delete community posts
-      final postDocs = await firestore.collection('posts').where('authorId', isEqualTo: uid).get();
-      for (var doc in postDocs.docs) {
-        batch.delete(doc.reference);
-      }
-
-      // 5. Delete user document
-      final userRef = firestore.collection('users').doc(uid);
-      batch.delete(userRef);
-
-      // Commit batch
-      await batch.commit();
-
-      // 6. Delete mood docs in chunked batches (Firestore caps a batch at 500 ops)
-      final moodDocs = await firestore.collection('mood').where('userId', isEqualTo: uid).get();
-      for (var i = 0; i < moodDocs.docs.length; i += 500) {
-        final moodBatch = firestore.batch();
-        final end = (i + 500 > moodDocs.docs.length) ? moodDocs.docs.length : i + 500;
-        for (var j = i; j < end; j++) {
-          moodBatch.delete(moodDocs.docs[j].reference);
-        }
-        await moodBatch.commit();
-      }
-
-      // 7. Delete chats
-      try {
-        await locator<ChatService>().deleteAllUserChats(uid);
-      } catch (e) {
-        AppLog.error('AuthenticationService.deleteCurrentAccount.deleteChats', e);
-      }
-
-      // 8. Delete FirebaseAuth user
-      await firebaseUser.delete();
+      // Deletion runs server-side via the `deleteMyAccount` Admin-SDK callable.
+      // This is required for correctness: security rules deny client deletes of
+      // users/{uid} (delete: if false), so the old client-side batch always
+      // failed with permission-denied. The callable removes ALL of the user's
+      // Firestore data, Storage uploads, and the Firebase Auth user. Because the
+      // Admin SDK deletes the Auth user (no recent-login requirement), the
+      // previous 5-minute re-login gate is no longer needed.
+      await FirebaseFunctions.instance.httpsCallable('deleteMyAccount').call();
 
       _analytics.logAccountDeleted(role: user.role.name);
       _analytics.clearUser();
 
-      // Clear local state
+      // The Auth user is gone; make sure any local session + caches are cleared.
+      try {
+        await _auth.signOut();
+      } catch (_) {}
+      locator<VolunteerService>().clearCache();
+
       _currentUser.value = null;
       _authStatus.value = AuthStatus.unauthenticated;
       notifyListeners();
-
+    } on FirebaseFunctionsException catch (e) {
+      _error.value = 'Failed to delete account: ${e.message ?? e.code}';
+      throw Exception(_error.value);
     } catch (e) {
       _error.value = 'Failed to delete account: $e';
       throw Exception(_error.value);
     } finally {
       _isLoading.value = false;
       notifyListeners();
-    }
-  }
-
-  Future<void> checkEmailVerification() async {
-    if (_currentUser.value != null) {
-      await _auth.currentUser!.reload();
-      final updatedUser = _auth.currentUser;
-
-      if (updatedUser != null && updatedUser.emailVerified) {
-        _currentUser.value = _currentUser.value!.copyWith(emailVerified: true);
-        notifyListeners();
-      }
     }
   }
 

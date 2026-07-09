@@ -7,6 +7,7 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/shared/widgets.dart';
+import 'package:you_app/ui/shared/verify_email_prompt.dart';
 
 import 'volunteer_edit_profile_viewmodel.dart';
 import "package:you_app/ui/shared/custom_lottie_loader.dart";
@@ -51,6 +52,9 @@ class VolunteerEditProfileView
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          // Persistent (non-dismissible) verify prompt for the
+                          // volunteer until their email is verified.
+                          const VerifyEmailPrompt(source: 'volunteer_profile'),
                           // Profile Picture Section
                           Center(
                             child: Stack(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -125,12 +127,21 @@ class UserInfoViewModel extends BaseViewModel {
       return false;
     }
 
-    // 4. Asynchronous uniqueness check (service lowercases for the query)
-    final isAvailable =
-        await locator<UserService>().checkUsernameAvailability(username);
-    if (!isAvailable) {
+    // 4. Asynchronous uniqueness check (service lowercases for the query).
+    // Bounded by a timeout so a slow/unreachable Firestore query can't freeze
+    // the button for minutes — on timeout we ask the user to retry.
+    try {
+      final isAvailable = await locator<UserService>()
+          .checkUsernameAvailability(username)
+          .timeout(const Duration(seconds: 12));
+      if (!isAvailable) {
+        _validationError =
+            'This username is already taken. Please choose another one.';
+      }
+    } on TimeoutException {
       _validationError =
-          'This username is already taken. Please choose another one.';
+          "We couldn't check that username just now. Please check your "
+          'connection and try again.';
     }
 
     notifyListeners();
@@ -164,8 +175,17 @@ class UserInfoViewModel extends BaseViewModel {
       // 1. Update the existing user document using the passed UID
       await locator<UserService>().update(uid, updateData);
 
-      // 2. Refresh the local AppUser object in the AuthService to reflect new data
-      await _authenticationService.checkCurrentUserStatus();
+      // 2. Reflect the new data in the in-memory user instantly. We deliberately
+      // do NOT call checkCurrentUserStatus() here — its firebaseUser.reload()
+      // and full re-init are redundant (the live user-doc listener already syncs
+      // this write) and can stall for a long time on a poor connection, which
+      // was making "Complete sign up" hang for minutes.
+      _authenticationService.applyLocalProfileUpdate(
+        username: userNameController.text.trim().toLowerCase(),
+        gender: _selectedGender,
+        dateOfBirth: _selectedDate,
+        status: 'active',
+      );
 
       // 3. Navigate to the main application view
       _navigationService.clearStackAndShow(Routes.homeView);

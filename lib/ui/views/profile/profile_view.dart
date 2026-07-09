@@ -6,6 +6,7 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/press_scale.dart';
 import 'package:you_app/ui/shared/topbar.dart';
+import 'package:you_app/ui/shared/verify_email_nudge.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 import 'package:you_app/ui/views/premium/premium_helper.dart';
 import 'profile_viewmodel.dart';
@@ -62,6 +63,11 @@ class ProfileView extends StackedView<ProfileViewModel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        if (viewModel.showVerifyEmailNudge)
+                          VerifyEmailNudge(
+                            onVerify: viewModel.openVerifyEmail,
+                            onDismiss: viewModel.dismissVerifyEmailNudge,
+                          ),
                         if (viewModel.completionPercentage < 1.0) ...[
                           Container(
                             padding: const EdgeInsets.all(16),

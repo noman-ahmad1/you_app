@@ -77,14 +77,25 @@ class VolunteerService with FirestoreServiceMixin {
   void clearCache() => _cache.clear();
 
   /// Adds a review for a volunteer and updates their overall statistics.
+  ///
+  /// When [requestId] is supplied, the request's `userReviewed` flag is flipped
+  /// to true inside the SAME transaction as the rating update. This makes the
+  /// whole review atomic: the volunteer's aggregate stats and the
+  /// "already reviewed" marker commit together or not at all, so a failure
+  /// mid-way can never leave the request re-promptable (which would let the
+  /// same chat be rated twice and double-count the volunteer's average).
   Future<void> addReviewAndCompleteChat({
     required String volunteerId,
     required String userId,
     required double rating,
     required String comment,
+    String? requestId,
   }) async {
     final volunteerRef = db.collection('volunteer_info').doc(volunteerId);
     final reviewsRef = volunteerRef.collection('reviews').doc();
+    final requestRef = requestId != null
+        ? db.collection('chat_requests').doc(requestId)
+        : null;
 
     await db.runTransaction((transaction) async {
       final volunteerDoc = await transaction.get(volunteerRef);
@@ -116,6 +127,12 @@ class VolunteerService with FirestoreServiceMixin {
         'comment': comment,
         'createdAt': FieldValue.serverTimestamp(),
       });
+
+      // Mark the source request reviewed atomically with the rating.
+      if (requestRef != null) {
+        transaction
+            .set(requestRef, {'userReviewed': true}, SetOptions(merge: true));
+      }
     });
 
     // Stats changed — drop the stale cache entry so the next read is fresh.

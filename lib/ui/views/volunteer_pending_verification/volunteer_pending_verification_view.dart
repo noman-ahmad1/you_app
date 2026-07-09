@@ -8,6 +8,7 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'volunteer_pending_verification_viewmodel.dart';
 import "package:you_app/ui/shared/custom_lottie_loader.dart";
+import 'package:you_app/ui/shared/verify_email_block.dart';
 
 class VolunteerPendingVerificationView
     extends StackedView<VolunteerPendingVerificationViewModel> {
@@ -21,8 +22,10 @@ class VolunteerPendingVerificationView
   ) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Container(
-        decoration: const BoxDecoration(
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage(AppConstants.background),
             fit: BoxFit.cover,
@@ -117,6 +120,11 @@ class VolunteerPendingVerificationView
             ),
           ),
         ),
+          ),
+          // Non-dismissible verify block also persists on the pending-approval
+          // screen until the volunteer verifies their email.
+          const VerifyEmailBlock(source: 'volunteer_block'),
+        ],
       ),
     );
   }

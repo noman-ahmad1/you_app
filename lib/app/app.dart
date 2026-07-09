@@ -51,6 +51,7 @@ import 'package:you_app/ui/views/breathe/breathe_view.dart';
 import 'package:you_app/ui/views/paywall/paywall_view.dart';
 import 'package:you_app/ui/views/premium/premium_view.dart';
 import 'package:you_app/ui/views/mood_insights/mood_insights_view.dart';
+import 'package:you_app/ui/views/verify_email/verify_email_view.dart';
 import 'package:you_app/ui/shared/page_transitions.dart';
 // @stacked-import
 import 'package:you_app/services/monetization_service.dart';
@@ -87,6 +88,7 @@ import 'package:you_app/services/monetization_service.dart';
     CustomRoute(page: PremiumView, transitionsBuilder: slideUpTransition),
     CustomRoute(
         page: MoodInsightsView, transitionsBuilder: slideUpTransition),
+    CustomRoute(page: VerifyEmailView, transitionsBuilder: slideUpTransition),
 // @stacked-route
   ],
   dependencies: [

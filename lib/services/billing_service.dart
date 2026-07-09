@@ -28,7 +28,8 @@ class BillingService {
   Future<void> configure() async {
     final key = Secrets.revenueCatAndroidKey;
     if (key.isEmpty) {
-      AppLog.error('BillingService.configure', 'REVENUECAT_ANDROID_KEY missing');
+      AppLog.error(
+          'BillingService.configure', 'REVENUECAT_ANDROID_KEY missing');
       return;
     }
     try {

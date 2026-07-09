@@ -35,6 +35,26 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && selfRole() == 'admin';
     }
+    // Lets any signed-in user like/unlike a post or reply without being its
+    // author: the update may touch ONLY `likedBy`/`likeCount`, and the caller
+    // may add or remove ONLY their own uid, with `likeCount` moving in lock-step
+    // (+1 on like, -1 on unlike). This can't be used to edit content, tamper
+    // with others' likes, or set an arbitrary count. (posts/replies are always
+    // created with likedBy:[] and likeCount:0, so the fields always exist.)
+    function isOwnLikeToggle() {
+      return isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['likedBy', 'likeCount'])
+        && (
+          (!(request.auth.uid in resource.data.likedBy)
+            && request.auth.uid in request.resource.data.likedBy
+            && request.resource.data.likeCount == resource.data.likeCount + 1)
+          ||
+          (request.auth.uid in resource.data.likedBy
+            && !(request.auth.uid in request.resource.data.likedBy)
+            && request.resource.data.likeCount == resource.data.likeCount - 1)
+        );
+    }
 
     // =============================
     // users
@@ -240,9 +260,13 @@ service cloud.firestore {
       // enforces the free-tier monthly cap atomically and strips free-user mentions.
       // A client create here would skip the counter — the bypass we're guarding.
       allow create: if false;
-      // Author edits/deletes own; admins delete/edit for moderation.
-      allow update, delete: if (isSignedIn() && resource.data.authorId == request.auth.uid)
-                            || isAdmin();
+      // Author edits own; admins edit for moderation; anyone may like/unlike.
+      allow update: if (isSignedIn() && resource.data.authorId == request.auth.uid)
+                    || isAdmin()
+                    || isOwnLikeToggle();
+      // Only the author or an admin may delete.
+      allow delete: if (isSignedIn() && resource.data.authorId == request.auth.uid)
+                    || isAdmin();
 
       match /replies/{replyId} {
         allow read: if isSignedIn();
@@ -251,8 +275,13 @@ service cloud.firestore {
         // the free-tier monthly reply cap atomically and strips free-user
         // mentions. A client create here would skip the counter.
         allow create: if false;
-        allow update, delete: if (isSignedIn() && resource.data.authorId == request.auth.uid)
-                              || isAdmin();
+        // Author edits own; admins edit for moderation; anyone may like/unlike.
+        allow update: if (isSignedIn() && resource.data.authorId == request.auth.uid)
+                      || isAdmin()
+                      || isOwnLikeToggle();
+        // Only the author or an admin may delete.
+        allow delete: if (isSignedIn() && resource.data.authorId == request.auth.uid)
+                      || isAdmin();
       }
     }
 

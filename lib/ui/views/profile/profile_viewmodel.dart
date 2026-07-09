@@ -5,11 +5,37 @@ import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/ui/shared/verify_email_nudge.dart';
+import 'package:you_app/ui/views/verify_email/email_verification_gate.dart';
 
 class ProfileViewModel extends ReactiveViewModel {
   final _navigationService = locator<NavigationService>();
   final _authService = locator<AuthenticationService>();
   final _analytics = locator<AnalyticsService>();
+
+  ProfileViewModel() {
+    _loadVerifyNudgeDismissal();
+  }
+
+  // --- Email-verification soft nudge (non-blocking, dismissible) ---
+  bool _verifyNudgeDismissed = false;
+  bool get showVerifyEmailNudge =>
+      _authService.needsEmailVerification && !_verifyNudgeDismissed;
+
+  Future<void> _loadVerifyNudgeDismissal() async {
+    _verifyNudgeDismissed = await VerifyEmailNudgePrefs.isDismissedActive();
+    if (_verifyNudgeDismissed) notifyListeners();
+  }
+
+  Future<void> dismissVerifyEmailNudge() async {
+    _verifyNudgeDismissed = true;
+    notifyListeners();
+    await VerifyEmailNudgePrefs.dismissForCooldown();
+  }
+
+  void openVerifyEmail() {
+    EmailVerificationGate.ensure(context: 'nudge_profile');
+  }
 
   /// Whether anonymous usage analytics + crash reporting is enabled.
   bool get analyticsEnabled => _analytics.isEnabled;

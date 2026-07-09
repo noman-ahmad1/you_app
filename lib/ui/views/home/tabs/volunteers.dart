@@ -12,6 +12,7 @@ import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
 import 'package:you_app/ui/views/home/widgets/volunteer_card.dart';
+import 'package:you_app/ui/views/chat/widgets/review_dialog.dart';
 import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 // This is correct: ViewModelWidget uses the parent's HomeViewModel
@@ -20,6 +21,10 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
 
   @override
   Widget build(BuildContext context, HomeViewModel viewModel) {
+    // When the user lands on this tab and has an unreviewed, just-completed
+    // chat, prompt for a review over the volunteer list. Submitting or skipping
+    // returns them to the normal list.
+    _maybeShowReviewDialog(context, viewModel);
     return Stack(
       children: [
         Container(
@@ -125,6 +130,34 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
         ),
       ],
     );
+  }
+
+  /// Opens the post-chat review dialog once, when this tab is visible and the
+  /// view model has flagged a completed-but-unreviewed chat. The view model's
+  /// [HomeViewModel.isReviewDialogOpen] guard keeps rebuilds from stacking
+  /// dialogs; resolving the dialog clears the prompt and reveals the list.
+  void _maybeShowReviewDialog(BuildContext context, HomeViewModel viewModel) {
+    if (viewModel.currentIndex != 2 ||
+        viewModel.pendingReviewRequest == null ||
+        viewModel.isReviewDialogOpen) {
+      return;
+    }
+    viewModel.markReviewDialogOpen();
+    final volunteerName = viewModel.reviewVolunteerName;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final result = await showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => ReviewDialog(volunteerName: volunteerName),
+      );
+      if (result != null) {
+        final rating = (result['rating'] as num).toDouble();
+        final comment = result['comment'] as String? ?? '';
+        await viewModel.submitVolunteerReview(rating, comment);
+      } else {
+        await viewModel.skipVolunteerReview();
+      }
+    });
   }
 
   /// Builds the main content based on the ViewModel's state.

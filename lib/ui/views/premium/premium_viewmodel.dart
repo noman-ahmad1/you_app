@@ -11,6 +11,7 @@ import 'package:you_app/services/billing_service.dart';
 import 'package:you_app/services/monetization_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
+import 'package:you_app/ui/views/verify_email/email_verification_gate.dart';
 
 enum BillingPeriod { monthly, yearly }
 
@@ -161,6 +162,12 @@ class PremiumViewModel extends ReactiveViewModel {
   /// the app unlocks only from that Firestore state (never from the client).
   Future<void> subscribe() async {
     if (isWorking) return;
+    // Hard gate: an email/password user must verify before we take money — a
+    // paying account needs a recoverable, verified identity. Google/verified
+    // users pass straight through; on success the purchase continues below.
+    if (!await EmailVerificationGate.ensure(context: 'premium_purchase')) {
+      return;
+    }
     final plan = _selected;
     final package = plan == BillingPeriod.yearly ? _yearlyPkg : _monthlyPkg;
     if (package == null) {

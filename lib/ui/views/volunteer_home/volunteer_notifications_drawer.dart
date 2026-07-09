@@ -94,33 +94,7 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
           }
         }
 
-        // Combine live notification data with volunteer specific dummy data if empty
-        final combinedNotifications = [
-          ...liveNotifications,
-          if (liveNotifications.isEmpty) ...[
-            {
-              'type': 'request_received',
-              'title': 'New Pending Chat Request',
-              'body': 'A friend wants to connect with you.',
-              'time': '5m ago',
-              'isUnread': true,
-              'onTap': () {
-                Navigator.of(context).pop();
-                viewModel.setTab(0);
-              },
-            },
-            {
-              'type': 'general',
-              'title': 'System Notification',
-              'body': 'Your availability status has been set to Online.',
-              'time': '1h ago',
-              'isUnread': false,
-              'onTap': null,
-            },
-          ]
-        ];
-
-        return _buildDrawerContent(context, combinedNotifications);
+        return _buildDrawerContent(context, liveNotifications);
       },
     );
   }
@@ -170,28 +144,63 @@ class VolunteerNotificationsDrawer extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-              // Notifications List
+              // Notifications List (or a calm empty state when there are none)
               Expanded(
-                child: ListView.separated(
-                  itemCount: notifications.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final notification = notifications[index];
-                    return _buildNotificationCard(
-                      type: notification['type'] as String,
-                      title: notification['title'] as String,
-                      body: notification['body'] as String? ?? '',
-                      time: notification['time'] as String,
-                      isUnread: notification['isUnread'] as bool,
-                      onTap: notification['onTap'] as VoidCallback?,
-                    );
-                  },
-                ),
+                child: notifications.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        itemCount: notifications.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final notification = notifications[index];
+                          return _buildNotificationCard(
+                            type: notification['type'] as String,
+                            title: notification['title'] as String,
+                            body: notification['body'] as String? ?? '',
+                            time: notification['time'] as String,
+                            isUnread: notification['isUnread'] as bool,
+                            onTap: notification['onTap'] as VoidCallback?,
+                          );
+                        },
+                      ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.notifications_none_rounded,
+            size: 56,
+            color: AppColors.secondary.withValues(alpha: 0.4),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'You\'re all caught up',
+            style: GoogleFonts.crimsonPro(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.secondary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'New requests and messages will appear here.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.crimsonPro(
+              fontSize: 14,
+              color: AppColors.primaryVeryDark.withAlpha(140),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -60,6 +60,87 @@ exports.cleanupChatroom = onDocumentDeleted("chats/{chatId}", async (event) => {
 });
 
 /**
+ * Auto-expiry: a volunteer chat ends automatically 24 hours after it is
+ * accepted. On accept, the chat doc is created with `createdAt` = accept time
+ * (and a `requestId` pointer). This scheduled job runs hourly, finds active
+ * chats older than 24h, and marks both the chat and its request `completed`
+ * (with `endedBy: 'system'` / `endedAt`). The requester's open chat view reacts
+ * to the status flip, and the volunteers screen then offers a review prompt.
+ * Idempotent: only `status == 'active'` chats are touched, so re-runs no-op.
+ */
+exports.expireStaleChats = onSchedule(
+    { schedule: "every 1 hours", timeZone: "Asia/Karachi" },
+    async () => {
+        const cutoff = admin.firestore.Timestamp.fromMillis(
+            Date.now() - 24 * 60 * 60 * 1000);
+
+        const snap = await db.collection("chats")
+            .where("status", "==", "active")
+            .where("createdAt", "<=", cutoff)
+            .limit(300)
+            .get();
+
+        if (snap.empty) {
+            logger.log("expireStaleChats: no chats to expire.");
+            return;
+        }
+
+        const now = admin.firestore.FieldValue.serverTimestamp();
+        // Use a BulkWriter, not a WriteBatch: a batch is hard-capped at 500
+        // writes, and this loop emits up to 2 writes per chat (the chat + its
+        // matching request), so a backlog >250 chats would blow the cap and
+        // fail the whole commit. BulkWriter auto-chunks and rate-limits with no
+        // such cap (same approach as cleanupSecurityLogs).
+        const writer = db.bulkWriter();
+        let count = 0;
+
+        for (const doc of snap.docs) {
+            const data = doc.data() || {};
+            writer.set(doc.ref, {
+                status: "completed",
+                endedBy: "system",
+                endedAt: now,
+            }, { merge: true });
+
+            // Complete the matching request too. New chats carry `requestId`;
+            // older ones are resolved from the sorted participant ids in the id.
+            let requestRef = null;
+            if (data.requestId) {
+                requestRef = db.collection("chat_requests").doc(data.requestId);
+            } else {
+                const parts = doc.id.split("_");
+                if (parts.length === 2) {
+                    try {
+                        const q = await db.collection("chat_requests")
+                            .where("requesterId", "in", parts)
+                            .where("volunteerId", "in", parts)
+                            .where("status", "==", "accepted")
+                            .limit(1)
+                            .get();
+                        if (!q.empty) requestRef = q.docs[0].ref;
+                    } catch (e) {
+                        logger.error(`expireStaleChats: request lookup failed for ${doc.id}:`, e);
+                    }
+                }
+            }
+            if (requestRef) {
+                writer.set(requestRef, {
+                    status: "completed",
+                    endedAt: now,
+                }, { merge: true });
+            }
+            count++;
+        }
+
+        // Surface failures instead of swallowing them: if close() throws, the
+        // scheduled run is marked failed and retries next hour, rather than
+        // silently reporting success while expiring nothing.
+        await writer.close();
+        logger.log(`expireStaleChats: expired ${count} chat(s).`);
+    },
+);
+
+/**
  * Two-Layer Trigger: Fires when a notification is written to a user's subcollection.
  * Path: users/{userId}/notifications/{notificationId}
  */
@@ -350,27 +431,28 @@ exports.aggregateDailyAnalytics = onSchedule(
     },
 );
 
-// Shared secret guarding the manual trigger. Override in production via the
-// ANALYTICS_SEED_SECRET environment variable / functions config.
-const SEED_SECRET = process.env.ANALYTICS_SEED_SECRET || "CHANGE_ME_SEED_SECRET";
-
 /**
  * Manual trigger that recomputes TODAY's (Asia/Karachi) doc immediately. Used
  * once right after deploy to seed the dashboard so its trend isn't empty until
- * the scheduler first runs. Guarded by a shared-secret token.
- * Usage: GET /runDailyAnalyticsNow?token=<secret>
+ * the scheduler first runs.
+ *
+ * Admin-only callable (was a public HTTPS endpoint guarded by a shared token —
+ * which deployed publicly and leaked live counts to anyone with the token).
+ * Now it requires an authenticated admin and returns only { ok, written }, no
+ * raw metrics. Invoke from the admin panel or a signed-in admin context.
  */
-exports.runDailyAnalyticsNow = onRequest(async (req, res) => {
-    if (!SEED_SECRET || req.query.token !== SEED_SECRET) {
-        res.status(403).json({ error: "Forbidden" });
-        return;
+exports.runDailyAnalyticsNow = onCall(async (request) => {
+    const callerUid = request.auth && request.auth.uid;
+    if (!callerUid) throw new HttpsError("unauthenticated", "Sign in first.");
+    if ((await roleOf(callerUid)) !== "admin") {
+        throw new HttpsError("permission-denied", "Admins only.");
     }
     try {
         const written = await aggregateForDay(new Date());
-        res.status(200).json({ ok: true, written });
+        return { ok: true, written };
     } catch (error) {
         logger.error("runDailyAnalyticsNow failed:", error);
-        res.status(500).json({ ok: false, error: String(error) });
+        throw new HttpsError("internal", "Failed to seed analytics.");
     }
 });
 
@@ -1047,6 +1129,9 @@ exports.onChatRequestDeclined = onDocumentUpdated("chat_requests/{requestId}", a
         await db.runTransaction(async (tx) => {
             const userRef = db.collection("users").doc(requesterId);
             const snap = await tx.get(userRef);
+            // Don't resurrect a deleted user's doc (e.g. account deletion racing
+            // this refund) — a set(merge) on a missing doc would recreate it.
+            if (!snap.exists) return;
             const used = (snap.data() || {}).welcomeChatsUsed || 0;
             tx.set(userRef, { welcomeChatsUsed: Math.max(0, used - 1) }, { merge: true });
             tx.update(event.data.after.ref, { charged: false });
@@ -1073,6 +1158,9 @@ exports.onChatRequestDeleted = onDocumentDeleted("chat_requests/{requestId}", as
         await db.runTransaction(async (tx) => {
             const userRef = db.collection("users").doc(requesterId);
             const snap = await tx.get(userRef);
+            // Don't resurrect a deleted user's doc (e.g. account deletion racing
+            // this refund) — a set(merge) on a missing doc would recreate it.
+            if (!snap.exists) return;
             const used = (snap.data() || {}).welcomeChatsUsed || 0;
             tx.set(userRef, { welcomeChatsUsed: Math.max(0, used - 1) }, { merge: true });
         });
@@ -1080,6 +1168,122 @@ exports.onChatRequestDeleted = onDocumentDeleted("chat_requests/{requestId}", as
     } catch (e) {
         logger.error("onChatRequestDeleted refund failed:", e);
     }
+});
+
+/**
+ * User-initiated account deletion (GDPR / app-store compliance). Runs with the
+ * Admin SDK so it can remove data that security rules deny to clients
+ * (users/{uid} is `delete: if false`). For the authenticated caller it deletes:
+ *   • their user doc + all subcollections (journal, notifications, usage)
+ *   • their volunteer_info doc + reviews subcollection (if any)
+ *   • community posts they authored (+ replies, via recursiveDelete)
+ *   • mood entries, chats they participate in (+ messages), and chat_requests
+ *   • uploaded Storage files (profile pics, journal audio, verification docs)
+ *   • the Firebase Auth user (last)
+ * Each Firestore/Storage section is best-effort: a failure is logged and does
+ * not abort the rest, so a partial failure still removes as much as possible.
+ * The Auth user is deleted last and its failure IS surfaced to the client, so
+ * the app never tells the user their account is gone while the login still works.
+ */
+exports.deleteMyAccount = onCall(async (request) => {
+    const uid = request.auth && request.auth.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
+
+    // Capture the role before the user doc is deleted (best-effort, for the log).
+    let role = "user";
+    try {
+        role = await roleOf(uid);
+    } catch (e) {
+        // Non-fatal — proceed with the default.
+    }
+
+    // --- Firestore: docs with subcollections via recursiveDelete ---
+    try {
+        await db.recursiveDelete(db.collection("users").doc(uid));
+    } catch (e) {
+        logger.error(`deleteMyAccount: user doc delete failed for ${uid}:`, e);
+    }
+    try {
+        await db.recursiveDelete(db.collection("volunteer_info").doc(uid));
+    } catch (e) {
+        logger.error(`deleteMyAccount: volunteer_info delete failed for ${uid}:`, e);
+    }
+    try {
+        const posts = await db.collection("posts")
+            .where("authorId", "==", uid).get();
+        for (const doc of posts.docs) {
+            await db.recursiveDelete(doc.ref); // post + its replies subcollection
+        }
+    } catch (e) {
+        logger.error(`deleteMyAccount: posts delete failed for ${uid}:`, e);
+    }
+
+    // --- Firestore: flat/bulk deletes via one BulkWriter (no 500 cap) ---
+    const writer = db.bulkWriter();
+    try {
+        const moods = await db.collection("mood")
+            .where("userId", "==", uid).get();
+        moods.forEach((d) => writer.delete(d.ref));
+    } catch (e) {
+        logger.error(`deleteMyAccount: mood query failed for ${uid}:`, e);
+    }
+    try {
+        const chats = await db.collection("chats")
+            .where("participants", "array-contains", uid).get();
+        for (const doc of chats.docs) {
+            const msgs = await doc.ref.collection("messages").get();
+            msgs.forEach((m) => writer.delete(m.ref));
+            writer.delete(doc.ref);
+        }
+    } catch (e) {
+        logger.error(`deleteMyAccount: chats query failed for ${uid}:`, e);
+    }
+    try {
+        const asRequester = await db.collection("chat_requests")
+            .where("requesterId", "==", uid).get();
+        asRequester.forEach((d) => writer.delete(d.ref));
+        const asVolunteer = await db.collection("chat_requests")
+            .where("volunteerId", "==", uid).get();
+        asVolunteer.forEach((d) => writer.delete(d.ref));
+    } catch (e) {
+        logger.error(`deleteMyAccount: chat_requests query failed for ${uid}:`, e);
+    }
+    try {
+        await writer.close();
+    } catch (e) {
+        logger.error(`deleteMyAccount: bulk delete failed for ${uid}:`, e);
+    }
+
+    // --- Storage (best-effort): all uploads live under `<folder>/<uid>/…` ---
+    const storageFolders = [
+        "user_profiles", "journal_audio",
+        "volunteer_profiles", "volunteer_id_cards", "volunteer_id_cards_back",
+        "volunteer_student_ids", "volunteer_student_ids_back",
+    ];
+    try {
+        // Name the bucket explicitly so it works regardless of how the Admin SDK
+        // resolved the default bucket at init.
+        const bucket = admin.storage().bucket("you-app-c6b1f.firebasestorage.app");
+        await Promise.all(storageFolders.map((folder) =>
+            bucket.deleteFiles({ prefix: `${folder}/${uid}/` })
+                .catch((e) => logger.error(
+                    `deleteMyAccount: storage purge ${folder} failed:`, e)),
+        ));
+    } catch (e) {
+        logger.error(`deleteMyAccount: storage cleanup failed for ${uid}:`, e);
+    }
+
+    // --- Auth (last): Admin SDK deletion needs no recent client login ---
+    try {
+        await admin.auth().deleteUser(uid);
+    } catch (e) {
+        logger.error(`deleteMyAccount: auth deletion failed for ${uid}:`, e);
+        throw new HttpsError("internal",
+            "Your data was removed but the login could not be fully deleted. Please contact support.");
+    }
+
+    logger.log(`deleteMyAccount: deleted account ${uid} (role ${role}).`);
+    return { ok: true };
 });
 
 /**

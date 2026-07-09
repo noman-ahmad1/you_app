@@ -118,6 +118,10 @@ class AppUser {
     String? firstName,
     String? lastName,
     UserRole? role,
+    String? profilePictureUrl,
+    DateTime? dateOfBirth,
+    String? gender,
+    String? username,
     String? phoneNumber,
     bool? emailVerified,
     bool? phoneVerified,
@@ -137,6 +141,12 @@ class AppUser {
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       role: role ?? this.role,
+      // Carry these through — omitting them previously wiped the fields on any
+      // copyWith (e.g. flipping emailVerified would drop username/gender/etc.).
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      gender: gender ?? this.gender,
+      username: username ?? this.username,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       emailVerified: emailVerified ?? this.emailVerified,
       phoneVerified: phoneVerified ?? this.phoneVerified,

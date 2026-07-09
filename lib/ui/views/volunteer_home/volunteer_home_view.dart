@@ -8,6 +8,7 @@ import 'package:you_app/ui/views/volunteer_home/tabs/request.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/dashboard.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_bottom_bar.dart';
 import 'package:you_app/ui/views/volunteer_home/volunteer_notifications_drawer.dart';
+import 'package:you_app/ui/shared/verify_email_block.dart';
 
 import 'volunteer_home_viewmodel.dart';
 
@@ -56,6 +57,11 @@ class VolunteerHomeView extends StackedView<VolunteerHomeViewModel> {
                   ),
                 ),
               ),
+
+              // Non-dismissible verify block — covers all tabs + bottom bar
+              // until the volunteer verifies their email (renders nothing once
+              // verified). Blocks accepting chat requests while unverified.
+              const VerifyEmailBlock(source: 'volunteer_block'),
             ],
           ),
         );

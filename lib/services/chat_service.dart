@@ -89,10 +89,18 @@ class ChatService with FirestoreServiceMixin {
     }
   }
 
-  /// Ends a chat instead of deleting it. Marks both the chat and the request as 'completed'.
+  /// Ends a chat instead of deleting it. Marks both the chat and the request as
+  /// 'completed'.
+  ///
+  /// [endedBy] records who ended it ('user', 'volunteer', or 'system' for the
+  /// 24-hour auto-expiry). [markReviewed] is set true when the review was
+  /// already collected inline (the user's own end-chat flow shows the review
+  /// dialog first) so the volunteers screen does not prompt for it again.
   Future<void> endChatAndRequest({
     required String chatId,
     required String requestId,
+    String endedBy = 'user',
+    bool markReviewed = false,
   }) async {
     final batch = db.batch();
     final chatRef = db.collection('chats').doc(chatId);
@@ -132,9 +140,26 @@ class ChatService with FirestoreServiceMixin {
       }
     }
 
-    // Mark as completed
-    batch.update(chatRef, {'status': 'completed'});
-    batch.update(requestRef, {'status': 'completed'});
+    // Mark as completed. `endedBy`/`endedAt` let the other participant's open
+    // chat view react, and `endedAt` marks the request as eligible for a
+    // post-chat review prompt. `userReviewed` short-circuits that prompt when
+    // the review was already collected inline.
+    batch.set(
+        chatRef,
+        {
+          'status': 'completed',
+          'endedBy': endedBy,
+          'endedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
+    batch.set(
+        requestRef,
+        {
+          'status': 'completed',
+          'endedAt': FieldValue.serverTimestamp(),
+          'userReviewed': markReviewed,
+        },
+        SetOptions(merge: true));
 
     await batch.commit();
     _analytics.logChatEnded();

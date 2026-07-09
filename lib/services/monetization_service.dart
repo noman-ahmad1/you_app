@@ -61,12 +61,24 @@ class MonetizationService with ListenableServiceMixin, FirestoreServiceMixin {
     _onAuthChange();
   }
 
+  // The user we've already initialised tracking for this session. AuthService
+  // fires notifyListeners on every user-doc snapshot, so without this guard a
+  // brand-new user (missing `first_login_at`) would loop: _initializeTracking
+  // writes the field → the pending serverTimestamp snapshot reads back null →
+  // listener fires → it writes again … hammering Firestore and storming
+  // rebuilds until a server round-trip commits. Initialising once per uid
+  // breaks that loop (the field is written exactly once).
+  String? _trackedUid;
+
   void _onAuthChange() {
     final user = _authService.currentUser;
     if (user != null) {
+      if (_trackedUid == user.uid) return; // already initialised this session
+      _trackedUid = user.uid;
       _initializeTracking(user.uid);
     } else {
       // Reset when logged out
+      _trackedUid = null;
       _isSubscriptionRequired.value = false;
       _daysSinceLogin.value = 0;
     }

@@ -18,6 +18,7 @@ import 'package:you_app/ui/views/home/home_viewmodel.dart';
 // import 'package:you_app/ui/views/home/volunteer_card.dart';
 import 'package:you_app/ui/views/home/widgets/feature_nav_card.dart';
 import 'package:you_app/ui/shared/topbar.dart';
+import 'package:you_app/ui/shared/verify_email_nudge.dart';
 
 class HomeScreen extends ViewModelWidget<HomeViewModel> {
   const HomeScreen({Key? key}) : super(key: key);
@@ -155,6 +156,11 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            if (viewModel.showVerifyEmailNudge)
+                              VerifyEmailNudge(
+                                onVerify: viewModel.openVerifyEmail,
+                                onDismiss: viewModel.dismissVerifyEmailNudge,
+                              ),
                             _HomeAnnouncement(viewModel: viewModel),
                             ClipRRect(
                               borderRadius: BorderRadius.circular(23),

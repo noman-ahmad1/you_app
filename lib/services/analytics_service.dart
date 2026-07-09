@@ -93,6 +93,19 @@ class AnalyticsService {
   Future<void> logPhoneOtpSent() => _log('phone_otp_sent', null);
   Future<void> logPhoneVerified() => _log('phone_verified', null);
 
+  // --- Email verification ---
+  // [context] is a coarse label for WHERE it fired (e.g. 'premium_purchase',
+  // 'nudge_home', 'nudge_profile', 'volunteer_block', 'volunteer_profile').
+  // Never log the email address or any PII.
+  Future<void> logVerificationGateHit({required String context}) =>
+      _log('verification_gate_hit', {'context': context});
+  Future<void> logVerificationPrompted({required String context}) =>
+      _log('verification_prompted', {'context': context});
+  Future<void> logVerificationEmailSent({required String context}) =>
+      _log('verification_email_sent', {'context': context});
+  Future<void> logVerificationCompleted({required String context}) =>
+      _log('verification_completed', {'context': context});
+
   // --- Journal ---
   Future<void> logJournalCreated({String? label}) =>
       _log('journal_created', {'label': label});
@@ -182,7 +195,11 @@ class AnalyticsService {
     if (!_enabled) return;
     final clean = <String, Object>{};
     params?.forEach((key, value) {
-      if (value != null) clean[key] = value;
+      if (value == null) return;
+      // Firebase Analytics only accepts String/num param values and asserts on
+      // anything else in debug builds. Coerce bools to 1/0 so no event (current
+      // or future) can trip that assertion — e.g. subscription_gate.required.
+      clean[key] = value is bool ? (value ? 1 : 0) : value;
     });
     await _safe(name, () => _analytics.logEvent(
           name: name,

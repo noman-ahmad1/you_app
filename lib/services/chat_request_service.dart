@@ -63,10 +63,20 @@ class ChatRequestService {
 
       // Volunteer details are now passed as arguments
 
-      // 1. Update the request status
-      transaction.update(requestRef, {'status': 'accepted'});
+      // 1. Update the request status. `acceptedAt` anchors the 24-hour
+      // auto-expiry window; `volunteerName` lets the requester's review dialog
+      // name the volunteer without an extra lookup. `userReviewed` starts false.
+      transaction.update(requestRef, {
+        'status': 'accepted',
+        'acceptedAt': FieldValue.serverTimestamp(),
+        'volunteerName': volunteerName,
+        'userReviewed': false,
+      });
 
-      // 2. Create the chat room document (or merge if it somehow exists)
+      // 2. Create the chat room document (or merge if it somehow exists).
+      // `createdAt` doubles as the acceptance time (chat is created on accept),
+      // which the server-side expiry function uses to find stale chats.
+      // `requestId` lets that function complete the matching request directly.
       transaction.set(
           chatRef,
           {
@@ -82,6 +92,7 @@ class ChatRequestService {
                 'avatarUrl': volunteerAvatarUrl
               },
             },
+            'requestId': request.id,
             'createdAt':
                 FieldValue.serverTimestamp(), // Timestamp for chat creation
             'lastMessage': null, // Initialize last message
@@ -183,5 +194,14 @@ class ChatRequestService {
         .collection('chat_requests')
         .doc(requestId)
         .update({'status': newStatus});
+  }
+
+  /// Marks that the requester has resolved (submitted or skipped) the post-chat
+  /// review for this request, so it is no longer surfaced as a review prompt.
+  Future<void> markRequestReviewed(String requestId) async {
+    await _firestore
+        .collection('chat_requests')
+        .doc(requestId)
+        .set({'userReviewed': true}, SetOptions(merge: true));
   }
 }
