@@ -178,6 +178,11 @@ class AnalyticsService {
   /// The user tapped "Restore purchase".
   Future<void> logRestoreTapped() => _log('restore_tapped', null);
 
+  /// The user confirmed cancelling and we opened the store's manage-subscription
+  /// page. The app never cancels a Play subscription itself.
+  Future<void> logManageSubscriptionOpened() =>
+      _log('manage_subscription_opened', null);
+
   // --- Onboarding ---
   Future<void> logOnboardingCompleted({required String tour}) =>
       _log('onboarding_completed', {'tour': tour});

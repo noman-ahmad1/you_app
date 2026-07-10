@@ -595,6 +595,34 @@ class _PremiumMemberBlock extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 12),
+        // Cancelling happens in the Play Store — we only open it (see
+        // PremiumViewModel.unsubscribe). Quiet by design: never alarming.
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.058,
+          child: Material(
+            color: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+              side: BorderSide(color: Colors.white.withAlpha(150), width: 1.4),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(30),
+              onTap: viewModel.isWorking ? null : viewModel.unsubscribe,
+              child: Center(
+                child: Text(
+                  viewModel.isWorking ? 'Opening…' : 'Cancel subscription',
+                  style: GoogleFonts.crimsonPro(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color:
+                        Colors.white.withAlpha(viewModel.isWorking ? 150 : 235),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

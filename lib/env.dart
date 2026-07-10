@@ -3,8 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Non-secret, compile-time configuration values.
 class Environments {
   static const String appName = 'You';
-  static const String apiBaseURL = 'https://api.youtaicosmetic.net/';
-  static const String websiteURL = 'https://multi-salon.initappz.com/';
+  // static const String apiBaseURL = 'https://api.youtaicosmetic.net/';
+  // static const String websiteURL = 'https://multi-salon.initappz.com/';
 }
 
 /// Runtime secrets loaded from the gitignored `.env` file (see `.env.example`).

@@ -1,7 +1,9 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:stacked/stacked.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/analytics_service.dart';
@@ -77,7 +79,8 @@ class PremiumViewModel extends ReactiveViewModel {
   // --- Purchase flow state ---
   bool _purchasing = false; // store purchase sheet in flight
   bool _activating = false; // verifying entitlement with the backend
-  bool get isWorking => _purchasing || _activating;
+  bool _managing = false; // fetching / opening the store's manage-sub page
+  bool get isWorking => _purchasing || _activating || _managing;
   String? _purchaseError;
   String? get purchaseError => _purchaseError;
 
@@ -240,6 +243,97 @@ class PremiumViewModel extends ReactiveViewModel {
           'this is a mistake, reach out and we’ll help.',
     );
     if (isPremium) celebrate();
+  }
+
+  /// Google Play's generic subscriptions page, used when the store doesn't hand
+  /// us a specific management URL.
+  static const String _playSubscriptionsUrl =
+      'https://play.google.com/store/account/subscriptions';
+
+  /// A friendly "you keep YOU+ until …" phrase for the confirmation copy.
+  String get _keepUntilPhrase {
+    final expiry = _authService.currentUser?.subscriptionExpiry;
+    if (expiry == null) return 'until the end of your current billing period';
+    return 'until ${DateFormat('d MMMM yyyy').format(expiry)}';
+  }
+
+  /// "Cancel subscription" — shown on the member block.
+  ///
+  /// IMPORTANT: an app can never cancel a Google Play subscription itself
+  /// (Play policy), and this client never writes entitlement. So we confirm,
+  /// then send the user to the store's manage-subscription page. Cancelling
+  /// there only turns OFF auto-renew: RevenueCat sends CANCELLATION (which our
+  /// webhook treats as a no-op) and the user stays premium until the period
+  /// ends, when EXPIRATION fires and the backend revokes.
+  Future<void> unsubscribe() async {
+    if (isWorking) return;
+
+    // A grant from our team (admin/promo) has no store subscription to cancel.
+    final source = _authService.currentUser?.subscriptionSource;
+    if (source != null && source != 'google_play') {
+      await _dialogService.showDialog(
+        title: 'YOU+ is a gift from us',
+        description:
+            'Your YOU+ access was granted by our team, so there’s no Google Play '
+            'subscription to cancel. If you’d like it removed, just reach out '
+            'and we’ll take care of it.',
+        buttonTitle: 'OK',
+      );
+      return;
+    }
+
+    // 1. Warm confirmation — nothing is lost today.
+    final response = await _dialogService.showConfirmationDialog(
+      title: 'Cancel YOU+?',
+      description:
+          'You’ll keep YOU+ $_keepUntilPhrase — nothing changes today, and your '
+          'journal, mood history, and messages always stay yours.\n\n'
+          'Google Play handles cancellations, so we’ll open your subscription '
+          'settings there.',
+      confirmationTitle: 'Continue to Play Store',
+      cancelTitle: 'Stay subscribed',
+    );
+    if (response?.confirmed != true) return;
+
+    _analytics.logManageSubscriptionOpened();
+
+    // 2. Open the store's manage-subscriptions page.
+    _managing = true;
+    notifyListeners();
+    final url = await _billing.managementUrl() ?? _playSubscriptionsUrl;
+    _managing = false;
+    notifyListeners();
+
+    var opened = false;
+    final uri = Uri.tryParse(url);
+    if (uri != null) {
+      try {
+        opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        AppLog.error('PremiumViewModel.unsubscribe.launch', e);
+      }
+    }
+
+    if (!opened) {
+      await _dialogService.showDialog(
+        title: 'Couldn’t open the Play Store',
+        description:
+            'Please open the Play Store app → Menu → Subscriptions → YOU+ to '
+            'cancel. Your access stays active until then.',
+        buttonTitle: 'OK',
+      );
+      return;
+    }
+
+    // 3. Reassure: cancelling only stops the next renewal.
+    await _dialogService.showDialog(
+      title: 'You’re still YOU+ 💛',
+      description:
+          'If you cancelled, YOU+ stays active $_keepUntilPhrase. We’ll update '
+          'your account automatically when it ends — and you’re welcome back '
+          'any time.',
+      buttonTitle: 'Got it',
+    );
   }
 
   /// Ask the backend to verify entitlement with RevenueCat and write it to

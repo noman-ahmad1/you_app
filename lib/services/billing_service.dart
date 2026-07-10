@@ -98,6 +98,26 @@ class BillingService {
     }
   }
 
+  /// The store's "manage subscription" URL for the current customer (on Android
+  /// this is Google Play's subscriptions page for this app). Returns null when
+  /// billing isn't configured, there is no active STORE subscription (e.g. an
+  /// admin/promo grant), or the store didn't supply one — callers should then
+  /// fall back to the generic Play subscriptions page.
+  ///
+  /// SECURITY: this reads CustomerInfo ONLY for the management URL. It must
+  /// never be used to derive entitlement — `isPremium` comes solely from the
+  /// backend-written Firestore state.
+  Future<String?> managementUrl() async {
+    if (!_configured) return null;
+    try {
+      final info = await Purchases.getCustomerInfo();
+      return info.managementURL;
+    } catch (e) {
+      AppLog.error('BillingService.managementUrl', e);
+      return null;
+    }
+  }
+
   /// Restore an existing subscription (e.g. after reinstall).
   Future<BillingResult> restore() async {
     if (!_configured) {
