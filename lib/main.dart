@@ -7,6 +7,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/billing_service.dart';
 import 'package:you_app/services/moderation_service.dart';
@@ -23,6 +25,17 @@ Future<void> main() async {
   // runZonedGuarded captures uncaught async errors for Crashlytics.
   await runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Use Android's system Photo Picker for gallery picks. It requires NO
+    // media permission, which is exactly what Google Play's Photo and Video
+    // Permissions policy mandates for apps (like ours) that only need one-time
+    // media access. The picker is backported to Android 7–12 via Play services
+    // and falls back to the document picker when unavailable — still no
+    // permission. `is ImagePickerAndroid` is the platform guard (no-op on iOS).
+    final ImagePickerPlatform picker = ImagePickerPlatform.instance;
+    if (picker is ImagePickerAndroid) {
+      picker.useAndroidPhotoPicker = true;
+    }
 
     // Load environment secrets before any service that needs them is created.
     // Fail-soft: a missing .env should not crash the app on startup.

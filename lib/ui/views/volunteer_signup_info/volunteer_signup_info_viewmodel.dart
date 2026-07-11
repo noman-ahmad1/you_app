@@ -236,11 +236,13 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   Future<void> pickImage(ImageSource source, BuildContext context,
       {required String imageType}) async {
     try {
+      // Only the camera needs a runtime permission. Gallery picks (incl. the
+      // gov-ID and student-ID card images) go through Android's system Photo
+      // Picker, which requires NO permission — asking for Permission.photos
+      // would re-introduce READ_MEDIA_IMAGES and breach Google Play's Photo and
+      // Video Permissions policy.
       if (source == ImageSource.camera) {
         final status = await Permission.camera.request();
-        if (!status.isGranted) return;
-      } else {
-        final status = await Permission.photos.request();
         if (!status.isGranted) return;
       }
 

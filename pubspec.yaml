@@ -23,6 +23,10 @@ dependencies:
   google_sign_in: ^6.3.0
   google_sign_in_dartio: ^0.3.0
   image_picker: ^1.2.0
+  # Direct deps so we can opt into Android's system Photo Picker in main.dart
+  # (ImagePickerAndroid.useAndroidPhotoPicker), which needs no media permission.
+  image_picker_android: ^0.8.13+17
+  image_picker_platform_interface: ^2.11.1
   intl: ^0.20.2
   just_audio: ^0.10.4
   liquid_glass_renderer: ^0.1.1-dev.10

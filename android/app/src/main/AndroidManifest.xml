@@ -1,10 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- CAMERA: taking a profile photo / photographing an ID card in-app. -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- RECORD_AUDIO: voice journal entries. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    <!--
+      NO media/storage permissions, by design. Picking an image from the gallery
+      goes through Android's system Photo Picker (see main.dart:
+      ImagePickerAndroid.useAndroidPhotoPicker), which requires no permission at
+      all. Google Play's Photo and Video Permissions policy only allows
+      READ_MEDIA_IMAGES / READ_MEDIA_VIDEO for apps whose core use case needs
+      persistent access to shared media — ours are one-time picks, so declaring
+      them got the app rejected. Do NOT re-add:
+        READ_MEDIA_IMAGES, READ_MEDIA_VIDEO,
+        READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE
+    -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
