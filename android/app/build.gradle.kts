@@ -33,7 +33,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.youstartup.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -58,10 +57,18 @@ android {
 
     buildTypes {
         getByName("release") {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("release")
-            // signingConfig = signingConfigs.getByName("debug")
+
+            // R8: shrink, optimise and obfuscate. Off by default in AGP, which
+            // shipped this app unobfuscated and unshrunk. Keep rules live in
+            // proguard-rules.pro; Firebase, RevenueCat and Hive ship their own
+            // consumer rules in their AARs.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
