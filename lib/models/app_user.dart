@@ -19,7 +19,23 @@ class AppUser {
   final bool emailVerified;
   final bool phoneVerified;
   final String status;
+
+  /// Admin-authored reason shown to the user when their account is blocked
+  /// (suspended/banned). Written only by the admin panel.
+  final String? statusReason;
+
+  /// The volunteer's availability toggle — 'online' | 'offline'. This alone
+  /// decides whether they appear in discovery: once on, it stays on until they
+  /// switch it off (or sign out, which deletes their FCM token and so makes them
+  /// unreachable anyway).
   final String availabilityStatus;
+
+  /// When the volunteer's app was last alive. Advisory only — nothing gates on
+  /// it today. It exists so the admin panel can spot dormant volunteers, and so
+  /// staleness expiry can be switched on later without an app release. See
+  /// PresenceService.
+  final DateTime? lastSeen;
+
   final DateTime? createdAt;
   final List<String>? permissions;
   final String? fcmToken;
@@ -42,7 +58,9 @@ class AppUser {
     required this.emailVerified,
     required this.phoneVerified,
     required this.status,
+    this.statusReason,
     this.availabilityStatus = 'offline',
+    this.lastSeen,
     this.createdAt,
     this.permissions,
     this.fcmToken,
@@ -52,25 +70,49 @@ class AppUser {
     this.subscriptionSource,
   });
 
+  /// Parses a role string without throwing. An unrecognised value degrades to
+  /// [UserRole.user] rather than killing the auth stream.
+  static UserRole _roleFrom(dynamic raw) {
+    final name = raw is String ? raw : 'user';
+    for (final role in UserRole.values) {
+      if (role.name == name) return role;
+    }
+    return UserRole.user;
+  }
+
+  /// Coerces the several shapes a date has taken in this collection over time
+  /// (Timestamp, ISO string, DateTime) into a DateTime, or null if unparseable.
+  static DateTime? _dateFrom(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is Timestamp) return raw.toDate();
+    if (raw is DateTime) return raw;
+    if (raw is String) return DateTime.tryParse(raw);
+    return null;
+  }
+
   factory AppUser.fromJson(Map<String, dynamic> data) {
     return AppUser(
       uid: data['uid'] ?? '',
       email: data['email'] ?? '',
       firstName: data['firstName'] ?? '',
       lastName: data['lastName'] ?? '',
-      // Convert the string from Firestore back to a UserRole enum
-      role: UserRole.values.byName(data['role'] ?? 'user'),
+      // Convert the string from Firestore back to a UserRole enum. byName()
+      // THROWS on an unknown value, and this runs inside the auth stream — a
+      // future role like 'moderator' would take down sign-in for that account.
+      role: _roleFrom(data['role']),
       profilePictureUrl: data['profilePictureUrl'],
       // Convert Firestore Timestamp back to DateTime, handling nulls
-      dateOfBirth: (data['dateOfBirth'] as Timestamp?)?.toDate(),
+      dateOfBirth: _dateFrom(data['dateOfBirth']),
       gender: data['gender'],
       username: data['username'],
       phoneNumber: data['phoneNumber'],
       emailVerified: data['emailVerified'] ?? false,
       phoneVerified: data['phoneVerified'] ?? false,
       status: data['status'] ?? 'active',
+      statusReason: data['statusReason'],
       availabilityStatus: data['availabilityStatus'] ?? 'offline',
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      lastSeen: _dateFrom(data['lastSeen']),
+      createdAt: _dateFrom(data['createdAt']),
       // Ensure the list from Firestore is correctly typed as List<String>
       permissions: data['permissions'] != null
           ? List<String>.from(data['permissions'])
@@ -80,7 +122,7 @@ class AppUser {
           ? List<String>.from(data['joinedCommunities'])
           : [],
       subscriptionTier: data['subscriptionTier'] ?? 'free',
-      subscriptionExpiry: (data['subscription_expiry'] as Timestamp?)?.toDate(),
+      subscriptionExpiry: _dateFrom(data['subscription_expiry']),
       subscriptionSource: data['subscription_source'],
     );
   }
@@ -91,6 +133,13 @@ class AppUser {
   bool get isOnline => availabilityStatus == 'online';
   bool get isVerified =>
       emailVerified && (role == UserRole.user || phoneVerified);
+
+  /// Account statuses that must deny access entirely. The admin panel sets
+  /// `suspended`/`banned` as moderation actions; `deleted` is the soft-delete
+  /// convention. A blocked user is signed out — see
+  /// AuthenticationService._enforceAccountStatus.
+  static const Set<String> blockedStatuses = {'suspended', 'banned', 'deleted'};
+  bool get isBlocked => blockedStatuses.contains(status);
   bool get canManageUsers =>
       isAdmin && (permissions?.contains('manage_users') ?? true);
   bool get canManageContent =>
@@ -99,7 +148,8 @@ class AppUser {
       isAdmin && (permissions?.contains('view_analytics') ?? true);
   bool get isPremium =>
       subscriptionTier == 'premium' &&
-      (subscriptionExpiry == null || subscriptionExpiry!.isAfter(DateTime.now()));
+      (subscriptionExpiry == null ||
+          subscriptionExpiry!.isAfter(DateTime.now()));
 
   String get defaultAvatar {
     final g = gender?.toLowerCase();
@@ -126,7 +176,9 @@ class AppUser {
     bool? emailVerified,
     bool? phoneVerified,
     String? status,
+    String? statusReason,
     String? availabilityStatus,
+    DateTime? lastSeen,
     DateTime? createdAt,
     List<String>? permissions,
     String? fcmToken,
@@ -151,7 +203,9 @@ class AppUser {
       emailVerified: emailVerified ?? this.emailVerified,
       phoneVerified: phoneVerified ?? this.phoneVerified,
       status: status ?? this.status,
+      statusReason: statusReason ?? this.statusReason,
       availabilityStatus: availabilityStatus ?? this.availabilityStatus,
+      lastSeen: lastSeen ?? this.lastSeen,
       createdAt: createdAt ?? this.createdAt,
       permissions: permissions ?? this.permissions,
       fcmToken: fcmToken ?? this.fcmToken,

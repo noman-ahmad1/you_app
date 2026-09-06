@@ -11,12 +11,10 @@ import 'package:you_app/services/billing_service.dart';
 import 'package:you_app/services/security_log_service.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
-import 'package:you_app/services/mood_service.dart';
-import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_request_service.dart';
-import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/push_notification_service.dart';
+import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart'; // REQUIRED FOR SERVICE LOCATOR PATTERN
+import 'package:you_app/app/app.router.dart';
 
 class AuthenticationService with ListenableServiceMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -106,6 +104,10 @@ class AuthenticationService with ListenableServiceMixin {
 
         _currentUser.value = appUser;
 
+        // Suspended / banned / soft-deleted by an admin → sign out immediately.
+        // (Cold-start path; the live listener below catches a MID-SESSION block.)
+        if (_enforceAccountStatus(appUser)) return;
+
         // Keep the user in sync with their Firestore doc (subscription, profile).
         _listenToUserDoc(firebaseUser);
 
@@ -149,7 +151,11 @@ class AuthenticationService with ListenableServiceMixin {
         } else if (!appUser.emailVerified) {
           _authStatus.value = AuthStatus.pendingVerification;
         } else if (appUser.isVolunteer &&
-            (!appUser.phoneVerified || appUser.status != 'verified')) {
+            (!appUser.phoneVerified || appUser.status != 'active')) {
+          // Canonical volunteer states: 'active' = approved & live (the pending
+          // screen and the discovery query both key off this). 'verified' now
+          // means "approved but DEACTIVATED by an admin" — still able to sign in,
+          // but not discoverable. See docs/FIRESTORE_SCHEMA.md.
           _authStatus.value = AuthStatus.pendingVerification;
         } else {
           _authStatus.value = AuthStatus.authenticated;
@@ -197,11 +203,88 @@ class AuthenticationService with ListenableServiceMixin {
         .snapshots()
         .listen((snapshot) {
       if (!snapshot.exists) return;
-      _currentUser.value = _createAppUser(firebaseUser, snapshot.data());
+      final user = _createAppUser(firebaseUser, snapshot.data());
+      _currentUser.value = user;
       notifyListeners();
+      // This is the ONLY path that catches a MID-SESSION suspension/ban: the
+      // admin flips `status` and the live doc listener fires here.
+      _enforceAccountStatus(user);
     }, onError: (e) {
       AppLog.error('AuthenticationService.userDocListener', e);
     });
+  }
+
+  // --- Account status enforcement (suspended / banned / soft-deleted) ---
+
+  /// Guards against stacking dialogs / double sign-outs when several paths
+  /// (auth-state, live listener, sign-in) notice the block at once.
+  bool _handlingBlockedAccount = false;
+
+  /// Returns true when [user] is blocked by an admin. Signs them out, tells them
+  /// why, and returns them to Welcome. Without this an admin's "suspend" action
+  /// would be purely cosmetic — the user would keep full access.
+  bool _enforceAccountStatus(AppUser user) {
+    if (!user.isBlocked) return false;
+    if (!_handlingBlockedAccount) {
+      _handlingBlockedAccount = true;
+      unawaited(_signOutBlockedAccount(user));
+    }
+    return true;
+  }
+
+  String _blockedTitle(AppUser user) {
+    switch (user.status) {
+      case 'suspended':
+        return 'Account suspended';
+      case 'banned':
+        return 'Account closed';
+      default:
+        return 'Account unavailable';
+    }
+  }
+
+  String blockedMessage(AppUser user) {
+    final buffer = StringBuffer();
+    switch (user.status) {
+      case 'suspended':
+        buffer.write(
+            "Your account has been suspended, so you've been signed out for now.");
+        break;
+      case 'banned':
+        buffer.write(
+            'Your account has been closed and can no longer be used to sign in.');
+        break;
+      default:
+        buffer.write('This account is no longer available.');
+    }
+    final reason = user.statusReason?.trim();
+    if (reason != null && reason.isNotEmpty) {
+      buffer.write('\n\nReason: $reason');
+    }
+    buffer.write(
+        "\n\nIf you think this is a mistake, please reach out — we're here to help.");
+    return buffer.toString();
+  }
+
+  Future<void> _signOutBlockedAccount(AppUser user) async {
+    final title = _blockedTitle(user);
+    final description = blockedMessage(user);
+    try {
+      await signOut();
+    } catch (e) {
+      AppLog.error('AuthenticationService.blockedSignOut', e);
+    }
+    try {
+      await locator<NavigationService>().clearStackAndShow(Routes.welcomeView);
+      await locator<DialogService>().showDialog(
+        title: title,
+        description: description,
+        buttonTitle: 'OK',
+      );
+    } catch (e) {
+      AppLog.error('AuthenticationService.blockedNotify', e);
+    }
+    _handlingBlockedAccount = false;
   }
 
   // New method to force refresh the current user's state (useful after external actions like password reset)
@@ -242,8 +325,7 @@ class AuthenticationService with ListenableServiceMixin {
   /// Google users use the 'google.com' provider (already verified by Google),
   /// so they are never asked to verify.
   bool get isPasswordUser =>
-      _auth.currentUser?.providerData
-          .any((p) => p.providerId == 'password') ??
+      _auth.currentUser?.providerData.any((p) => p.providerId == 'password') ??
       false;
 
   /// Live email-verified state straight from the FirebaseUser.
@@ -301,34 +383,21 @@ class AuthenticationService with ListenableServiceMixin {
     return locator<UserService>().get(uid);
   }
 
+  /// Builds the in-memory user from the Firebase Auth record plus its Firestore
+  /// document.
+  ///
+  /// This delegates to [AppUser.fromJson] rather than mapping fields by hand.
+  /// The previous hand-rolled version silently omitted `availabilityStatus`,
+  /// `lastSeen` and `fcmToken`, so `isOnline` was permanently false and
+  /// PresenceService never wrote a single heartbeat.
   AppUser _createAppUser(User firebaseUser, Map<String, dynamic>? userData) {
-    return AppUser(
+    final fromDoc = AppUser.fromJson(userData ?? const <String, dynamic>{});
+    // Firebase Auth is authoritative for identity and verification — the
+    // Firestore mirror of these three can lag behind it.
+    return fromDoc.copyWith(
       uid: firebaseUser.uid,
-      email: firebaseUser.email ?? '',
-      firstName: userData?['firstName'] ?? '',
-      lastName: userData?['lastName'] ?? '',
-      role: userData?['role'] == 'admin'
-          ? UserRole.admin
-          : userData?['role'] == 'volunteer'
-              ? UserRole.volunteer
-              : UserRole.user,
-      phoneNumber: userData?['phoneNumber'],
+      email: firebaseUser.email ?? fromDoc.email,
       emailVerified: firebaseUser.emailVerified,
-      phoneVerified: userData?['phoneVerified'] ?? false,
-      status: userData?['status'] ?? 'active',
-      createdAt: userData?['createdAt']?.toDate(),
-      permissions: List<String>.from(userData?['permissions'] ?? []),
-      profilePictureUrl: userData?['profilePictureUrl'],
-      gender: userData?['gender'],
-      username: userData?['username'],
-      dateOfBirth: (userData?['dateOfBirth'] as Timestamp?)?.toDate(),
-      joinedCommunities: userData?['joinedCommunities'] != null
-          ? List<String>.from(userData!['joinedCommunities'])
-          : [],
-      subscriptionTier: userData?['subscriptionTier'] ?? 'free',
-      subscriptionExpiry:
-          (userData?['subscription_expiry'] as Timestamp?)?.toDate(),
-      subscriptionSource: userData?['subscription_source'],
     );
   }
 
@@ -464,9 +533,13 @@ class AuthenticationService with ListenableServiceMixin {
     }
 
     try {
-      // Use FirestoreService via locator to update the user document status
+      // Approving a volunteer sets status:'active' — the value the pending screen
+      // waits for AND the one streamAvailableVolunteers() requires for discovery.
+      // ('verified' now means "approved but DEACTIVATED": can sign in, not
+      // discoverable.) Writing 'verified' here previously left an approved
+      // volunteer stuck on the pending screen and invisible to users.
       await locator<UserService>().update(volunteerId, {
-        'status': 'verified',
+        'status': 'active',
         'verifiedAt': FieldValue.serverTimestamp(),
         'verifiedBy': _currentUser.value!.uid,
       });
@@ -712,6 +785,17 @@ class AuthenticationService with ListenableServiceMixin {
       final userData = await _getUserData(userCredential.user!.uid);
       final appUser = _createAppUser(userCredential.user!, userData);
 
+      // Blocked by an admin → sign back out and surface why, so the caller never
+      // navigates into the app. The flag suppresses the listener's duplicate
+      // dialog; the login view model shows this message.
+      if (appUser.isBlocked) {
+        _handlingBlockedAccount = true;
+        await signOut();
+        _handlingBlockedAccount = false;
+        _error.value = blockedMessage(appUser);
+        throw Exception(_error.value);
+      }
+
       _analytics.logLogin(method: 'email');
       locator<SecurityLogService>().log(SecurityAction.signin);
       return appUser;
@@ -796,6 +880,17 @@ class AuthenticationService with ListenableServiceMixin {
       final userData = await _getUserData(userCredential.user!.uid);
       final appUser = _createAppUser(userCredential.user!, userData);
 
+      // Blocked by an admin → sign back out and surface why (mirrors the
+      // email path, and the existing role-rejection template above).
+      if (appUser.isBlocked) {
+        _handlingBlockedAccount = true;
+        await signOut();
+        await _googleSignIn.signOut();
+        _handlingBlockedAccount = false;
+        _error.value = blockedMessage(appUser);
+        throw Exception(_error.value);
+      }
+
       _analytics.logLogin(method: 'google');
       return appUser;
     } catch (e) {
@@ -810,12 +905,20 @@ class AuthenticationService with ListenableServiceMixin {
 
   Future<void> signOut() async {
     try {
-      // Remove FCM token from Firestore before logging out to protect privacy
+      // Remove FCM token from Firestore before logging out to protect privacy.
+      //
+      // A signing-out volunteer is ALSO switched offline. This is the one place
+      // we override their toggle, and it's not an expiry rule — it's that we
+      // just deleted their FCM token two lines up, so they physically cannot be
+      // notified of a chat request. Leaving them listed would send users to a
+      // listener who is guaranteed never to hear them. Signing back in and
+      // flipping the toggle puts them straight back.
       final user = _currentUser.value;
       if (user != null) {
         try {
           await locator<UserService>().update(user.uid, {
             'fcmToken': FieldValue.delete(),
+            if (user.isVolunteer) 'availabilityStatus': 'offline',
           });
         } catch (e) {
           AppLog.error('AuthenticationService.signOut.removeFcmToken', e);
