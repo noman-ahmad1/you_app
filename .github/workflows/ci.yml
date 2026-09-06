@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    name: Analyze, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # .env is gitignored but declared as a Flutter asset, so the build cannot
+      # resolve without one. Values stay empty — CI never calls a paid service.
+      - name: Create placeholder .env
+        run: cp .env.example .env
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      # --no-fatal-infos for now: errors and warnings are both at zero and this
+      # step keeps them there. The ~26 remaining infos are third-party API
+      # deprecations (stacked, showcaseview) that need package migrations.
+      # Drop this flag once those land — see docs/APP_QUALITY_REVIEW.md §10.2.
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test
+        run: flutter test
+
+      # Debug, not release: the release build needs the upload keystore, which
+      # is not available to CI. R8 on the release build must be verified
+      # locally — see docs/APP_QUALITY_REVIEW.md §4.9.
+      - name: Build APK
+        run: flutter build apk --debug
+
+  functions:
+    name: Cloud Functions lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run lint
+
+  rules:
+    name: Firestore security rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # The Firestore emulator requires a JDK 21+.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install
+        working-directory: firestore-tests
+        run: npm install
+      # Guards firestore.rules against regressions in the authorisation model:
+      # ID-document exposure, mood privacy, notification injection, user-
+      # directory dumping, chat integrity and aggregate tampering.
+      - name: Run rules suite
+        working-directory: firestore-tests
+        run: npm test

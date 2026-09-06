@@ -50,3 +50,5 @@ app.*.map.json
 # Android release keystore and properties
 /android/key.properties
 *.jks
+# Firestore rules test deps
+firestore-tests/node_modules/
