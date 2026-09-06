@@ -9,10 +9,15 @@ class DodoResponse {
   const DodoResponse({required this.capReached, this.reply = ''});
 }
 
-/// Talks to Dodo via the `sendDodoMessage` callable Cloud Function. The Groq API
-/// key now lives server-side (Functions secret), and the function enforces the
-/// free-tier daily cap authoritatively — the client no longer contacts Groq
-/// directly and cannot see or count around the limit.
+/// Talks to Dodo via the `sendDodoMessage` callable Cloud Function.
+///
+/// Dodo runs on Gemini. The API key lives in Cloud Functions Secret Manager and
+/// never reaches the app, and the function enforces the free-tier daily cap
+/// authoritatively — the client cannot see or count around the limit.
+///
+/// The function may also return a reply flagged `blocked`, meaning Gemini
+/// declined on safety grounds. The text is still a warm, human message, so the
+/// client renders it like any other reply.
 class ChatbotService {
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
 

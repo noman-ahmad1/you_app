@@ -60,6 +60,8 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npm run lint
+      # Unit tests for the Dodo/Gemini request and response shaping.
+      - run: npm test
 
   rules:
     name: Firestore security rules

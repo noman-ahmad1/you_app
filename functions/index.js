@@ -6,10 +6,14 @@ const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
 const {onDocumentUpdated} = require("firebase-functions/v2/firestore");
 
-// Groq API key — server-side secret (was previously shipped in the client .env).
-// Set with: firebase functions:secrets:set GROQ_API_KEY
+// Gemini API key — server-side secret. Dodo runs on Gemini; the previous Groq
+// integration and its key have been removed.
+// Set with: firebase functions:secrets:set GEMINI_API_KEY
+//
+// Lives in Secret Manager, never in the app bundle. `.env` is declared as a
+// Flutter asset, so anything placed there ships inside the APK in plain text.
 const {defineSecret} = require("firebase-functions/params");
-const GROQ_API_KEY = defineSecret("GROQ_API_KEY");
+const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
 // RevenueCat billing secrets.
 // - WEBHOOK_SECRET: the exact Authorization header value configured on the
@@ -29,6 +33,13 @@ const logger = require("firebase-functions/logger");
 
 // Keyword/regex moderation engine (mirrors the Flutter ModerationService)
 const moderation = require("./moderation");
+// Dodo (Gemini) request/response shaping — pure, unit tested in test/dodo.test.js
+const {
+    DodoBlockedError,
+    toGeminiContents,
+    parseGeminiReply,
+    buildGeminiBody,
+} = require("./dodo");
 
 // Initialize the Admin SDK
 admin.initializeApp();
@@ -701,6 +712,8 @@ function pktMonthKey(instant) {
 }
 
 /** @return {Promise<{dodoDailyCap:number, welcomeChats:number, communityThreadsMonthly:number}>} live limits. */
+const DODO_MODEL_DEFAULT = "gemini-2.5-flash";
+
 async function getFreemiumLimits() {
     try {
         const snap = await db.collection("app_settings").doc("global_config").get();
@@ -710,6 +723,13 @@ async function getFreemiumLimits() {
             return Number.isFinite(n) && n > 0 ? n : fallback;
         };
         return {
+            // Model id is tunable from the admin panel so it can be changed
+            // without a redeploy, matching how the caps below work. Read here
+            // rather than in a second helper because this already fetches the
+            // same document.
+            dodoModel: typeof data.dodo_model === "string" && data.dodo_model.trim() ?
+                data.dodo_model.trim() :
+                DODO_MODEL_DEFAULT,
             dodoDailyCap: asPositiveInt(data.dodo_daily_cap, DODO_DAILY_CAP_DEFAULT),
             welcomeChats: asPositiveInt(data.welcome_chats, WELCOME_CHATS_DEFAULT),
             communityThreadsMonthly: asPositiveInt(
@@ -720,6 +740,7 @@ async function getFreemiumLimits() {
     } catch (e) {
         logger.error("getFreemiumLimits failed, using defaults:", e);
         return {
+            dodoModel: DODO_MODEL_DEFAULT,
             dodoDailyCap: DODO_DAILY_CAP_DEFAULT,
             welcomeChats: WELCOME_CHATS_DEFAULT,
             communityThreadsMonthly: COMMUNITY_THREADS_MONTHLY_DEFAULT,
@@ -920,12 +941,14 @@ exports.refreshEntitlement = onCall(
 /**
  * Dodo AI gateway. Free users are capped at `dodo_daily_cap` messages per PKT
  * day; premium is unlimited. Reserves the daily slot in a transaction BEFORE
- * calling Groq (so concurrent sends can't overshoot), then calls Groq with the
- * server-held key. On Groq failure the slot is refunded (best-effort).
+ * calling the model (so concurrent sends can't overshoot), then calls Gemini
+ * with the server-held key. The slot is refunded on failure (best-effort) and
+ * on a safety refusal, since neither gives the user an answer.
  * Request: { history: [{ isMe: 'true'|'false', text: string }, ...] }
- * Response: { reply } on success, or { capReached: true } when the cap is hit.
+ * Response: { reply } on success, { capReached: true } when the cap is hit, or
+ * { reply, blocked: true } when Gemini declined to answer.
  */
-exports.sendDodoMessage = onCall({secrets: [GROQ_API_KEY]}, async (request) => {
+exports.sendDodoMessage = onCall({secrets: [GEMINI_API_KEY]}, async (request) => {
     const uid = request.auth && request.auth.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in to chat with Dodo.");
 
@@ -935,7 +958,7 @@ exports.sendDodoMessage = onCall({secrets: [GROQ_API_KEY]}, async (request) => {
 
     const userRef = db.collection("users").doc(uid);
     const usageRef = userRef.collection("usage").doc("dodo");
-    const {dodoDailyCap} = await getFreemiumLimits();
+    const {dodoDailyCap, dodoModel} = await getFreemiumLimits();
     const today = pktDateKey(new Date());
 
     // Reserve a slot atomically (free users only). Premium skips the counter.
@@ -954,7 +977,8 @@ exports.sendDodoMessage = onCall({secrets: [GROQ_API_KEY]}, async (request) => {
 
     if (reserved.capReached) return {capReached: true};
 
-    // Refunds a reserved free-tier slot when the downstream Groq call fails.
+    // Refunds a reserved free-tier slot when the model call fails or is
+    // refused — the user got no answer, so it should not cost them a turn.
     const refund = async () => {
         if (reserved.premium) return;
         try {
@@ -971,54 +995,64 @@ exports.sendDodoMessage = onCall({secrets: [GROQ_API_KEY]}, async (request) => {
     };
 
     try {
-        const reply = await callGroq(history);
+        const reply = await callGemini(history, dodoModel);
         return {capReached: false, reply};
     } catch (e) {
         await refund();
-        logger.error("sendDodoMessage Groq call failed:", e);
+
+        // Gemini declined on safety grounds. Never surface a technical error
+        // here: the likeliest trigger is a user disclosing something painful,
+        // and a failure message at that moment reads as rejection. Hand them
+        // back something warm that points at a human.
+        if (e instanceof DodoBlockedError) {
+            // Reason only — never the message content.
+            logger.warn(`Dodo reply blocked (${e.reason})`);
+            return {
+                capReached: false,
+                blocked: true,
+                reply: "I'm here with you, and I don't want to get this one " +
+                    "wrong. What you're carrying sounds heavy, and it deserves " +
+                    "more than I can give you right now — please reach out to " +
+                    "one of our listeners, or to someone you trust, so you're " +
+                    "not holding it alone.",
+            };
+        }
+
+        logger.error("sendDodoMessage Gemini call failed:", e);
         throw new HttpsError("unavailable", "Dodo is having trouble right now.");
     }
 });
 
 /**
- * Calls Groq's chat completions with Dodo's persona. Mirrors the persona/model
- * the client previously used. Node 22 provides global fetch.
- * @param {Array<{isMe:string, text:string}>} history Conversation so far.
- * @return {Promise<string>} The assistant reply text.
+ * Sends a Dodo turn to Gemini and returns the reply text.
+ *
+ * @param {Array<Object>} history Client chat history.
+ * @param {string} model Gemini model id (live-tunable via global_config).
+ * @return {Promise<string>} The assistant reply.
+ * @throws {DodoBlockedError} When Gemini refuses on safety grounds.
  */
-async function callGroq(history) {
-    const messages = [{
-        role: "system",
-        content: "You are Dodo, a comforting, empathetic, and exceptionally supportive mental health assistant. Do not break character. Provide short, practical, warm, and highly compassionate assistance to the user. Do not give medical diagnoses.",
-    }];
-    for (const msg of history) {
-        messages.push({
-            role: msg.isMe === "true" ? "user" : "assistant",
-            content: (msg.text || "").toString(),
-        });
+async function callGemini(history, model) {
+    const contents = toGeminiContents(history);
+    if (contents.length === 0) {
+        throw new Error("No usable user turn in history");
     }
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
+        `${encodeURIComponent(model)}:generateContent`;
+
+    const response = await fetch(url, {
         method: "POST",
         headers: {
-            "Authorization": `Bearer ${GROQ_API_KEY.value()}`,
+            "x-goog-api-key": GEMINI_API_KEY.value(),
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-            model: "llama-3.1-8b-instant",
-            messages,
-            temperature: 0.7,
-        }),
+        body: JSON.stringify(buildGeminiBody(contents)),
     });
+
     if (!response.ok) {
-        throw new Error(`Groq API ${response.status}: ${await response.text()}`);
+        throw new Error(`Gemini API ${response.status}: ${await response.text()}`);
     }
-    const data = await response.json();
-    try {
-        return data.choices[0].message.content;
-    } catch (e) {
-        return "I'm having a little trouble focusing right now. Could you repeat that?";
-    }
+    return parseGeminiReply(await response.json());
 }
 
 /**
