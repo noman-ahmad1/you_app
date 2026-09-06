@@ -268,3 +268,45 @@ describe('client flows still work after the lockdown', () => {
       { participantsActivity: { [ALICE]: true } }, { merge: true }));
   });
 });
+
+// ---------------------------------------------------------------------------
+// The admin panel is a separate web app authenticating as a role:'admin' user.
+// These pin the reads and writes it depends on, so a future rules change can't
+// break it silently.
+describe('admin panel access', () => {
+  it('an admin can list the whole users collection', async () => {
+    await assertSucceeds(getDocs(collection(as(ADMIN), 'users')));
+  });
+  it('an admin can read any user doc', async () => {
+    await assertSucceeds(getDoc(doc(as(ADMIN), 'users', ALICE)));
+  });
+  it('an admin can read mood entries for the dashboard', async () => {
+    await assertSucceeds(getDocs(collection(as(ADMIN), 'mood')));
+  });
+  it('an admin can read vetting documents', async () => {
+    await assertSucceeds(getDoc(doc(as(ADMIN), 'volunteer_info', VERA, 'private', 'vetting')));
+  });
+  it('an admin can read a chat transcript for escalation review', async () => {
+    await assertSucceeds(getDoc(doc(as(ADMIN), 'chats', 'c1', 'messages', 'msg1')));
+  });
+  it('an admin still CANNOT rewrite message content', async () => {
+    await assertFails(updateDoc(doc(as(ADMIN), 'chats', 'c1', 'messages', 'msg1'), { text: 'edited' }));
+  });
+  it('an admin can end a chat', async () => {
+    await assertSucceeds(updateDoc(doc(as(ADMIN), 'chats', 'c1'), { status: 'completed', endedBy: 'admin' }));
+  });
+  it('an admin can triage the escalation feed', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'escalations', 'e1'), { userId: ALICE, status: 'open' });
+    });
+    await assertSucceeds(updateDoc(doc(as(ADMIN), 'escalations', 'e1'), { status: 'acknowledged' }));
+  });
+  it('an admin can author a whisper; a user can only read it', async () => {
+    await assertSucceeds(setDoc(doc(as(ADMIN), 'whispers', '2026-09-06'), { text: 'Be gentle with yourself.', active: true }));
+    await assertSucceeds(getDoc(doc(as(ALICE), 'whispers', '2026-09-06')));
+    await assertFails(setDoc(doc(as(ALICE), 'whispers', '2026-09-06'), { text: 'nope', active: true }));
+  });
+  it('an admin can moderate a volunteer profile', async () => {
+    await assertSucceeds(updateDoc(doc(as(ADMIN), 'volunteer_info', VERA), { status: 'verified' }));
+  });
+});
