@@ -1,7 +1,7 @@
 name: you_app
 description: A new Flutter project.
 publish_to: 'none'
-version: 1.0.0+9
+version: 1.1.0+10
 
 environment:
   sdk: '>=3.0.3 <4.0.0'
@@ -20,6 +20,10 @@ dependencies:
   flutter_zoom_drawer: ^3.2.0
   get_it: ^8.0.3
   google_fonts: ^6.2.1
+  # Imported directly by the volunteer_signup_info tabs. Declared
+  # explicitly rather than relied on as a transitive dep of stacked —
+  # if stacked ever drops it, those three files stop compiling.
+  provider: ^6.1.5+1
   google_sign_in: ^6.3.0
   google_sign_in_dartio: ^0.3.0
   image_picker: ^1.2.0
@@ -61,6 +65,7 @@ dependencies:
 # older record_platform_interface and fails to compile against the 1.6.0 that
 # record_android pulls in. We don't ship Linux, so force a record_linux that
 # implements the current interface to keep the build green.
+  stacked_shared: any
 dependency_overrides:
   record_linux: 1.3.1
 

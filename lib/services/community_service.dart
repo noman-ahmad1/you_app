@@ -25,7 +25,6 @@ class CommunityService with FirestoreServiceMixin {
   AnalyticsService get _analytics => locator<AnalyticsService>();
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
-
   // 1. Fetch all available communities (capped to avoid unbounded reads)
   Stream<List<Map<String, dynamic>>> getCommunities({int limit = 50}) {
     return db
@@ -44,11 +43,7 @@ class CommunityService with FirestoreServiceMixin {
 
   // 1b. Stream a single community document (for live fields like isLocked).
   Stream<Map<String, dynamic>?> getCommunity(String communityId) {
-    return db
-        .collection('communities')
-        .doc(communityId)
-        .snapshots()
-        .map((doc) {
+    return db.collection('communities').doc(communityId).snapshots().map((doc) {
       if (!doc.exists) return null;
       final data = doc.data()!;
       data['id'] = doc.id;
@@ -102,16 +97,25 @@ class CommunityService with FirestoreServiceMixin {
     return const CreatePostResult(capReached: false);
   }
 
-  // 4. Stream replies for a specific post (thread)
-  Stream<List<ThreadReply>> getThreadReplies(String postId) {
+  /// 4. Stream the most recent replies for a post (thread).
+  ///
+  /// Bounded deliberately — this was unlimited, so a popular thread streamed
+  /// every reply live. Note the query orders DESCENDING so the limit keeps the
+  /// NEWEST replies (ordering ascending would have clipped the newest ones,
+  /// which is the opposite of what a thread reader wants), then reverses in
+  /// memory so the view still renders oldest-to-newest as before.
+  Stream<List<ThreadReply>> getThreadReplies(String postId, {int limit = 100}) {
     return db
         .collection('posts')
         .doc(postId)
         .collection('replies')
-        .orderBy('createdAt', descending: false)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => ThreadReply.fromMap(doc.data(), doc.id))
+            .toList()
+            .reversed
             .toList());
   }
 
@@ -151,7 +155,7 @@ class CommunityService with FirestoreServiceMixin {
     if (uid == null) return;
 
     final postRef = db.collection('posts').doc(postId);
-    
+
     if (isLiked) {
       // User has already liked it -> unlike
       await postRef.update({
@@ -169,12 +173,14 @@ class CommunityService with FirestoreServiceMixin {
   }
 
   // 7. Toggle like on a reply
-  Future<void> toggleLikeReply(String postId, String replyId, bool isLiked) async {
+  Future<void> toggleLikeReply(
+      String postId, String replyId, bool isLiked) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final replyRef = db.collection('posts').doc(postId).collection('replies').doc(replyId);
-    
+    final replyRef =
+        db.collection('posts').doc(postId).collection('replies').doc(replyId);
+
     if (isLiked) {
       await replyRef.update({
         'likedBy': FieldValue.arrayRemove([uid]),
@@ -188,13 +194,38 @@ class CommunityService with FirestoreServiceMixin {
     }
   }
 
-  // 8. Join a community
+  // 8. Delete a thread (author only).
+  //
+  // Unlike CREATE — which must go through a callable because rules deny client
+  // writes (the freemium cap would be bypassed otherwise) — DELETE is a direct
+  // client write: firestore.rules already restricts it to the author or an admin.
+  // The `onPostDeleted` Cloud Function cascades the replies subcollection.
+  Future<void> deletePost(String postId) async {
+    await db.collection('posts').doc(postId).delete();
+  }
+
+  // 9. Delete a reply (author only).
+  //
+  // The parent's `replyCount` is decremented by the `onReplyDeleted` trigger —
+  // deliberately NOT here, since a client that dies mid-write would otherwise
+  // leave the count wrong. Note the free monthly reply quota is NOT refunded:
+  // delete-and-repost would be a cap bypass.
+  Future<void> deleteReply(String postId, String replyId) async {
+    await db
+        .collection('posts')
+        .doc(postId)
+        .collection('replies')
+        .doc(replyId)
+        .delete();
+  }
+
+  // 10. Join a community
   Future<void> joinCommunity(String communityId) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
     final batch = db.batch();
-    
+
     // Update the user's joinedCommunities list
     final userRef = db.collection('users').doc(uid);
     batch.update(userRef, {
@@ -203,12 +234,9 @@ class CommunityService with FirestoreServiceMixin {
 
     // Optionally increment the members count in the community doc
     final communityRef = db.collection('communities').doc(communityId);
-    batch.update(communityRef, {
-      'membersCount': FieldValue.increment(1)
-    });
+    batch.update(communityRef, {'membersCount': FieldValue.increment(1)});
 
     await batch.commit();
     _analytics.logCommunityJoined(communityId: communityId);
   }
 }
-

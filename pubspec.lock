@@ -1297,7 +1297,7 @@ packages:
     source: hosted
     version: "6.5.0"
   provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: provider
       sha256: "4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272"
@@ -1558,7 +1558,7 @@ packages:
     source: hosted
     version: "1.6.0"
   stacked_shared:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: stacked_shared
       sha256: "3d69b34d87422b78a7e5123681d3f4bcdd79757170454933f68795c54812d003"

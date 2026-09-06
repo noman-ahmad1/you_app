@@ -2,17 +2,14 @@ import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:lottie/lottie.dart';
 import 'package:you_app/ui/shared/app_showcase.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
-import 'package:you_app/ui/common/app_theme.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/views/home/home_viewmodel.dart';
 // import 'package:you_app/ui/views/home/volunteer_card.dart';
@@ -21,11 +18,11 @@ import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/shared/verify_email_nudge.dart';
 
 class HomeScreen extends ViewModelWidget<HomeViewModel> {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, HomeViewModel viewModel) {
-    Widget _buildShowcase(
+    Widget buildShowcase(
         {required GlobalKey key,
         required String title,
         required String description,
@@ -215,7 +212,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                             ),
                             Space.verticalSpaceTiny(context),
                             // Mood Card
-                            _buildShowcase(
+                            buildShowcase(
                               key: viewModel.moodKey,
                               title: 'Mood Tracker',
                               description:
@@ -325,7 +322,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                             ),
                             Space.verticalSpaceTiny(context),
                             // Journal Card
-                            _buildShowcase(
+                            buildShowcase(
                               key: viewModel.journalKey,
                               title: 'Journaling',
                               description:
@@ -579,7 +576,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                _buildShowcase(
+                                buildShowcase(
                                   key: viewModel.communitiesKey,
                                   title: 'Communities',
                                   description:
@@ -650,7 +647,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                     ),
                                   ),
                                 ),
-                                _buildShowcase(
+                                buildShowcase(
                                   key: viewModel.volunteersKey,
                                   title: 'Volunteers',
                                   description:
@@ -727,7 +724,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                _buildShowcase(
+                                buildShowcase(
                                   key: viewModel.soothingSoundsKey,
                                   title: 'Soothing Sounds',
                                   description:
@@ -739,7 +736,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
                                     onTap: viewModel.navigateToSoothingSounds,
                                   ),
                                 ),
-                                _buildShowcase(
+                                buildShowcase(
                                   key: viewModel.breatheKey,
                                   title: 'Breathe',
                                   description:
@@ -768,7 +765,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
           alignment: Alignment.bottomRight,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(0, 0, 20, 200),
-            child: _buildShowcase(
+            child: buildShowcase(
               key: viewModel.dodoKey,
               title: 'AI Dodo',
               description:
@@ -821,7 +818,7 @@ class HomeScreen extends ViewModelWidget<HomeViewModel> {
 class _AnimatedDodoIcon extends StatefulWidget {
   final VoidCallback onTap;
 
-  const _AnimatedDodoIcon({Key? key, required this.onTap}) : super(key: key);
+  const _AnimatedDodoIcon({required this.onTap});
 
   @override
   State<_AnimatedDodoIcon> createState() => _AnimatedDodoIconState();

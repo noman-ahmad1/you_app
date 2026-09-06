@@ -6,6 +6,7 @@ import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/push_notification_service.dart';
 import 'package:you_app/services/monetization_service.dart';
+import 'package:you_app/services/presence_service.dart';
 
 class StartupViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
@@ -16,14 +17,26 @@ class StartupViewModel extends BaseViewModel {
     // Initialize MonetizationService silently in the background
     locator<MonetizationService>();
 
-    // You can keep a short delay for a splash screen effect
-    await Future.delayed(const Duration(seconds: 2));
+    // Construct PresenceService so it starts listening to auth. It's a lazy
+    // singleton, so without this touch it would never exist and a volunteer's
+    // heartbeat would never beat — leaving them advertised as available long
+    // after their app died.
+    locator<PresenceService>();
+
+    // No artificial splash delay. The splash stays visible for as long as
+    // getCurrentUserRole() below actually needs (cache-first, then a bounded
+    // server read), which is the only wait the user should pay for.
 
     // --- Role-Based Navigation Logic ---
 
     // Assuming AuthenticationService provides a simple way to check the current user's role
     final userRole = await _authenticationService.getCurrentUserRole();
     AppLog.info('StartupViewModel', 'Detected user role: $userRole');
+
+    // Defence in depth: a suspended/banned/deleted account is signed out by
+    // AuthenticationService._enforceAccountStatus (which also navigates to
+    // Welcome) — never route one into the app from the splash.
+    if (_authenticationService.currentUser?.isBlocked == true) return;
 
     if (userRole == 'volunteer') {
       final currentUser = _authenticationService.currentUser;
@@ -32,8 +45,10 @@ class StartupViewModel extends BaseViewModel {
           Routes.volunteerSignupInfoView,
           arguments: VolunteerSignupInfoViewArguments(uid: currentUser.uid),
         );
-      } else if (currentUser != null && currentUser.status == 'pending_verification') {
-        await _navigationService.clearStackAndShow(Routes.volunteerPendingVerificationView);
+      } else if (currentUser != null &&
+          currentUser.status == 'pending_verification') {
+        await _navigationService
+            .clearStackAndShow(Routes.volunteerPendingVerificationView);
       } else {
         await _navigationService.clearStackAndShow(Routes.volunteerHomeView);
       }

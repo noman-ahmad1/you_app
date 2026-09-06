@@ -20,14 +20,14 @@ class VolunteerCard extends StatelessWidget {
   final VolunteerCardType type; // Use the enum
 
   const VolunteerCard({
-    Key? key,
+    super.key,
     required this.username,
     required this.avatarPath,
     required this.rating,
     required this.categories,
     required this.type,
     this.onActionTap, // Renamed parameter
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

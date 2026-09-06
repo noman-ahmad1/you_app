@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
-import 'package:you_app/app/app.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/shared/fade_slide_in.dart';
@@ -15,7 +14,7 @@ import "package:you_app/ui/shared/custom_lottie_loader.dart";
 // ... your other imports
 
 class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
-  const CommunitiesScreen({Key? key}) : super(key: key);
+  const CommunitiesScreen({super.key});
 
   @override
   Widget build(BuildContext context, HomeViewModel viewModel) {
@@ -191,33 +190,33 @@ class CommunitiesScreen extends ViewModelWidget<HomeViewModel> {
                                   return FadeSlideIn(
                                     index: index,
                                     child: CommunityCard(
-                                    title: community['name'] ?? 'Unknown',
-                                    description: community['description'] ??
-                                        'A quiet circle for those carrying heavy hearts.',
-                                    membersCount:
-                                        community['membersCount']?.toString() ??
-                                            '4,830',
-                                    postsToday:
-                                        community['postsToday']?.toString() ??
-                                            '128',
-                                    assetPath: community['imageAsset'] ??
-                                        AppConstants.lonliness,
-                                    coverPhotoUrl: community['cover_photo'],
-                                    isJoined: isJoined,
-                                    isJoining: viewModel
-                                        .isJoiningCommunity(communityId),
-                                    isLocked: community['isLocked'] == true,
-                                    onJoin: () {
-                                      viewModel.joinCommunity(communityId);
-                                    },
-                                    onTap: () {
-                                      // Navigate to the specific community chat
-                                      viewModel.navigateToCommunityChat(
-                                        communityId: community['id'],
-                                        communityName: community['name'],
-                                      );
-                                    },
-                                  ),
+                                      title: community['name'] ?? 'Unknown',
+                                      description: community['description'] ??
+                                          'A quiet circle for those carrying heavy hearts.',
+                                      membersCount: community['membersCount']
+                                              ?.toString() ??
+                                          '4,830',
+                                      postsToday:
+                                          community['postsToday']?.toString() ??
+                                              '128',
+                                      assetPath: community['imageAsset'] ??
+                                          AppConstants.lonliness,
+                                      coverPhotoUrl: community['cover_photo'],
+                                      isJoined: isJoined,
+                                      isJoining: viewModel
+                                          .isJoiningCommunity(communityId),
+                                      isLocked: community['isLocked'] == true,
+                                      onJoin: () {
+                                        viewModel.joinCommunity(communityId);
+                                      },
+                                      onTap: () {
+                                        // Navigate to the specific community chat
+                                        viewModel.navigateToCommunityChat(
+                                          communityId: community['id'],
+                                          communityName: community['name'],
+                                        );
+                                      },
+                                    ),
                                   );
                                 },
                               );

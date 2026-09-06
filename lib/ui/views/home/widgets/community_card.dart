@@ -41,10 +41,11 @@ class CommunityCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.background.withAlpha(200),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.withOpacity(0.15), width: 1),
+          border:
+              Border.all(color: Colors.grey.withValues(alpha: 0.15), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

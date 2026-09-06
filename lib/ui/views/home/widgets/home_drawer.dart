@@ -7,7 +7,7 @@ import 'package:you_app/ui/views/home/home_viewmodel.dart';
 class HomeDrawer extends StatelessWidget {
   final HomeViewModel viewModel;
 
-  const HomeDrawer({Key? key, required this.viewModel}) : super(key: key);
+  const HomeDrawer({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class HomeDrawer extends StatelessWidget {
                     radius: 28,
                     backgroundImage: user?.profilePictureUrl != null &&
                             user!.profilePictureUrl!.isNotEmpty
-                        ? NetworkImage(user!.profilePictureUrl!)
+                        ? NetworkImage(user.profilePictureUrl!)
                         : AssetImage(user?.defaultAvatar ??
                             AppConstants.avatarBinary) as ImageProvider,
                     backgroundColor: AppColors.secondaryVeryLight,

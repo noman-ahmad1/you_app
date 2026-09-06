@@ -13,7 +13,6 @@ import 'package:you_app/services/security_log_service.dart';
 class ChatService with FirestoreServiceMixin {
   AnalyticsService get _analytics => locator<AnalyticsService>();
 
-
   Future<void> deleteChatAndRequest({
     required String chatId,
     required String requestId, // The ID of the document in 'chat_requests'
@@ -42,12 +41,14 @@ class ChatService with FirestoreServiceMixin {
               .get();
           if (query.docs.isNotEmpty) {
             requestRef = query.docs.first.reference;
-            debugPrint("Defensively resolved real request ID: ${requestRef.id}");
+            debugPrint(
+                "Defensively resolved real request ID: ${requestRef.id}");
           }
         }
       }
     } catch (e) {
-      debugPrint("Could not fetch document directly (possibly permission denied due to wrong ID). Performing defensive fallback query: $e");
+      debugPrint(
+          "Could not fetch document directly (possibly permission denied due to wrong ID). Performing defensive fallback query: $e");
       final parts = chatId.split('_');
       if (parts.length == 2) {
         try {
@@ -59,7 +60,8 @@ class ChatService with FirestoreServiceMixin {
               .get();
           if (query.docs.isNotEmpty) {
             requestRef = query.docs.first.reference;
-            debugPrint("Defensively resolved real request ID on error: ${requestRef.id}");
+            debugPrint(
+                "Defensively resolved real request ID on error: ${requestRef.id}");
           }
         } catch (queryErr) {
           debugPrint("Failed to perform defensive fallback query: $queryErr");
@@ -189,13 +191,23 @@ class ChatService with FirestoreServiceMixin {
     await docRef.set(chatRoomData, SetOptions(merge: true));
   }
 
-  // Gets a real-time stream of messages for a specific chat room
-  Stream<List<ChatMessage>> getChatMessagesStream(String chatId) {
+  /// Real-time stream of the most recent messages in a chat room.
+  ///
+  /// Bounded deliberately. This was previously unlimited, so every new message
+  /// re-delivered and re-parsed the entire history. Chats auto-expire after 24h
+  /// (see HomeViewModel.chatLifetime and the expireStaleChats function), so
+  /// [limit] is set well above any realistic session rather than at a value
+  /// that would clip a live conversation. The list renders with reverse: true
+  /// over this descending order, so the newest [limit] messages are the ones
+  /// kept.
+  Stream<List<ChatMessage>> getChatMessagesStream(String chatId,
+      {int limit = 200}) {
     return db
         .collection('chats')
         .doc(chatId)
         .collection('messages')
         .orderBy('timestamp', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => ChatMessage.fromJson(doc.data()))
@@ -203,7 +215,8 @@ class ChatService with FirestoreServiceMixin {
   }
 
   /// Sets whether a user is currently active in a chat room.
-  Future<void> setChatPresence(String chatId, String userId, bool isActive) async {
+  Future<void> setChatPresence(
+      String chatId, String userId, bool isActive) async {
     await db.collection('chats').doc(chatId).set({
       'participantsActivity': {
         userId: isActive,
@@ -239,7 +252,8 @@ class ChatService with FirestoreServiceMixin {
 
   /// Creates an in-app notification for the message recipient, unless they are
   /// currently active in the chat. Best-effort: errors are logged, not thrown.
-  Future<void> _notifyRecipientOfMessage(String chatId, ChatMessage message) async {
+  Future<void> _notifyRecipientOfMessage(
+      String chatId, ChatMessage message) async {
     try {
       final parts = chatId.split('_');
       final recipientId =
@@ -322,7 +336,8 @@ class ChatService with FirestoreServiceMixin {
 
     try {
       await batch.commit();
-      debugPrint("Successfully deleted all chats and requests for user $userId");
+      debugPrint(
+          "Successfully deleted all chats and requests for user $userId");
     } catch (e) {
       debugPrint("Error committing batch delete for user chats: $e");
       rethrow;

@@ -1,7 +1,6 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -11,9 +10,6 @@ import 'package:you_app/ui/views/verify_email/email_verification_gate.dart';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:you_app/app/app.bottomsheets.dart';
-import 'package:you_app/app/app.dialogs.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
@@ -29,12 +25,9 @@ import 'package:you_app/services/block_service.dart';
 import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
-import 'package:you_app/services/journal_service.dart';
 import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/services/community_service.dart';
-import 'package:you_app/ui/common/app_constants.dart';
-import 'package:you_app/ui/common/app_strings.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 
@@ -45,24 +38,19 @@ class HomeViewModel extends ReactiveViewModel {
   @override
   List<ListenableServiceMixin> get listenableServices =>
       [_authenticationService];
-  // Secondary player for short sound effects (e.g., swipe)
-  final AudioPlayer _fxPlayer = AudioPlayer();
-  // Main player for soothing music audio
-  final AudioPlayer _player = AudioPlayer();
   final _dialogService = locator<DialogService>();
-  final _bottomSheetService = locator<BottomSheetService>();
 
   List<AppUser> _volunteers = [];
   List<AppUser> get volunteers => _volunteers;
   AppUser? get currentUser => _authenticationService.currentUser;
 
-  Map<String, List<String>> _volunteerTags = {};
+  final Map<String, List<String>> _volunteerTags = {};
   Map<String, List<String>> get volunteerTags => _volunteerTags;
 
-  Map<String, double> _volunteerRatings = {};
+  final Map<String, double> _volunteerRatings = {};
   Map<String, double> get volunteerRatings => _volunteerRatings;
 
-  List<String> _selectedFilterTags = [];
+  final List<String> _selectedFilterTags = [];
   List<String> get selectedFilterTags => _selectedFilterTags;
 
   List<AppUser> get filteredVolunteers {
@@ -127,15 +115,13 @@ class HomeViewModel extends ReactiveViewModel {
   bool get hasActiveInteraction =>
       pendingRequest != null || activeChatRequest != null;
 
-  bool _isPlaying = false;
+  final bool _isPlaying = false;
   bool get isPlaying => _isPlaying;
-  String get counterLabel => 'Counter is: $_counter';
   String get currentUserName =>
       _authenticationService.currentUser?.firstName ?? 'there';
   String get currentUserEmail =>
       _authenticationService.currentUser?.email ?? 'visitor@you.app';
 
-  int _counter = 0;
   int currentIndex = 1;
 
   String _todayWhisper = 'Some days, surviving is a form of bravery';
@@ -256,19 +242,14 @@ class HomeViewModel extends ReactiveViewModel {
     return streak;
   }
 
+  /// Loads today's admin-curated whisper, keeping the bundled default if none
+  /// is set. Previously this fetched live from zenquotes.io — an unreviewed
+  /// third-party endpoint feeding text straight to users in crisis.
   Future<void> fetchTodayWhisper() async {
-    try {
-      final response = await http.get(Uri.parse('https://zenquotes.io/api/today'));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data.isNotEmpty && data[0]['q'] != null) {
-          _todayWhisper = data[0]['q'];
-          notifyListeners();
-        }
-      }
-    } catch (e) {
-      debugPrint("Failed to fetch today's whisper: $e");
-    }
+    final whisper = await locator<AppContentService>().whisperOfTheDay();
+    if (whisper == null || whisper.isEmpty) return;
+    _todayWhisper = whisper;
+    notifyListeners();
   }
 
   void onTabTapped(int index) {
@@ -286,16 +267,6 @@ class HomeViewModel extends ReactiveViewModel {
 
   void navigateToPremium() {
     PremiumHelper.open(source: 'home_drawer');
-  }
-
-  void setIndex(int value) {
-    _counter++;
-    rebuildUi();
-  }
-
-  void incrementCounter() {
-    _counter++;
-    rebuildUi();
   }
 
   bool isCommunityJoined(String communityId) {
@@ -378,12 +349,26 @@ class HomeViewModel extends ReactiveViewModel {
 
       // Free user is out of welcome chats — show the paywall instead.
       if (result.capReached) {
-        locator<AnalyticsService>().logGateHit(feature: PaywallFeature.welcomeChat);
+        locator<AnalyticsService>()
+            .logGateHit(feature: PaywallFeature.welcomeChat);
         setBusy(false);
         await PaywallHelper.show(feature: PaywallFeature.welcomeChat);
         return;
       }
       // Success is handled by the stream listener updating the UI state.
+    } on FirebaseFunctionsException catch (e) {
+      // The listener went dark between rendering this list and the tap — the
+      // server re-checks presence and refuses rather than filing a request that
+      // would never be answered. Say so plainly instead of a generic error.
+      final offline = e.code == 'failed-precondition' || e.code == 'not-found';
+      await _dialogService.showDialog(
+        title: offline ? 'They just stepped away' : 'Error',
+        description: offline
+            ? 'This listener is no longer available. Please choose someone else '
+                '— we\'ll refresh the list for you.'
+            : 'Could not send request.',
+        buttonTitle: 'OK',
+      );
     } catch (e) {
       await _dialogService.showDialog(
           title: 'Error', description: 'Could not send request.');
@@ -636,10 +621,9 @@ class HomeViewModel extends ReactiveViewModel {
           for (final uid in missing) {
             final info = infos[uid];
             _volunteerTags[uid] = info?.tags ?? [];
-            _volunteerRatings[uid] =
-                (info != null && info.averageRating > 0)
-                    ? info.averageRating
-                    : 4.0;
+            _volunteerRatings[uid] = (info != null && info.averageRating > 0)
+                ? info.averageRating
+                : 4.0;
           }
         } catch (e) {
           AppLog.error('HomeViewModel.listenToVolunteers', e);
@@ -738,22 +722,6 @@ class HomeViewModel extends ReactiveViewModel {
 
   void navigateToProfile() {
     _navigationService.navigateToProfileView();
-  }
-
-  void showDialog() {
-    _dialogService.showCustomDialog(
-      variant: DialogType.infoAlert,
-      title: 'Stacked Rocks!',
-      description: 'Give stacked $_counter stars on Github',
-    );
-  }
-
-  void showBottomSheet() {
-    _bottomSheetService.showCustomSheet(
-      variant: BottomSheetType.notice,
-      title: ksHomeBottomSheetTitle,
-      description: ksHomeBottomSheetDescription,
-    );
   }
 
   final List<GlobalKey<NavigatorState>> navigatorKeys = [

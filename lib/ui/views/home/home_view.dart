@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:stacked/stacked.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:you_app/ui/shared/app_showcase.dart';
@@ -13,7 +12,7 @@ import 'package:you_app/ui/views/home/tabs/volunteers.dart';
 
 class HomeView extends StackedView<HomeViewModel> {
   final int initialIndex;
-  const HomeView({Key? key, this.initialIndex = 1}) : super(key: key);
+  const HomeView({super.key, this.initialIndex = 1});
 
   @override
   void onViewModelReady(HomeViewModel viewModel) {

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -17,7 +18,7 @@ import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 // This is correct: ViewModelWidget uses the parent's HomeViewModel
 class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
-  const VolunteersScreen({Key? key}) : super(key: key);
+  const VolunteersScreen({super.key});
 
   @override
   Widget build(BuildContext context, HomeViewModel viewModel) {
@@ -361,12 +362,21 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
   }
 
   /// Widget to show the list of available volunteers.
+  ///
+  /// A [CustomScrollView] so the tag filters can PIN to the top: the marketing
+  /// header scrolls away, the chips stay reachable while the user scrolls a long
+  /// list of listeners. Mirrors the journal screen's `_FilterBarHeaderDelegate`.
   Widget _buildVolunteerList(BuildContext context, HomeViewModel viewModel) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
+    // A SliverPersistentHeader needs a FIXED extent, but a FilterChip sizes
+    // itself. 48px is the chip's interactive height (kMinInteractiveDimension);
+    // +12 for the breathing room the old Column had below it.
+    const double chipsExtent = 48 + 12;
+
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverToBoxAdapter(
+          child: SizedBox(
             width: double.infinity,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,7 +407,6 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                           color: AppColors.secondary,
                         ),
                       ),
-                      // TextSpan(text: 'alone in this.'),
                     ],
                   ),
                 ),
@@ -410,94 +419,56 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
                     color: Colors.grey[700],
                   ),
                 ),
+                Space.verticalSpaceVTiny(context),
               ],
             ),
           ),
-          // Text(
-          //   'Hello ${viewModel.currentUserName},',
-          //   style: GoogleFonts.crimsonPro(
-          //       fontSize: 25,
-          //       fontWeight: FontWeight.w700,
-          //       color: AppColors.secondary),
-          // ),
-          // Text(
-          //   'Our volunteers are here to listen.',
-          //   textAlign: TextAlign.center,
-          //   style: GoogleFonts.crimsonPro(
-          //       fontSize: 17,
-          //       fontWeight: FontWeight.w500,
-          //       color: AppColors.primaryVeryDark),
-          // ),
-          Space.verticalSpaceVTiny(context),
-          // --- Tags Filter ---
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: AppConstants.volunteerTags.map((tag) {
-                final isSelected = viewModel.selectedFilterTags.contains(tag);
+        ),
+        // --- Tags filter — PINNED ---
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _TagFilterHeaderDelegate(
+            extent: chipsExtent,
+            selectedTags: viewModel.selectedFilterTags,
+            onTagTap: viewModel.toggleFilterTag,
+          ),
+        ),
+        if (viewModel.filteredVolunteers.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: _buildEmptyState(),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final volunteer = viewModel.filteredVolunteers[index];
+                final volunteerTags = viewModel.volunteerTags[volunteer.uid];
+                final volunteerRating =
+                    viewModel.volunteerRatings[volunteer.uid] ?? 4.0;
+                final displayTags =
+                    (volunteerTags != null && volunteerTags.isNotEmpty)
+                        ? volunteerTags
+                        : const ['Mental Health', 'Support'];
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: FilterChip(
-                    label: Text(
-                      tag,
-                      style: GoogleFonts.crimsonPro(
-                        color: isSelected ? Colors.white : AppColors.secondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    selected: isSelected,
-                    onSelected: (bool selected) {
-                      viewModel.toggleFilterTag(tag);
-                    },
-                    selectedColor: AppColors.secondary,
-                    backgroundColor: AppColors.background,
-                    checkmarkColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: const BorderSide(
-                        color: AppColors.secondary,
-                        width: 1,
-                      ),
-                    ),
+                  padding: const EdgeInsets.only(bottom: 7.0),
+                  child: VolunteerCard(
+                    type: VolunteerCardType.availableChat,
+                    username: volunteer.fullName,
+                    avatarPath:
+                        volunteer.profilePictureUrl ?? volunteer.defaultAvatar,
+                    rating: volunteerRating.round(),
+                    categories: displayTags,
+                    onActionTap: () => viewModel.sendChatRequest(volunteer),
                   ),
                 );
-              }).toList(),
+              },
+              childCount: viewModel.filteredVolunteers.length,
             ),
           ),
-          Space.verticalSpaceTiny(context),
-          viewModel.filteredVolunteers.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: viewModel.filteredVolunteers.length,
-                  itemBuilder: (context, index) {
-                    final volunteer = viewModel.filteredVolunteers[index];
-                    final volunteerTags =
-                        viewModel.volunteerTags[volunteer.uid];
-                    final volunteerRating =
-                        viewModel.volunteerRatings[volunteer.uid] ?? 4.0;
-                    final displayTags =
-                        (volunteerTags != null && volunteerTags.isNotEmpty)
-                            ? volunteerTags
-                            : const ['Mental Health', 'Support'];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 7.0),
-                      child: VolunteerCard(
-                        type: VolunteerCardType.availableChat, // Correct type
-                        username: volunteer.fullName,
-                        avatarPath: volunteer.profilePictureUrl ??
-                            volunteer.defaultAvatar,
-                        rating: volunteerRating.round(),
-                        categories: displayTags,
-                        onActionTap: () => viewModel.sendChatRequest(volunteer),
-                      ),
-                    );
-                  },
-                ),
-          const SizedBox(height: 120),
-        ],
-      ),
+        // Clears the floating bottom nav bar.
+        const SliverToBoxAdapter(child: SizedBox(height: 120)),
+      ],
     );
   }
 
@@ -517,10 +488,88 @@ class VolunteersScreen extends ViewModelWidget<HomeViewModel> {
             style: GoogleFonts.crimsonPro(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
-                color: AppColors.secondary.withOpacity(0.7)),
+                color: AppColors.secondary.withValues(alpha: 0.7)),
           ),
         ],
       ),
     );
+  }
+}
+
+/// Pins the horizontal tag-filter chips to the top of the volunteers scroll, so
+/// they stay reachable while the listener list scrolls beneath them.
+///
+/// The strip is frosted (same treatment as the journal's filter bar) because the
+/// screen has an image background — an unpainted pinned header would let cards
+/// show straight through it as they scroll under.
+class _TagFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double extent;
+  final List<String> selectedTags;
+  final void Function(String tag) onTagTap;
+
+  _TagFilterHeaderDelegate({
+    required this.extent,
+    required this.selectedTags,
+    required this.onTagTap,
+  });
+
+  @override
+  double get minExtent => extent;
+
+  @override
+  double get maxExtent => extent;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          alignment: Alignment.centerLeft,
+          color: AppColors.background.withAlpha(overlapsContent ? 120 : 0),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: AppConstants.volunteerTags.map((tag) {
+                final isSelected = selectedTags.contains(tag);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: FilterChip(
+                    label: Text(
+                      tag,
+                      style: GoogleFonts.crimsonPro(
+                        color: isSelected ? Colors.white : AppColors.secondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    selected: isSelected,
+                    onSelected: (_) => onTagTap(tag),
+                    selectedColor: AppColors.secondary,
+                    backgroundColor: AppColors.background,
+                    checkmarkColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: const BorderSide(
+                        color: AppColors.secondary,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Without comparing the selection, tapping a chip would not repaint the
+  // PINNED header — the chip would appear not to respond.
+  @override
+  bool shouldRebuild(covariant _TagFilterHeaderDelegate oldDelegate) {
+    return oldDelegate.extent != extent ||
+        !listEquals(oldDelegate.selectedTags, selectedTags);
   }
 }

@@ -3,16 +3,20 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Non-secret, compile-time configuration values.
 class Environments {
   static const String appName = 'You';
+  static const String privacyUrl = 'https://you-pakistan.web.app/privacy';
+  static const String termsUrl = 'https://you-pakistan.web.app/terms';
   // static const String apiBaseURL = 'https://api.youtaicosmetic.net/';
   // static const String websiteURL = 'https://multi-salon.initappz.com/';
 }
 
-/// Runtime secrets loaded from the gitignored `.env` file (see `.env.example`).
-/// Returns an empty string if a key is missing so callers fail gracefully.
+/// Values loaded from the gitignored `.env` file (see `.env.example`).
+///
+/// NOTE: `.env` is declared as a Flutter asset, so everything here ships inside
+/// the APK/IPA in plain text and is recoverable with `unzip`. Only PUBLIC keys
+/// belong in this file. Server-side secrets (Groq, Gemini) live in Cloud
+/// Functions Secret Manager and are reached through callables — see
+/// `sendDodoMessage` in functions/index.js.
 class Secrets {
-  static String get groqApiKey => dotenv.env['GROQ_API_KEY'] ?? '';
-  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
-
   /// RevenueCat public SDK key (Android / Google Play). Safe to ship in the
   /// app, but kept with the other keys for consistency.
   static String get revenueCatAndroidKey =>
