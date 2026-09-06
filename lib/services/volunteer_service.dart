@@ -61,14 +61,63 @@ class VolunteerService with FirestoreServiceMixin {
     return result;
   }
 
-  // SET/CREATE: Save or overwrite the volunteer info document
+  /// Identity-document fields that must NEVER live on the public
+  /// `volunteer_info` doc. These are Firebase download URLs carrying their own
+  /// access token, so the URL *is* the file — and the public doc is read by
+  /// every user browsing the volunteer list.
+  static const vettingFields = <String>[
+    'idCardUrl',
+    'idCardBackUrl',
+    'studentIdUrl',
+    'studentIdBackUrl',
+  ];
+
+  /// SET/CREATE: save the volunteer info document.
+  ///
+  /// Vetting URLs are split out into `volunteer_info/{uid}/private/vetting`,
+  /// which the rules restrict to the owner and admins. Both writes go in one
+  /// batch so a volunteer's application can never land half-written.
   Future<void> saveInfo(String uid, Map<String, dynamic> data) async {
-    await db.collection('volunteer_info').doc(uid).set(data);
+    final public = Map<String, dynamic>.from(data)
+      ..removeWhere((k, _) => vettingFields.contains(k));
+    final vetting = <String, dynamic>{
+      for (final k in vettingFields)
+        if (data.containsKey(k)) k: data[k],
+    };
+
+    final batch = db.batch();
+    final infoRef = db.collection('volunteer_info').doc(uid);
+    batch.set(infoRef, public);
+    if (vetting.isNotEmpty) {
+      batch.set(infoRef.collection('private').doc('vetting'), vetting,
+          SetOptions(merge: true));
+    }
+    await batch.commit();
     _cache.invalidate(uid);
   }
 
-  // UPDATE: Generic update for the volunteer info document
+  /// Reads a volunteer's vetting documents. Permitted only for the volunteer
+  /// themselves and for admins; anyone else gets a permission error.
+  Future<Map<String, dynamic>?> getVetting(String uid) async {
+    final doc = await db
+        .collection('volunteer_info')
+        .doc(uid)
+        .collection('private')
+        .doc('vetting')
+        .get();
+    return doc.data();
+  }
+
+  /// UPDATE: generic update for the volunteer info document.
+  ///
+  /// Asserts in debug that no vetting field is being written to the public doc
+  /// — those belong in the private subcollection (see [saveInfo]).
   Future<void> update(String uid, Map<String, dynamic> data) async {
+    assert(
+      !data.keys.any(vettingFields.contains),
+      'Vetting URLs must not be written to the public volunteer_info doc. '
+      'Use saveInfo(), which routes them to volunteer_info/$uid/private/vetting.',
+    );
     await db.collection('volunteer_info').doc(uid).update(data);
     _cache.invalidate(uid);
   }
@@ -130,8 +179,8 @@ class VolunteerService with FirestoreServiceMixin {
 
       // Mark the source request reviewed atomically with the rating.
       if (requestRef != null) {
-        transaction
-            .set(requestRef, {'userReviewed': true}, SetOptions(merge: true));
+        transaction.set(
+            requestRef, {'userReviewed': true}, SetOptions(merge: true));
       }
     });
 

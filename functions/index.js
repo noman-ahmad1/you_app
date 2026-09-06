@@ -1,14 +1,14 @@
 // Import the v2 trigger for Firestore
-const { onDocumentDeleted, onDocumentCreated } = require("firebase-functions/v2/firestore");
+const {onDocumentDeleted, onDocumentCreated} = require("firebase-functions/v2/firestore");
 
 // Import the v2 scheduler + https triggers (for daily analytics aggregation)
-const { onSchedule } = require("firebase-functions/v2/scheduler");
-const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
-const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
+const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
+const {onDocumentUpdated} = require("firebase-functions/v2/firestore");
 
 // Groq API key — server-side secret (was previously shipped in the client .env).
 // Set with: firebase functions:secrets:set GROQ_API_KEY
-const { defineSecret } = require("firebase-functions/params");
+const {defineSecret} = require("firebase-functions/params");
 const GROQ_API_KEY = defineSecret("GROQ_API_KEY");
 
 // RevenueCat billing secrets.
@@ -41,7 +41,7 @@ const db = admin.firestore();
  */
 exports.cleanupChatroom = onDocumentDeleted("chats/{chatId}", async (event) => {
     // Get the 'chatId' from the event parameters
-    const { chatId } = event.params;
+    const {chatId} = event.params;
 
     logger.log(`Cleaning up messages for chatroom: ${chatId}`);
 
@@ -69,7 +69,7 @@ exports.cleanupChatroom = onDocumentDeleted("chats/{chatId}", async (event) => {
  * Idempotent: only `status == 'active'` chats are touched, so re-runs no-op.
  */
 exports.expireStaleChats = onSchedule(
-    { schedule: "every 1 hours", timeZone: "Asia/Karachi" },
+    {schedule: "every 1 hours", timeZone: "Asia/Karachi"},
     async () => {
         const cutoff = admin.firestore.Timestamp.fromMillis(
             Date.now() - 24 * 60 * 60 * 1000);
@@ -100,7 +100,7 @@ exports.expireStaleChats = onSchedule(
                 status: "completed",
                 endedBy: "system",
                 endedAt: now,
-            }, { merge: true });
+            }, {merge: true});
 
             // Complete the matching request too. New chats carry `requestId`;
             // older ones are resolved from the sorted participant ids in the id.
@@ -127,7 +127,7 @@ exports.expireStaleChats = onSchedule(
                 writer.set(requestRef, {
                     status: "completed",
                     endedAt: now,
-                }, { merge: true });
+                }, {merge: true});
             }
             count++;
         }
@@ -150,11 +150,11 @@ exports.onNotificationCreated = onDocumentCreated("users/{userId}/notifications/
         logger.log("No data associated with the event");
         return;
     }
-    
+
     // Extract the recipient ID directly from the document path
     const userId = event.params.userId;
     const notificationData = snap.data();
-    const { title, body, data } = notificationData;
+    const {title, body, data} = notificationData;
 
     logger.log(`Centralized Notification triggered for user: ${userId}`);
 
@@ -175,7 +175,7 @@ exports.onNotificationCreated = onDocumentCreated("users/{userId}/notifications/
 
         // Standardize data payload to String values for FCM compliance
         const standardizedData = {
-            click_action: "FLUTTER_NOTIFICATION_CLICK"
+            click_action: "FLUTTER_NOTIFICATION_CLICK",
         };
         if (data && typeof data === "object") {
             Object.keys(data).forEach((key) => {
@@ -188,23 +188,23 @@ exports.onNotificationCreated = onDocumentCreated("users/{userId}/notifications/
             token: fcmToken,
             notification: {
                 title: title || "New Update",
-                body: body || ""
+                body: body || "",
             },
             data: standardizedData,
             android: {
                 priority: "high",
                 notification: {
-                    sound: "default"
-                }
+                    sound: "default",
+                },
             },
             apns: {
                 payload: {
                     aps: {
                         sound: "default",
-                        badge: 1
-                    }
-                }
-            }
+                        badge: 1,
+                    },
+                },
+            },
         };
 
         const response = await admin.messaging().send(payload);
@@ -239,8 +239,8 @@ exports.onReplyCreated = onDocumentCreated("posts/{postId}/replies/{replyId}", a
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 data: {
                     postId: postId,
-                    route: "thread_detail"
-                }
+                    route: "thread_detail",
+                },
             });
             logger.log(`Created new_reply notification for user ${postData.authorId}`);
         }
@@ -250,7 +250,14 @@ exports.onReplyCreated = onDocumentCreated("posts/{postId}/replies/{replyId}", a
 });
 
 /**
- * Helper function to handle mentions in both posts and replies
+ * Notifies every user @-mentioned in a new post or reply.
+ *
+ * @param {Object} docData The created post/reply document's data.
+ * @param {string} postId Id of the parent post (the post itself, or the post
+ *   a reply belongs to).
+ * @param {string} triggerType Either "post" or "reply" — selects the
+ *   notification copy and deep-link route.
+ * @return {Promise<void>} Resolves once all mention notifications are written.
  */
 async function handleMentions(docData, postId, triggerType) {
     const mentionedUsers = docData.mentionedUsers || [];
@@ -285,8 +292,8 @@ async function handleMentions(docData, postId, triggerType) {
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             data: {
                 postId: postId,
-                route: "thread_detail"
-            }
+                route: "thread_detail",
+            },
         });
         logger.log(`Created new_mention notification for user ${userId}`);
     }
@@ -368,6 +375,7 @@ async function aggregateForDay(referenceInstant) {
         pendingVolunteers,
         newUsers,
         postsToday,
+        premiumUsers,
     ] = await Promise.all([
         countOf(usersRef),
         countOf(usersRef.where("role", "==", "volunteer")),
@@ -383,7 +391,29 @@ async function aggregateForDay(referenceInstant) {
         countOf(postsRef
             .where("createdAt", ">=", startTs)
             .where("createdAt", "<", nextTs)),
+        // Subscriptions overview (admin panel 30-day trend).
+        countOf(usersRef.where("subscriptionTier", "==", "premium")),
     ]);
+
+    // newPremium / churnedPremium can't be derived from a point-in-time count, so
+    // they're the DELTA vs the previous day's `premiumUsers`. This is an
+    // approximation: it nets out same-day upgrades and downgrades (a day with one
+    // of each shows 0/0), and is 0 on the first day where no prior doc exists.
+    // A precise figure would need a subscription-event log.
+    let newPremium = 0;
+    let churnedPremium = 0;
+    try {
+        const prevId = pktDateKey(new Date(startMs - 1000)); // 1s before day start
+        const prevSnap = await db.collection("daily_analytics").doc(prevId).get();
+        const prev = prevSnap.exists ? prevSnap.data().premiumUsers : undefined;
+        if (typeof prev === "number") {
+            const delta = premiumUsers - prev;
+            newPremium = delta > 0 ? delta : 0;
+            churnedPremium = delta < 0 ? -delta : 0;
+        }
+    } catch (e) {
+        logger.error(`premium delta lookup failed for ${dateId}:`, e);
+    }
 
     const counts = {
         totalUsers,
@@ -392,6 +422,9 @@ async function aggregateForDay(referenceInstant) {
         pendingVolunteers,
         newUsers,
         postsToday,
+        premiumUsers,
+        newPremium,
+        churnedPremium,
     };
 
     await db.collection("daily_analytics").doc(dateId).set(
@@ -399,11 +432,11 @@ async function aggregateForDay(referenceInstant) {
             ...counts,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         },
-        { merge: true },
+        {merge: true},
     );
 
     logger.log(`daily_analytics written for ${dateId}: ${JSON.stringify(counts)}`);
-    return { dateId, ...counts };
+    return {dateId, ...counts};
 }
 
 /**
@@ -412,7 +445,7 @@ async function aggregateForDay(referenceInstant) {
  * seed below, every calendar day ends up with exactly one daily_analytics doc.
  */
 exports.aggregateDailyAnalytics = onSchedule(
-    { schedule: "5 0 * * *", timeZone: "Asia/Karachi" },
+    {schedule: "5 0 * * *", timeZone: "Asia/Karachi"},
     async () => {
         // 1s before the start of today (Karachi) falls inside yesterday.
         const nowShifted = new Date(Date.now() + KARACHI_OFFSET_MS);
@@ -449,7 +482,7 @@ exports.runDailyAnalyticsNow = onCall(async (request) => {
     }
     try {
         const written = await aggregateForDay(new Date());
-        return { ok: true, written };
+        return {ok: true, written};
     } catch (error) {
         logger.error("runDailyAnalyticsNow failed:", error);
         throw new HttpsError("internal", "Failed to seed analytics.");
@@ -465,6 +498,73 @@ exports.runDailyAnalyticsNow = onCall(async (request) => {
 // these coexist with the existing onReply*/onPost* functions.
 // ============================================================================
 
+// --- Admin-tunable moderation config (app_settings/moderation_config) ---------
+// The server pass is the AUTHORITATIVE one, so it must honour the same admin
+// edits the app does — previously it silently ignored them and used only the
+// hard-coded DEFAULT_LISTS, meaning an admin's banned keyword (or the `enabled`
+// kill-switch) had no effect on delivered content. Cached briefly: these triggers
+// fire on every message/post/reply and the doc changes rarely.
+const MODERATION_CFG_TTL_MS = 5 * 60 * 1000;
+let moderationCfgCache = null; // { at: number, value: {enabled, lists} }
+
+/** @return {Promise<{enabled: boolean, lists: object}>} live moderation config. */
+async function getModerationConfig() {
+    const now = Date.now();
+    if (moderationCfgCache && now - moderationCfgCache.at < MODERATION_CFG_TTL_MS) {
+        return moderationCfgCache.value;
+    }
+    let value = {enabled: true, lists: {}};
+    try {
+        const snap = await db.collection("app_settings")
+            .doc("moderation_config").get();
+        const data = snap.exists ? snap.data() : {};
+
+        const clean = (v) => Array.isArray(v) ?
+            v.map((t) => String(t).toLowerCase().trim()).filter(Boolean) :
+            undefined;
+
+        const lists = {};
+        // New per-category shape written by the admin panel.
+        for (const key of ["hate", "violence", "sexual", "romance",
+            "offTopic", "contactIntent"]) {
+            const list = clean(data[key]);
+            if (list) lists[key] = list;
+        }
+        // Legacy explicit hard-block list → the `banned` (severe) category.
+        const banned = clean(data.bannedKeywords);
+        if (banned) lists.banned = banned;
+
+        value = {
+            // Legacy kill-switch; absent ⇒ moderation stays ON.
+            enabled: data.enabled !== false,
+            lists,
+        };
+    } catch (e) {
+        // Fail-safe: keep moderating with the bundled defaults.
+        logger.error("getModerationConfig failed, using defaults:", e);
+    }
+    moderationCfgCache = {at: now, value};
+    return value;
+}
+
+/**
+ * Throws when the community is locked (admin set `isLocked: true` → read-only).
+ * Fail-open on a read error so a transient Firestore blip can't block posting.
+ * @param {string} communityId the community to check.
+ */
+async function assertCommunityUnlocked(communityId) {
+    try {
+        const snap = await db.collection("communities").doc(communityId).get();
+        if (snap.exists && snap.data().isLocked === true) {
+            throw new HttpsError("failed-precondition",
+                "This community is locked and is currently read-only.");
+        }
+    } catch (e) {
+        if (e instanceof HttpsError) throw e;
+        logger.error(`assertCommunityUnlocked read failed for ${communityId}:`, e);
+    }
+}
+
 async function recordContentFlag(flag, sourceRef, result) {
     await db.collection("moderation_flags").add(flag);
     try {
@@ -474,7 +574,7 @@ async function recordContentFlag(flag, sourceRef, result) {
                 categories: result.categories,
                 masked: result.didMask,
             },
-        }, { merge: true });
+        }, {merge: true});
     } catch (e) {
         logger.error("Failed to tag moderated doc:", e);
     }
@@ -485,10 +585,12 @@ exports.moderateChatMessage = onDocumentCreated("chats/{chatId}/messages/{messag
     if (!snap) return;
     const data = snap.data();
     const text = data.text || "";
-    const result = moderation.inspect(text);
+    const cfg = await getModerationConfig();
+    if (!cfg.enabled) return; // admin kill-switch
+    const result = moderation.inspect(text, cfg.lists);
     if (!result.flagged) return;
 
-    const { chatId, messageId } = event.params;
+    const {chatId, messageId} = event.params;
     const senderId = data.senderId || "";
     const recipientId = chatId.split("_").find((id) => id !== senderId) || "";
 
@@ -514,7 +616,9 @@ exports.moderatePost = onDocumentCreated("posts/{postId}", async (event) => {
     if (!snap) return;
     const data = snap.data();
     const text = data.content || "";
-    const result = moderation.inspect(text);
+    const cfg = await getModerationConfig();
+    if (!cfg.enabled) return; // admin kill-switch
+    const result = moderation.inspect(text, cfg.lists);
     if (!result.flagged) return;
 
     await recordContentFlag({
@@ -538,7 +642,9 @@ exports.moderateReply = onDocumentCreated("posts/{postId}/replies/{replyId}", as
     if (!snap) return;
     const data = snap.data();
     const text = data.content || "";
-    const result = moderation.inspect(text);
+    const cfg = await getModerationConfig();
+    if (!cfg.enabled) return; // admin kill-switch
+    const result = moderation.inspect(text, cfg.lists);
     if (!result.flagged) return;
 
     await recordContentFlag({
@@ -641,11 +747,16 @@ async function reserveMonthlyQuota(tx, usageRef, monthKey, limit, premium) {
     const data = snap.exists ? snap.data() : {};
     const count = data.month === monthKey ? (data.count || 0) : 0;
     if (count >= limit) return true; // cap reached
-    tx.set(usageRef, { month: monthKey, count: count + 1 });
+    tx.set(usageRef, {month: monthKey, count: count + 1});
     return false;
 }
 
-/** @param {Object} userData A user doc's data. @return {boolean} premium & unexpired. */
+/**
+ * Whether a user document represents an active premium entitlement.
+ *
+ * @param {Object} userData A user doc's data.
+ * @return {boolean} True when the tier is premium and not past its expiry.
+ */
 function isUserPremium(userData) {
     if (!userData || userData.subscriptionTier !== "premium") return false;
     const exp = userData.subscription_expiry;
@@ -680,7 +791,7 @@ async function applyEntitlement(uid, entitled, expiryMs, source) {
             subscription_expiry: expiryMs ?
                 admin.firestore.Timestamp.fromMillis(expiryMs) : null,
         };
-        await userRef.set(update, { merge: true });
+        await userRef.set(update, {merge: true});
         return;
     }
     // Revoke path — protect admin grants from being flipped to free.
@@ -690,7 +801,7 @@ async function applyEntitlement(uid, entitled, expiryMs, source) {
         logger.info(`applyEntitlement: skip revoke for admin grant ${uid}`);
         return;
     }
-    await userRef.set({ subscriptionTier: "free" }, { merge: true });
+    await userRef.set({subscriptionTier: "free"}, {merge: true});
 }
 
 /**
@@ -699,25 +810,25 @@ async function applyEntitlement(uid, entitled, expiryMs, source) {
  * event type. Returns 2xx for handled events so RevenueCat does not retry.
  */
 exports.revenueCatWebhook = onRequest(
-    { secrets: [REVENUECAT_WEBHOOK_SECRET] },
+    {secrets: [REVENUECAT_WEBHOOK_SECRET]},
     async (req, res) => {
         const expected = REVENUECAT_WEBHOOK_SECRET.value();
         const provided = req.get("Authorization") || "";
         if (!expected || provided !== expected) {
-            res.status(401).json({ error: "Unauthorized" });
+            res.status(401).json({error: "Unauthorized"});
             return;
         }
 
         const event = req.body && req.body.event;
         if (!event || !event.type) {
-            res.status(400).json({ error: "Bad event" });
+            res.status(400).json({error: "Bad event"});
             return;
         }
 
         const uid = event.app_user_id;
         // Skip anonymous ids (user not yet aliased to a Firebase UID via logIn).
         if (!uid || uid.indexOf("$RCAnonymousID") === 0) {
-            res.status(200).json({ ok: true, skipped: "anonymous" });
+            res.status(200).json({ok: true, skipped: "anonymous"});
             return;
         }
 
@@ -736,10 +847,10 @@ exports.revenueCatWebhook = onRequest(
                 // BILLING_ISSUE (grace), TRANSFER, etc. — no entitlement change.
                 logger.info(`revenueCatWebhook: no-op ${event.type} for ${uid}`);
             }
-            res.status(200).json({ ok: true });
+            res.status(200).json({ok: true});
         } catch (error) {
             logger.error("revenueCatWebhook failed:", error);
-            res.status(500).json({ ok: false });
+            res.status(500).json({ok: false});
         }
     },
 );
@@ -752,7 +863,7 @@ exports.revenueCatWebhook = onRequest(
  * @return {Promise<{isPremium: boolean}>}
  */
 exports.refreshEntitlement = onCall(
-    { secrets: [REVENUECAT_REST_API_KEY] },
+    {secrets: [REVENUECAT_REST_API_KEY]},
     async (request) => {
         const uid = request.auth && request.auth.uid;
         if (!uid) {
@@ -769,7 +880,7 @@ exports.refreshEntitlement = onCall(
             const url = "https://api.revenuecat.com/v1/subscribers/" +
                 encodeURIComponent(uid);
             const resp = await fetch(url, {
-                headers: { "Authorization": `Bearer ${key}` },
+                headers: {"Authorization": `Bearer ${key}`},
             });
             if (resp.ok) {
                 const body = await resp.json();
@@ -802,7 +913,7 @@ exports.refreshEntitlement = onCall(
         if (entitled) {
             await applyEntitlement(uid, true, expiryMs, "google_play");
         }
-        return { isPremium: entitled };
+        return {isPremium: entitled};
     },
 );
 
@@ -814,34 +925,34 @@ exports.refreshEntitlement = onCall(
  * Request: { history: [{ isMe: 'true'|'false', text: string }, ...] }
  * Response: { reply } on success, or { capReached: true } when the cap is hit.
  */
-exports.sendDodoMessage = onCall({ secrets: [GROQ_API_KEY] }, async (request) => {
+exports.sendDodoMessage = onCall({secrets: [GROQ_API_KEY]}, async (request) => {
     const uid = request.auth && request.auth.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in to chat with Dodo.");
 
-    const history = Array.isArray(request.data && request.data.history)
-        ? request.data.history
-        : [];
+    const history = Array.isArray(request.data && request.data.history) ?
+        request.data.history :
+        [];
 
     const userRef = db.collection("users").doc(uid);
     const usageRef = userRef.collection("usage").doc("dodo");
-    const { dodoDailyCap } = await getFreemiumLimits();
+    const {dodoDailyCap} = await getFreemiumLimits();
     const today = pktDateKey(new Date());
 
     // Reserve a slot atomically (free users only). Premium skips the counter.
     const reserved = await db.runTransaction(async (tx) => {
         const userSnap = await tx.get(userRef);
-        if (isUserPremium(userSnap.data())) return { premium: true };
+        if (isUserPremium(userSnap.data())) return {premium: true};
 
         const usageSnap = await tx.get(usageRef);
         const usage = usageSnap.exists ? usageSnap.data() : {};
         const count = usage.date === today ? (usage.count || 0) : 0;
-        if (count >= dodoDailyCap) return { capReached: true };
+        if (count >= dodoDailyCap) return {capReached: true};
 
-        tx.set(usageRef, { date: today, count: count + 1 }, { merge: true });
-        return { count: count + 1 };
+        tx.set(usageRef, {date: today, count: count + 1}, {merge: true});
+        return {count: count + 1};
     });
 
-    if (reserved.capReached) return { capReached: true };
+    if (reserved.capReached) return {capReached: true};
 
     // Refunds a reserved free-tier slot when the downstream Groq call fails.
     const refund = async () => {
@@ -851,7 +962,7 @@ exports.sendDodoMessage = onCall({ secrets: [GROQ_API_KEY] }, async (request) =>
                 const s = await tx.get(usageRef);
                 const d = s.exists ? s.data() : {};
                 if (d.date === today && (d.count || 0) > 0) {
-                    tx.set(usageRef, { date: today, count: d.count - 1 }, { merge: true });
+                    tx.set(usageRef, {date: today, count: d.count - 1}, {merge: true});
                 }
             });
         } catch (e) {
@@ -861,7 +972,7 @@ exports.sendDodoMessage = onCall({ secrets: [GROQ_API_KEY] }, async (request) =>
 
     try {
         const reply = await callGroq(history);
-        return { capReached: false, reply };
+        return {capReached: false, reply};
     } catch (e) {
         await refund();
         logger.error("sendDodoMessage Groq call failed:", e);
@@ -924,22 +1035,39 @@ exports.requestVolunteerChat = onCall(async (request) => {
     const uid = request.auth && request.auth.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in to request a chat.");
 
-    const { volunteerId, requesterName, requesterAvatarUrl, topic } = request.data || {};
+    const {volunteerId, requesterName, requesterAvatarUrl, topic} = request.data || {};
     if (!volunteerId || typeof volunteerId !== "string") {
         throw new HttpsError("invalid-argument", "A volunteerId is required.");
     }
 
     const userRef = db.collection("users").doc(uid);
+    const volunteerRef = db.collection("users").doc(volunteerId);
     const requestRef = db.collection("chat_requests").doc();
-    const { welcomeChats } = await getFreemiumLimits();
+    const {welcomeChats} = await getFreemiumLimits();
 
     const outcome = await db.runTransaction(async (tx) => {
+        // Reads first (Firestore transactions require it), volunteer included.
         const userSnap = await tx.get(userRef);
+        const volSnap = await tx.get(volunteerRef);
+
+        // Never file a request against a listener who has switched themselves
+        // off. The client's list is a snapshot, and a volunteer can toggle off
+        // between the render and the tap — this re-checks authoritatively.
+        // (It checks the TOGGLE only, not staleness: a volunteer who is online
+        // but hasn't opened the app in a while is still reachable by push.)
+        const vol = volSnap.exists ? volSnap.data() : null;
+        if (!vol || vol.role !== "volunteer" || vol.status !== "active") {
+            throw new HttpsError("not-found", "This listener is no longer available.");
+        }
+        if (vol.availabilityStatus !== "online") {
+            throw new HttpsError("failed-precondition", "volunteer-offline");
+        }
+
         const userData = userSnap.data() || {};
         const premium = isUserPremium(userData);
         const used = userData.welcomeChatsUsed || 0;
 
-        if (!premium && used >= welcomeChats) return { capReached: true };
+        if (!premium && used >= welcomeChats) return {capReached: true};
 
         tx.set(requestRef, {
             requesterId: uid,
@@ -956,12 +1084,12 @@ exports.requestVolunteerChat = onCall(async (request) => {
         });
 
         if (!premium) {
-            tx.set(userRef, { welcomeChatsUsed: used + 1 }, { merge: true });
+            tx.set(userRef, {welcomeChatsUsed: used + 1}, {merge: true});
         }
-        return { requestId: requestRef.id };
+        return {requestId: requestRef.id};
     });
 
-    if (outcome.capReached) return { capReached: true };
+    if (outcome.capReached) return {capReached: true};
 
     // Notify the volunteer (best-effort; mirrors the old client-side write).
     try {
@@ -971,7 +1099,7 @@ exports.requestVolunteerChat = onCall(async (request) => {
             type: "request_received",
             isRead: false,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            data: { requestId: outcome.requestId, route: "volunteer_dashboard" },
+            data: {requestId: outcome.requestId, route: "volunteer_dashboard"},
         });
     } catch (e) {
         logger.error("requestVolunteerChat notification failed:", e);
@@ -987,7 +1115,7 @@ exports.requestVolunteerChat = onCall(async (request) => {
         logger.error("requestVolunteerChat security log failed:", e);
     }
 
-    return { capReached: false, requestId: outcome.requestId };
+    return {capReached: false, requestId: outcome.requestId};
 });
 
 /**
@@ -1004,7 +1132,7 @@ exports.createCommunityPost = onCall(async (request) => {
     const uid = request.auth && request.auth.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in to post.");
 
-    const { communityId, content, authorUsername, mentionedUsers } =
+    const {communityId, content, authorUsername, mentionedUsers} =
         request.data || {};
     if (!communityId || typeof communityId !== "string") {
         throw new HttpsError("invalid-argument", "A communityId is required.");
@@ -1013,10 +1141,16 @@ exports.createCommunityPost = onCall(async (request) => {
         throw new HttpsError("invalid-argument", "Post content is required.");
     }
 
+    // Admin lock: a locked community is read-only. The app already hides the
+    // composer, but posts are created HERE (client writes are denied by rules),
+    // so this is the only place the lock can actually be enforced — it closes
+    // the forged/stale-client hole.
+    await assertCommunityUnlocked(communityId);
+
     const userRef = db.collection("users").doc(uid);
     const usageRef = userRef.collection("usage").doc("community_threads");
     const postRef = db.collection("posts").doc();
-    const { communityThreadsMonthly } = await getFreemiumLimits();
+    const {communityThreadsMonthly} = await getFreemiumLimits();
     const thisMonth = pktMonthKey(new Date());
 
     const outcome = await db.runTransaction(async (tx) => {
@@ -1025,7 +1159,7 @@ exports.createCommunityPost = onCall(async (request) => {
 
         const capReached = await reserveMonthlyQuota(
             tx, usageRef, thisMonth, communityThreadsMonthly, premium);
-        if (capReached) return { capReached: true };
+        if (capReached) return {capReached: true};
 
         // Free users can't mention (backstop against a forged client).
         const mentions =
@@ -1042,11 +1176,11 @@ exports.createCommunityPost = onCall(async (request) => {
             likedBy: [],
             mentionedUsers: mentions,
         });
-        return { postId: postRef.id };
+        return {postId: postRef.id};
     });
 
-    if (outcome.capReached) return { capReached: true };
-    return { capReached: false, postId: outcome.postId };
+    if (outcome.capReached) return {capReached: true};
+    return {capReached: false, postId: outcome.postId};
 });
 
 /**
@@ -1064,7 +1198,7 @@ exports.createCommunityReply = onCall(async (request) => {
     const uid = request.auth && request.auth.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign in to reply.");
 
-    const { postId, content, authorUsername, mentionedUsers } =
+    const {postId, content, authorUsername, mentionedUsers} =
         request.data || {};
     if (!postId || typeof postId !== "string") {
         throw new HttpsError("invalid-argument", "A postId is required.");
@@ -1077,7 +1211,19 @@ exports.createCommunityReply = onCall(async (request) => {
     const usageRef = userRef.collection("usage").doc("community_replies");
     const postRef = db.collection("posts").doc(postId);
     const replyRef = postRef.collection("replies").doc();
-    const { communityRepliesMonthly } = await getFreemiumLimits();
+
+    // Admin lock: replies into a locked community are read-only too. The parent
+    // post carries the communityId.
+    try {
+        const parent = await postRef.get();
+        const parentCommunityId = parent.exists && parent.data().communityId;
+        if (parentCommunityId) await assertCommunityUnlocked(parentCommunityId);
+    } catch (e) {
+        if (e instanceof HttpsError) throw e;
+        logger.error(`createCommunityReply lock check failed for ${postId}:`, e);
+    }
+
+    const {communityRepliesMonthly} = await getFreemiumLimits();
     const thisMonth = pktMonthKey(new Date());
 
     const outcome = await db.runTransaction(async (tx) => {
@@ -1086,7 +1232,7 @@ exports.createCommunityReply = onCall(async (request) => {
 
         const capReached = await reserveMonthlyQuota(
             tx, usageRef, thisMonth, communityRepliesMonthly, premium);
-        if (capReached) return { capReached: true };
+        if (capReached) return {capReached: true};
 
         const mentions =
             premium && Array.isArray(mentionedUsers) ? mentionedUsers : [];
@@ -1104,11 +1250,11 @@ exports.createCommunityReply = onCall(async (request) => {
         tx.update(postRef, {
             replyCount: admin.firestore.FieldValue.increment(1),
         });
-        return { replyId: replyRef.id };
+        return {replyId: replyRef.id};
     });
 
-    if (outcome.capReached) return { capReached: true };
-    return { capReached: false, replyId: outcome.replyId };
+    if (outcome.capReached) return {capReached: true};
+    return {capReached: false, replyId: outcome.replyId};
 });
 
 /**
@@ -1133,8 +1279,8 @@ exports.onChatRequestDeclined = onDocumentUpdated("chat_requests/{requestId}", a
             // this refund) — a set(merge) on a missing doc would recreate it.
             if (!snap.exists) return;
             const used = (snap.data() || {}).welcomeChatsUsed || 0;
-            tx.set(userRef, { welcomeChatsUsed: Math.max(0, used - 1) }, { merge: true });
-            tx.update(event.data.after.ref, { charged: false });
+            tx.set(userRef, {welcomeChatsUsed: Math.max(0, used - 1)}, {merge: true});
+            tx.update(event.data.after.ref, {charged: false});
         });
         logger.log(`Refunded welcome chat for ${requesterId} (declined).`);
     } catch (e) {
@@ -1162,7 +1308,7 @@ exports.onChatRequestDeleted = onDocumentDeleted("chat_requests/{requestId}", as
             // this refund) — a set(merge) on a missing doc would recreate it.
             if (!snap.exists) return;
             const used = (snap.data() || {}).welcomeChatsUsed || 0;
-            tx.set(userRef, { welcomeChatsUsed: Math.max(0, used - 1) }, { merge: true });
+            tx.set(userRef, {welcomeChatsUsed: Math.max(0, used - 1)}, {merge: true});
         });
         logger.log(`Refunded welcome chat for ${requesterId} (cancelled).`);
     } catch (e) {
@@ -1265,7 +1411,7 @@ exports.deleteMyAccount = onCall(async (request) => {
         // resolved the default bucket at init.
         const bucket = admin.storage().bucket("you-app-c6b1f.firebasestorage.app");
         await Promise.all(storageFolders.map((folder) =>
-            bucket.deleteFiles({ prefix: `${folder}/${uid}/` })
+            bucket.deleteFiles({prefix: `${folder}/${uid}/`})
                 .catch((e) => logger.error(
                     `deleteMyAccount: storage purge ${folder} failed:`, e)),
         ));
@@ -1283,7 +1429,7 @@ exports.deleteMyAccount = onCall(async (request) => {
     }
 
     logger.log(`deleteMyAccount: deleted account ${uid} (role ${role}).`);
-    return { ok: true };
+    return {ok: true};
 });
 
 /**
@@ -1291,7 +1437,7 @@ exports.deleteMyAccount = onCall(async (request) => {
  * replies subcollection so no orphans remain (mirrors cleanupChatroom).
  */
 exports.onPostDeleted = onDocumentDeleted("posts/{postId}", async (event) => {
-    const { postId } = event.params;
+    const {postId} = event.params;
     try {
         await db.recursiveDelete(
             db.collection("posts").doc(postId).collection("replies"),
@@ -1386,7 +1532,7 @@ exports.logSecurityEvent = onCall(async (request) => {
     } catch (e) {
         logger.error("logSecurityEvent failed:", e);
     }
-    return { ok: true };
+    return {ok: true};
 });
 
 /**
@@ -1395,7 +1541,7 @@ exports.logSecurityEvent = onCall(async (request) => {
  * docs pinned to an open case (retainForCase === true).
  */
 exports.cleanupSecurityLogs = onSchedule(
-    { schedule: "30 0 * * *", timeZone: "Asia/Karachi" },
+    {schedule: "30 0 * * *", timeZone: "Asia/Karachi"},
     async () => {
         let days = SECURITY_LOG_RETENTION_DAYS_DEFAULT;
         try {
@@ -1449,7 +1595,7 @@ exports.flagUserLogsForCase = onCall(async (request) => {
     if ((await roleOf(callerUid)) !== "admin") {
         throw new HttpsError("permission-denied", "Admins only.");
     }
-    const { uid, retain } = request.data || {};
+    const {uid, retain} = request.data || {};
     if (!uid || typeof uid !== "string") {
         throw new HttpsError("invalid-argument", "A target uid is required.");
     }
@@ -1468,13 +1614,338 @@ exports.flagUserLogsForCase = onCall(async (request) => {
         const page = await q.get();
         if (page.empty) break;
         page.docs.forEach((doc) => {
-            writer.update(doc.ref, { retainForCase });
+            writer.update(doc.ref, {retainForCase});
             updated++;
         });
         last = page.docs[page.docs.length - 1];
         if (page.size < 400) break;
     }
     await writer.close();
-    return { ok: true, uid, retainForCase, updated };
+    return {ok: true, uid, retainForCase, updated};
 });
 
+
+/**
+ * ONE-OFF MIGRATION (admin-only, idempotent).
+ *
+ * Historically an approved volunteer was written as `status:'verified'`, but the
+ * app's pending screen redirects on `'active'` and `streamAvailableVolunteers()`
+ * requires `'active'` — so every volunteer approved that way is stuck on the
+ * pending screen AND invisible in discovery. The canonical values are now:
+ *   'active'   = approved & live (discoverable)
+ *   'verified' = approved but DEACTIVATED by an admin (can sign in, not listed)
+ *
+ * This flips role=='volunteer' && status=='verified' → 'active'.
+ *
+ * ⚠️ ORDERING: run this BEFORE the admin panel starts using 'verified' to mean
+ * "deactivated", otherwise it would silently reactivate deactivated volunteers.
+ * Response: { ok, migrated }.
+ */
+/**
+ * One-off migration: move volunteer identity-document URLs off the public
+ * `volunteer_info/{uid}` document into `volunteer_info/{uid}/private/vetting`.
+ *
+ * Why: those are Firebase download URLs carrying their own access token, and
+ * `volunteer_info` is readable by every signed-in user (the discovery UI needs
+ * tags and ratings). Holding the URL is equivalent to holding the file, so the
+ * Storage rules restricting these prefixes to owner+admin were being bypassed.
+ * See docs/APP_QUALITY_REVIEW.md §4.1.
+ *
+ * Idempotent — safe to run more than once. Run it BEFORE deploying the new
+ * firestore.rules, and update the admin panel to read the subcollection.
+ *
+ * IMPORTANT: this moves the URLs, it does not invalidate them. Any link already
+ * issued keeps working, so the Storage access tokens for existing ID uploads
+ * must also be revoked.
+ */
+exports.migrateVettingDocs = onCall(async (request) => {
+    const callerUid = request.auth && request.auth.uid;
+    if (!callerUid) throw new HttpsError("unauthenticated", "Sign in first.");
+    if ((await roleOf(callerUid)) !== "admin") {
+        throw new HttpsError("permission-denied", "Admins only.");
+    }
+
+    const VETTING_FIELDS = [
+        "idCardUrl",
+        "idCardBackUrl",
+        "studentIdUrl",
+        "studentIdBackUrl",
+    ];
+
+    const snap = await db.collection("volunteer_info").get();
+    if (snap.empty) {
+        logger.log("migrateVettingDocs: nothing to migrate.");
+        return {ok: true, migrated: 0, scanned: 0};
+    }
+
+    const writer = db.bulkWriter();
+    let migrated = 0;
+
+    snap.docs.forEach((doc) => {
+        const data = doc.data() || {};
+        const vetting = {};
+        const strip = {};
+        for (const field of VETTING_FIELDS) {
+            if (data[field] !== undefined) {
+                vetting[field] = data[field];
+                strip[field] = admin.firestore.FieldValue.delete();
+            }
+        }
+        if (Object.keys(vetting).length === 0) return; // already migrated
+
+        vetting.migratedAt = admin.firestore.FieldValue.serverTimestamp();
+        writer.set(doc.ref.collection("private").doc("vetting"), vetting, {merge: true});
+        writer.update(doc.ref, strip);
+        migrated += 1;
+    });
+
+    await writer.close();
+    logger.log(`migrateVettingDocs: moved vetting URLs for ${migrated} of ${snap.size} volunteer(s).`);
+    return {ok: true, migrated, scanned: snap.size};
+});
+
+exports.migrateVolunteerStatus = onCall(async (request) => {
+    const callerUid = request.auth && request.auth.uid;
+    if (!callerUid) throw new HttpsError("unauthenticated", "Sign in first.");
+    if ((await roleOf(callerUid)) !== "admin") {
+        throw new HttpsError("permission-denied", "Admins only.");
+    }
+
+    const snap = await db.collection("users")
+        .where("role", "==", "volunteer")
+        .where("status", "==", "verified")
+        .get();
+
+    if (snap.empty) {
+        logger.log("migrateVolunteerStatus: nothing to migrate.");
+        return {ok: true, migrated: 0};
+    }
+
+    const writer = db.bulkWriter();
+    snap.docs.forEach((doc) => {
+        writer.set(doc.ref, {
+            status: "active",
+            statusMigratedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, {merge: true});
+    });
+    await writer.close();
+
+    logger.log(`migrateVolunteerStatus: migrated ${snap.size} volunteer(s).`);
+    return {ok: true, migrated: snap.size};
+});
+
+// =============================================================================
+// SOOTHING SOUNDS (admin-managed `sounds` collection)
+// =============================================================================
+
+const SOUNDS_BUCKET = "you-app-c6b1f.firebasestorage.app";
+const SOUND_URL_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Returns a short-lived signed URL for a sound's audio file.
+ *
+ * This callable is the ONLY way a client can reach a sound's bytes: storage.rules
+ * denies client reads on `sound_audio/**`. That's deliberate — the `sounds` doc is
+ * world-readable (it has to be, to render the list), so `audio_path` is public
+ * knowledge. Gating the PATH would be security theatre; gating the BYTES is real.
+ * Hence `is_premium` is enforced here, server-side, exactly like every other
+ * entitlement in this codebase.
+ *
+ * Signed URLs are authenticated by signature and bypass storage.rules, so
+ * playback works even though `allow read: if false`.
+ *
+ * ⚠️ DEPLOYMENT: getSignedUrl() needs the runtime service account to sign blobs as
+ * itself. Without this it fails at runtime with "Permission iam.serviceAccounts.
+ * signBlob denied":
+ *   gcloud projects add-iam-policy-binding you-app-c6b1f \
+ *     --member="serviceAccount:137110090365-compute@developer.gserviceaccount.com" \
+ *     --role="roles/iam.serviceAccountTokenCreator"
+ *
+ * Request: { soundId }. Response: { url, expiresAt }.
+ */
+exports.getSoundAudioUrl = onCall(async (request) => {
+    const uid = request.auth && request.auth.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
+
+    const soundId = request.data && request.data.soundId;
+    if (!soundId || typeof soundId !== "string") {
+        throw new HttpsError("invalid-argument", "soundId is required.");
+    }
+
+    const snap = await db.collection("sounds").doc(soundId).get();
+    if (!snap.exists) throw new HttpsError("not-found", "Sound not found.");
+
+    const sound = snap.data();
+    if (sound.active !== true) {
+        throw new HttpsError("not-found", "This sound is no longer available.");
+    }
+    if (!sound.audio_path) {
+        throw new HttpsError("failed-precondition", "This sound has no audio yet.");
+    }
+
+    // Premium gate — the real one.
+    if (sound.is_premium === true) {
+        const userSnap = await db.collection("users").doc(uid).get();
+        if (!isUserPremium(userSnap.exists ? userSnap.data() : null)) {
+            throw new HttpsError("permission-denied", "premium-required");
+        }
+    }
+
+    const expires = Date.now() + SOUND_URL_TTL_MS;
+    try {
+        const [url] = await admin.storage()
+            .bucket(SOUNDS_BUCKET)
+            .file(sound.audio_path)
+            .getSignedUrl({version: "v4", action: "read", expires});
+        return {url, expiresAt: expires};
+    } catch (e) {
+        logger.error(`getSoundAudioUrl: signing failed for ${soundId}:`, e);
+        throw new HttpsError("internal", "Could not prepare this sound.");
+    }
+});
+
+/**
+ * Cleans up Storage when the admin deletes a sound.
+ *
+ * Without this, deleting a sound in the panel orphans its objects — and audio is
+ * heavy (up to 30 MB each), so orphans cost real money. Best-effort: a failure
+ * here must not resurrect the doc.
+ */
+exports.onSoundDeleted = onDocumentDeleted("sounds/{soundId}", async (event) => {
+    const soundId = event.params.soundId;
+    try {
+        const bucket = admin.storage().bucket(SOUNDS_BUCKET);
+        await Promise.all([
+            bucket.deleteFiles({prefix: `sound_covers/${soundId}/`}),
+            bucket.deleteFiles({prefix: `sound_audio/${soundId}/`}),
+        ]);
+        logger.log(`onSoundDeleted: purged storage for ${soundId}.`);
+    } catch (e) {
+        logger.error(`onSoundDeleted: storage purge failed for ${soundId}:`, e);
+    }
+});
+
+/**
+ * Keeps `posts/{postId}.replyCount` honest when a reply is deleted.
+ *
+ * The count is INCREMENTED inside the createCommunityReply transaction, but
+ * nothing ever decremented it — so an author deleting their reply would leave the
+ * parent's count permanently too high, and it's rendered on the thread card.
+ *
+ * A trigger (rather than a decrement inside a delete callable) because replies
+ * can be deleted from three different places: the author in-app, an admin via
+ * the panel's Admin SDK, and onPostDeleted's recursiveDelete. Only a trigger
+ * catches all three.
+ *
+ * The existence check matters: when a whole post is deleted, onPostDeleted
+ * recursively deletes its replies, firing this for each one — and updating a
+ * count on a post document that no longer exists would throw NOT_FOUND.
+ */
+exports.onReplyDeleted = onDocumentDeleted(
+    "posts/{postId}/replies/{replyId}",
+    async (event) => {
+        const {postId} = event.params;
+        try {
+            const postRef = db.collection("posts").doc(postId);
+            await db.runTransaction(async (tx) => {
+                const snap = await tx.get(postRef);
+                if (!snap.exists) return; // parent already gone — nothing to fix
+                const current = snap.data().replyCount || 0;
+                // Clamp at 0: a pre-existing drift must not push the count negative.
+                tx.update(postRef, {replyCount: Math.max(0, current - 1)});
+            });
+        } catch (e) {
+            logger.error(`onReplyDeleted: replyCount fix failed for ${postId}:`, e);
+        }
+    },
+);
+
+// =============================================================================
+// VOLUNTEER PRESENCE
+// =============================================================================
+
+/**
+ * How long a volunteer's app may go quiet before staleness expiry would drop
+ * them from discovery. Only consulted when expiry is ENABLED (see below).
+ */
+const PRESENCE_STALE_AFTER_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+/**
+ * Whether to auto-expire volunteers whose app has gone quiet.
+ *
+ * DEFAULT: OFF — and that is a product decision, not an oversight.
+ *
+ * A volunteer stays available until they switch themselves off. With a small
+ * volunteer pool, expiring anyone who hasn't opened the app recently would empty
+ * the listeners list, and a user who opens the app to find NO listeners has no
+ * path to help at all. That is a worse failure than reaching a listener who is
+ * slow to reply.
+ *
+ * Flip `app_settings/global_config.presence_expiry_enabled` to true once the
+ * pool is big enough to afford being strict. No app release is needed: the sweep
+ * writes `availabilityStatus`, which is what the app's discovery query already
+ * reads. Until then this function is a no-op that just logs what it *would*
+ * have done, so you can see the impact before committing to it.
+ *
+ * @return {Promise<boolean>} whether expiry is enabled.
+ */
+async function isPresenceExpiryEnabled() {
+    try {
+        const snap = await db.collection("app_settings").doc("global_config").get();
+        return snap.exists && snap.data().presence_expiry_enabled === true;
+    } catch (e) {
+        logger.error("isPresenceExpiryEnabled read failed:", e);
+        return false; // fail OPEN — never empty the listeners list on a read error
+    }
+}
+
+/**
+ * Takes long-dormant volunteers out of discovery — but ONLY when expiry is
+ * enabled (it is not, by default). Otherwise it reports what it would have done
+ * and changes nothing.
+ *
+ * The app heartbeats `lastSeen` while it is alive (PresenceService), so a
+ * volunteer who toggled themselves online and then uninstalled leaves a trail
+ * that goes cold. This is the switch that eventually acts on it.
+ */
+exports.sweepStalePresence = onSchedule(
+    {schedule: "every 30 minutes", timeZone: "Asia/Karachi"},
+    async () => {
+        const cutoff = admin.firestore.Timestamp.fromMillis(
+            Date.now() - PRESENCE_STALE_AFTER_MS);
+
+        const snap = await db.collection("users")
+            .where("role", "==", "volunteer")
+            .where("availabilityStatus", "==", "online")
+            .where("lastSeen", "<", cutoff)
+            .get();
+
+        if (snap.empty) return;
+
+        const enabled = await isPresenceExpiryEnabled();
+        if (!enabled) {
+            // Dry run: surface the dormant volunteers so they can be nudged by a
+            // human, which is the right fix at this size.
+            logger.log(
+                `sweepStalePresence: expiry DISABLED. ${snap.size} volunteer(s) ` +
+                "are marked online but dormant: " +
+                snap.docs.map((d) => d.id).join(", "));
+            return;
+        }
+
+        // BulkWriter, not a batch: a batch caps at 500 writes and silently fails
+        // the whole commit past that (the bug that once made expireStaleChats a
+        // no-op).
+        const writer = db.bulkWriter();
+        snap.docs.forEach((doc) => {
+            writer.update(doc.ref, {
+                availabilityStatus: "offline",
+                lastAvailabilityChange: admin.firestore.FieldValue.serverTimestamp(),
+                availabilityEndedBy: "presence_sweep",
+            });
+        });
+        await writer.close();
+
+        logger.log(`sweepStalePresence: took ${snap.size} dormant volunteer(s) offline.`);
+    },
+);

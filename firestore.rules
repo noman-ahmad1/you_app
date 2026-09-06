@@ -56,27 +56,108 @@ service cloud.firestore {
         );
     }
 
+    // --- notification relationship checks ---
+    // Rules cannot run a query, so these resolve the specific chat / request the
+    // notification names in its own payload and verify BOTH the sender and the
+    // recipient are parties to it. Reads inside one rule evaluation are cached,
+    // so each check costs a single billed document read.
+    function notifTarget(key) {
+      return request.resource.data.get('data', {}).get(key, '');
+    }
+    function sharesChatWith(recipientId) {
+      let chatId = notifTarget('chatId');
+      return chatId != ''
+        && exists(/databases/$(database)/documents/chats/$(chatId))
+        && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
+        && recipientId in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+    }
+    function sharesRequestWith(recipientId) {
+      let reqId = notifTarget('requestId');
+      let parties = reqId != ''
+        && exists(/databases/$(database)/documents/chat_requests/$(reqId))
+        ? [get(/databases/$(database)/documents/chat_requests/$(reqId)).data.requesterId,
+           get(/databases/$(database)/documents/chat_requests/$(reqId)).data.volunteerId]
+        : [];
+      return request.auth.uid in parties && recipientId in parties;
+    }
+
+    // A chat participant may edit the chat doc, but NOT in ways that defeat the
+    // safety model: they must not add a third reader to a private transcript,
+    // and must not clear the escalation flag that marks the chat as evidence.
+    // Escalating (false -> true) is allowed — EscalationService does it.
+    function chatUpdateOk() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return !changed.hasAny(['participants'])
+        && (!changed.hasAny(['escalated']) || request.resource.data.escalated == true);
+    }
+
+    // An aggregate the client maintains may only move by one, in either
+    // direction. Stops a caller writing membersCount: 999999 or
+    // averageRating: 5 / totalReviews: 9999 in a single request.
+    function movesByOne(field) {
+      return request.resource.data[field] == resource.data[field] + 1
+          || request.resource.data[field] == resource.data[field] - 1;
+    }
+
+    // Fields on one's OWN users doc that the owner may NEVER write:
+    //  • role / permissions      — otherwise ANY user could self-assign role:'admin'
+    //                              and gain full admin powers (incl. reading all chats).
+    //  • subscription* / welcomeChatsUsed — self-granted premium / reset billing counter.
+    //  • status audit trail      — admin-authored record of a suspension/ban.
+    // (`status` itself is handled separately by ownerStatusChangeOk() below, because the
+    //  client legitimately sets it during onboarding.)
+    function ownerForbiddenUserFields() {
+      return ['role', 'permissions',
+              'subscriptionTier', 'subscription_expiry', 'subscription_source',
+              'welcomeChatsUsed',
+              'statusReason', 'statusChangedBy', 'lastStatusChange'];
+    }
+
+    // The owner may change their own `status` ONLY during onboarding — never to escape a
+    // moderation action. So: their CURRENT status must not already be blocked, and the new
+    // value must be one the client is allowed to self-assign. A suspended/banned/deleted
+    // user therefore cannot write themselves back to 'active'.
+    function ownerStatusChangeOk() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+        || (
+          !(resource.data.status in ['suspended', 'banned', 'deleted'])
+          && request.resource.data.status in
+               ['active', 'profile_incomplete', 'pending_verification']
+        );
+    }
+
     // =============================
     // users
     // =============================
     match /users/{userId} {
       // A user reads their own doc; an admin can read anyone's.
       allow get: if isOwner(userId) || isAdmin();
-      // Any signed-in user can run queries (the app lists available volunteers).
-      allow list: if isSignedIn();
+      // Listing is restricted to VOLUNTEER documents. `allow list: if isSignedIn()`
+      // let any account page the whole collection and read every user's email,
+      // phone, date of birth and FCM token — rules cannot project fields, so a
+      // list returns whole documents. Firestore only permits a query when its
+      // constraints prove every possible result satisfies this rule, so the
+      // app's volunteer-discovery query (role == 'volunteer') is accepted and an
+      // unconstrained collection read is rejected.
+      //
+      // NOTE: a volunteer's own contact fields are still visible to anyone who
+      // lists volunteers. The complete fix is a `volunteers_public` projection
+      // maintained by a Cloud Function — see docs/APP_QUALITY_REVIEW.md §4.4.
+      allow list: if isAdmin() || (isSignedIn() && resource.data.role == 'volunteer');
       // Signup writes own doc; admins create other accounts (e.g. createAdminUser).
       allow create: if isOwner(userId) || isAdmin();
       // Profile self-edits, plus admin actions (role change, status, soft-delete, verify).
-      // SECURITY: the entitlement + billing-counter fields are NEVER writable by the
-      // owner — otherwise a free user could self-grant premium or zero out their
-      // welcome-chat count. Only admins (and the Admin SDK, which bypasses rules) may
-      // touch them. Everything else (profile, first_login_at, joinedCommunities) stays
-      // self-editable.
+      // SECURITY: an owner may never write ownerForbiddenUserFields() — that covers
+      // privilege escalation (role/permissions), self-granted premium (subscription* /
+      // welcomeChatsUsed) and the admin status-audit trail. `status` is additionally
+      // constrained by ownerStatusChangeOk() so a suspended/banned user cannot lift their
+      // own moderation action. Everything else (profile, first_login_at, joinedCommunities,
+      // availabilityStatus) stays self-editable.
       allow update: if isAdmin()
                     || (isOwner(userId)
                         && !request.resource.data.diff(resource.data).affectedKeys()
-                              .hasAny(['subscriptionTier', 'subscription_expiry',
-                                       'subscription_source', 'welcomeChatsUsed']));
+                              .hasAny(ownerForbiddenUserFields())
+                        && ownerStatusChangeOk());
       // SAFETY: never hard-delete a user (admins soft-delete via status:"deleted").
       allow delete: if false;
 
@@ -93,11 +174,21 @@ service cloud.firestore {
         allow write: if false;
       }
 
-      // Notifications: anyone signed in may CREATE one (this is how the app — and the
-      // admin panel — notifies a user; creating a doc triggers the FCM Cloud Function).
-      // Only the owner can read/modify their notification history.
+      // Notifications. Creating one triggers the onNotificationCreated Cloud
+      // Function, which pushes the title/body straight to the device via FCM —
+      // so `allow create: if isSignedIn()` meant any account could send
+      // arbitrary push notifications to any user. Now a cross-user create is
+      // permitted only between people already in a relationship: the two
+      // parties of a chat, or of a chat request.
+      //
+      // Each cross-user create costs one extra document read. The cheaper and
+      // stricter end state is to route notification creation through a
+      // callable, as the freemium writes already do — see §4.3.
       match /notifications/{notificationId} {
-        allow create: if isSignedIn();
+        allow create: if isOwner(userId)
+                      || isAdmin()
+                      || sharesChatWith(userId)
+                      || sharesRequestWith(userId);
         allow read, update, delete: if isOwner(userId);
       }
     }
@@ -130,6 +221,16 @@ service cloud.firestore {
     }
 
     // =============================
+    // whispers/{YYYY-MM-DD}  (daily home-screen whisper)
+    // =============================
+    // Admin-authored, app-readable. Replaces a live zenquotes.io fetch: text
+    // shown to users in a mental-health context must pass through review.
+    match /whispers/{dateId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // =============================
     // broadcasts  (admin push audit log)
     // =============================
     match /broadcasts/{broadcastId} {
@@ -148,11 +249,31 @@ service cloud.firestore {
       allow create: if isOwner(volunteerId) || isAdmin();
       allow update: if isOwner(volunteerId)
                     || isAdmin()
-                    // Allow the review transaction to bump ONLY the aggregate stats.
+                    // The review transaction may bump ONLY the aggregate stats,
+                    // and only by a single review at a time. Previously the key
+                    // set was constrained but the VALUES were not, so anyone
+                    // could write averageRating: 5, totalReviews: 9999.
+                    // A rating average can't be delta-checked in rules; the
+                    // counters can, and bounding them bounds the damage.
+                    // Server-side aggregation is the real fix — see §4.6.
                     || (isSignedIn() && request.resource.data.diff(resource.data)
                           .affectedKeys()
-                          .hasOnly(['averageRating', 'totalReviews', 'completedChats']));
+                          .hasOnly(['averageRating', 'totalReviews', 'completedChats'])
+                        && movesByOne('totalReviews')
+                        && movesByOne('completedChats')
+                        && request.resource.data.averageRating >= 0
+                        && request.resource.data.averageRating <= 5);
       allow delete: if false;
+
+      // Vetting documents (government ID / student ID image URLs). These are
+      // Firebase download URLs that carry their own access token and BYPASS
+      // Storage rules, so holding the URL is equivalent to holding the file.
+      // They live in this private subcollection precisely so that the public
+      // `volunteer_info` document — which the discovery UI reads for every
+      // volunteer — cannot leak them.
+      match /private/{docId} {
+        allow read, write: if isOwner(volunteerId) || isAdmin();
+      }
 
       // Reviews left for a volunteer after a chat (previously relied on the catch-all).
       match /reviews/{reviewId} {
@@ -167,7 +288,12 @@ service cloud.firestore {
     // mood
     // =============================
     match /mood/{moodId} {
-      allow read: if isSignedIn();
+      // Mood entries are health data and `extraField` may carry private notes.
+      // `allow read: if isSignedIn()` let any account read — and query — every
+      // user's full mood history. Owner-scoped now; admins retain access for
+      // the dashboard. Client queries must filter on userId (they already do).
+      allow read: if (isSignedIn() && resource.data.userId == request.auth.uid)
+                  || isAdmin();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
@@ -175,19 +301,42 @@ service cloud.firestore {
     // =============================
     // chats
     // PRIVACY NOTE: admins can READ chats/messages for life-safety escalation review
-    // only (the panel surfaces them in the Escalation Review screen). Admins can NOT
-    // write to chats. This is a deliberate exception to the "no chat text" rule.
+    // only (the panel surfaces them in the Escalation Review screen). Admins may also
+    // END a chat (moderation) — but they can NEVER create or edit message content, and
+    // never delete messages. This is a deliberate, narrow exception to "no chat text".
     // =============================
     match /chats/{chatId} {
       allow read: if (request.auth.uid in resource.data.participants) || isAdmin();
-      allow update, delete: if request.auth.uid in resource.data.participants;
+      // Participants manage their own chat. Admins may additionally END a chat
+      // (status:'completed', endedBy:'admin', endedReason, endedAt) — the app already
+      // reacts to endedBy=='admin' with "ended by a moderator".
+      // Participants manage their own chat, but chatUpdateOk() blocks the two
+      // dangerous edits: adding a third party to `participants` (which would
+      // grant them the whole transcript, since message reads resolve against
+      // the CURRENT array) and clearing `escalated`.
+      allow update: if isAdmin()
+                    || ((request.auth.uid in resource.data.participants)
+                        && chatUpdateOk());
+      // An escalated chat is evidence and must survive until a supervisor
+      // resolves it (the admin panel clears the flag).
+      // .get() with a default: most chat docs have no `escalated` field at all,
+      // and reading a missing field is an evaluation error (which denies), not
+      // a null — that would have blocked every ordinary chat deletion.
+      allow delete: if (request.auth.uid in resource.data.participants)
+                    && resource.data.get('escalated', false) != true;
       allow create: if request.auth.uid in request.resource.data.participants;
 
       match /messages/{messageId} {
         allow read: if isAdmin()
           || request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
-        allow write: if request.auth.uid in
+        // CREATE only. `allow write` also covers update and delete, so either
+        // participant could silently rewrite or delete the other's messages
+        // before a supervisor reviewed an escalation — which defeated the
+        // "immutable evidence" property this comment claimed. Admins were
+        // already blocked; participants are now too.
+        allow create: if request.auth.uid in
           get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow update, delete: if false;
       }
     }
 
@@ -195,8 +344,14 @@ service cloud.firestore {
     // escalations  (unified crisis feed — volunteer escalate + severe moderation)
     // =============================
     match /escalations/{escalationId} {
-      // The app (volunteer/user context) creates escalations; admins triage them.
-      allow create: if isSignedIn();
+      // The creator must be one of the two people named. Previously any account
+      // could fabricate a critical escalation about anyone and flood the
+      // supervisor triage queue. A moderation escalation names the author
+      // (userId == self); a volunteer escalation is raised BY the volunteer
+      // (volunteerId == self).
+      allow create: if isSignedIn()
+                    && (request.resource.data.userId == request.auth.uid
+                        || request.resource.data.get('volunteerId', '') == request.auth.uid);
       allow read, update: if isAdmin();
       allow delete: if false;
     }
@@ -237,9 +392,14 @@ service cloud.firestore {
       allow update: if isAdmin()
                     // Allow any signed-in user to join/leave by bumping ONLY the
                     // membersCount aggregate (client-side batch in joinCommunity()).
+                    // Join/leave may move membersCount by exactly one. The key
+                    // set was constrained before but the value was not, so
+                    // anyone could set any community's count to any number —
+                    // and the "popular communities" list orders by this field.
                     || (isSignedIn() && request.resource.data.diff(resource.data)
                           .affectedKeys()
-                          .hasOnly(['membersCount']));
+                          .hasOnly(['membersCount'])
+                        && movesByOne('membersCount'));
 
       match /messages/{messageId} {
         allow read: if isSignedIn();
@@ -248,6 +408,18 @@ service cloud.firestore {
         allow update, delete: if (isSignedIn() && resource.data.senderId == request.auth.uid)
                               || isAdmin();
       }
+    }
+
+    // =============================
+    // sounds  (admin-managed CRUD — soothing sounds library)
+    // =============================
+    // The doc is readable by everyone signed in, INCLUDING the `audio_path` of a
+    // premium sound. That's fine: the path is not the file. Storage denies client
+    // reads on sound_audio/**, so the only way to the bytes is the
+    // getSoundAudioUrl callable, which checks entitlement.
+    match /sounds/{soundId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // =============================

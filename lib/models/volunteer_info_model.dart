@@ -1,13 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Represents the application and academic details specific to a volunteer.
-/// This model separates detailed volunteer data from the core AppUser data.
+/// The PUBLIC half of a volunteer's application — readable by any signed-in
+/// user, because the discovery UI shows tags, institution and ratings.
+///
+/// Identity-document URLs deliberately do NOT live here. They are stored in
+/// `volunteer_info/{uid}/private/vetting` and reachable only via
+/// [VolunteerService.getVetting], for the owner and admins. Those URLs carry
+/// their own Storage access token, so putting them on a world-readable
+/// document handed every user a download link to a volunteer's national ID.
 class VolunteerInfo {
   final String uid;
-  final String? idCardUrl;
-  final String? idCardBackUrl;
-  final String? studentIdUrl;
-  final String? studentIdBackUrl;
   final String? currentLevelOfStudy;
   final String? institutionName;
   final String? graduationYear;
@@ -25,10 +27,6 @@ class VolunteerInfo {
 
   VolunteerInfo({
     required this.uid,
-    this.idCardUrl,
-    this.idCardBackUrl,
-    this.studentIdUrl,
-    this.studentIdBackUrl,
     this.currentLevelOfStudy,
     this.institutionName,
     this.graduationYear,
@@ -46,10 +44,6 @@ class VolunteerInfo {
   factory VolunteerInfo.fromJson(Map<String, dynamic> data) {
     return VolunteerInfo(
       uid: data['uid'] as String,
-      idCardUrl: data['idCardUrl'] as String?,
-      idCardBackUrl: data['idCardBackUrl'] as String?,
-      studentIdUrl: data['studentIdUrl'] as String?,
-      studentIdBackUrl: data['studentIdBackUrl'] as String?,
       currentLevelOfStudy: data['currentLevelOfStudy'] as String?,
       institutionName: data['institutionName'] as String?,
       graduationYear: data['graduationYear'] as String?,
@@ -70,10 +64,6 @@ class VolunteerInfo {
   Map<String, dynamic> toJson() {
     return {
       'uid': uid,
-      'idCardUrl': idCardUrl,
-      'idCardBackUrl': idCardBackUrl,
-      'studentIdUrl': studentIdUrl,
-      'studentIdBackUrl': studentIdBackUrl,
       'currentLevelOfStudy': currentLevelOfStudy,
       'institutionName': institutionName,
       'graduationYear': graduationYear,

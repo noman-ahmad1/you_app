@@ -69,6 +69,10 @@ const DEFAULT_LISTS = {
         "add me on",
         "dm me",
     ],
+    // Admin-authored hard-block list from app_settings/moderation_config
+    // (`bannedKeywords`). Empty by default; treated as `severe`, mirroring the
+    // Flutter ModerationService's `banned` category.
+    banned: [],
 };
 
 const PII_PATTERNS = [
@@ -100,7 +104,8 @@ function containsAny(normalized, terms) {
 }
 
 function severityOf(categories) {
-    if (categories.includes("hate") ||
+    if (categories.includes("banned") ||
+        categories.includes("hate") ||
         categories.includes("violence") ||
         categories.includes("sexual")) {
         return "severe";
@@ -120,6 +125,7 @@ function inspect(text, lists) {
     const normalized = (text || "").toLowerCase().replace(/\s+/g, " ").trim();
     const categories = [];
 
+    if (containsAny(normalized, L.banned)) categories.push("banned");
     if (containsAny(normalized, L.hate)) categories.push("hate");
     if (containsAny(normalized, L.violence)) categories.push("violence");
     if (containsAny(normalized, L.sexual)) categories.push("sexual");
@@ -141,4 +147,4 @@ function inspect(text, lists) {
     };
 }
 
-module.exports = { inspect, maskPii, DEFAULT_LISTS };
+module.exports = {inspect, maskPii, DEFAULT_LISTS};
