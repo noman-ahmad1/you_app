@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:you_app/ui/common/app_colors.dart';
+import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/shared/lottie_like_button.dart';
 
 /// Reusable, theme-aligned building blocks for community post / reply cards.
@@ -44,9 +45,8 @@ class _PendingCardState extends State<PendingCard>
 
   @override
   Widget build(BuildContext context) {
-    final initial = widget.authorName.isNotEmpty
-        ? widget.authorName[0].toUpperCase()
-        : '?';
+    final initial =
+        widget.authorName.isNotEmpty ? widget.authorName[0].toUpperCase() : '?';
 
     return AnimatedBuilder(
       animation: _controller,
@@ -67,8 +67,8 @@ class _PendingCardState extends State<PendingCard>
               AppColors.secondaryVeryLight.withAlpha(70),
             ],
           ),
-          border: Border.all(
-              color: AppColors.secondary.withAlpha(45), width: 1),
+          border:
+              Border.all(color: AppColors.secondary.withAlpha(45), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,6 +278,33 @@ class LikeChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The author's delete affordance on their own thread / reply card.
+///
+/// Deliberately quiet — a small, low-contrast icon rather than a red button.
+/// This is a support community; the card should read as a post, not as a row of
+/// controls. The confirmation dialog is where the weight belongs.
+class DeleteButton extends StatelessWidget {
+  final VoidCallback onDelete;
+  const DeleteButton({super.key, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onDelete,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(6.0),
+        child: Image.asset(
+          AppConstants.delete,
+          width: 19,
+          height: 19,
+          color: AppColors.primaryVeryDark.withAlpha(120),
+        ),
       ),
     );
   }

@@ -3,14 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
-import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/topbar.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 import 'edit_profile_viewmodel.dart';
-import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class EditProfileView extends StackedView<EditProfileViewModel> {
-  const EditProfileView({Key? key}) : super(key: key);
+  const EditProfileView({super.key});
 
   @override
   void onViewModelReady(EditProfileViewModel viewModel) {
@@ -51,7 +49,8 @@ class EditProfileView extends StackedView<EditProfileViewModel> {
                       child: CustomLottieLoader(
                         width: 20,
                         height: 20,
-                        loaderWidth: 40, // Lottie loader might need to be slightly larger to look good within 20x20, or just 20x20.
+                        loaderWidth:
+                            40, // Lottie loader might need to be slightly larger to look good within 20x20, or just 20x20.
                         loaderHeight: 40,
                       ),
                     ),
@@ -130,12 +129,16 @@ class EditProfileView extends StackedView<EditProfileViewModel> {
                                             fit: BoxFit.cover,
                                             width: 120,
                                             height: 120,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    Image.asset(
-                                                        viewModel.currentUser?.defaultAvatar ?? AppConstants.avatarBinary),
+                                            errorBuilder: (context, error,
+                                                    stackTrace) =>
+                                                Image.asset(viewModel
+                                                        .currentUser
+                                                        ?.defaultAvatar ??
+                                                    AppConstants.avatarBinary),
                                           )
-                                        : Image.asset(viewModel.currentUser?.defaultAvatar ?? AppConstants.avatarBinary)),
+                                        : Image.asset(viewModel
+                                                .currentUser?.defaultAvatar ??
+                                            AppConstants.avatarBinary)),
                               ),
                             ),
                             Positioned(
@@ -259,7 +262,7 @@ class EditProfileView extends StackedView<EditProfileViewModel> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return DropdownButtonFormField<String>(
-      value: viewModel.selectedGender,
+      initialValue: viewModel.selectedGender,
       decoration: InputDecoration(
         fillColor: AppColors.background,
         filled: true,

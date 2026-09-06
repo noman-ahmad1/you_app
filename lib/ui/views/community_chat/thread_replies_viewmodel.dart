@@ -33,7 +33,66 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
   List<ThreadReply> get replies => data ?? [];
 
   String get currentUserId => _authService.currentUser?.uid ?? '';
-  String get currentUserName => _authService.currentUser?.fullName ?? 'Anonymous';
+  String get currentUserName =>
+      _authService.currentUser?.fullName ?? 'Anonymous';
+
+  /// True when the thread being viewed is the user's own (drives the delete
+  /// affordance on the original-post card).
+  bool get isMyPost => post.authorId == currentUserId;
+
+  /// Deletes one of the user's own replies. The parent post's `replyCount` is
+  /// corrected server-side by the `onReplyDeleted` trigger.
+  Future<void> deleteReply(ThreadReply reply) async {
+    if (reply.authorId != currentUserId) return;
+
+    final response = await locator<DialogService>().showConfirmationDialog(
+      title: 'Delete reply?',
+      description: 'This will permanently delete your reply. '
+          'This cannot be undone.',
+      confirmationTitle: 'Delete',
+      cancelTitle: 'Cancel',
+    );
+    if (response?.confirmed != true) return;
+
+    try {
+      await locator<CommunityService>().deleteReply(post.id, reply.id);
+      // The stream drops it — no local list mutation needed.
+    } catch (e) {
+      _snackbarService.showSnackbar(
+        title: 'Error',
+        message: 'Could not delete this reply. Please try again.',
+      );
+    }
+  }
+
+  /// Deletes the whole thread from its own detail screen, then leaves — the
+  /// screen we're standing on is about to stop existing.
+  Future<void> deletePost() async {
+    if (!isMyPost) return;
+
+    final replies = post.replyCount;
+    final response = await locator<DialogService>().showConfirmationDialog(
+      title: 'Delete thread?',
+      description: replies > 0
+          ? 'This will permanently delete your thread and its '
+              '$replies ${replies == 1 ? 'reply' : 'replies'}. '
+              'This cannot be undone.'
+          : 'This will permanently delete your thread. This cannot be undone.',
+      confirmationTitle: 'Delete',
+      cancelTitle: 'Cancel',
+    );
+    if (response?.confirmed != true) return;
+
+    try {
+      await locator<CommunityService>().deletePost(post.id);
+      _navigationService.back();
+    } catch (e) {
+      _snackbarService.showSnackbar(
+        title: 'Error',
+        message: 'Could not delete this thread. Please try again.',
+      );
+    }
+  }
 
   // --- @-mentions (Premium only) ---
   /// Whether this user may @-mention people in replies.
@@ -50,7 +109,8 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
 
   /// Opens the Premium paywall from the reply cap-reached button.
   Future<void> openReplyPaywall() async {
-    locator<AnalyticsService>().logGateHit(feature: PaywallFeature.communityReplies);
+    locator<AnalyticsService>()
+        .logGateHit(feature: PaywallFeature.communityReplies);
     await PaywallHelper.show(feature: PaywallFeature.communityReplies);
   }
 
@@ -309,7 +369,9 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
         text: text,
         result: moderation,
       );
-      if (moderation.categories.contains(ModerationCategory.violence)) {
+      // Any SEVERE block (banned/hate/violence/sexual) raises an escalation —
+      // the admin crisis feed expects severe blocks, not just violence.
+      if (moderation.severity == 'severe') {
         locator<EscalationService>().escalateModeration(
           userId: currentUserId,
           userName: currentUserName,
@@ -338,7 +400,8 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
     final pending = PendingContent(id: ++_pendingCounter, content: text);
     _pendingReplies.add(pending);
     notifyListeners();
-    Future.delayed(const Duration(seconds: 15), () => _removePending(pending.id));
+    Future.delayed(
+        const Duration(seconds: 15), () => _removePending(pending.id));
 
     try {
       final result = await locator<CommunityService>().createReply(
@@ -409,7 +472,8 @@ class ThreadRepliesViewModel extends StreamViewModel<List<ThreadReply>> {
     notifyListeners();
 
     try {
-      await locator<CommunityService>().toggleLikeReply(post.id, reply.id, isLiked);
+      await locator<CommunityService>()
+          .toggleLikeReply(post.id, reply.id, isLiked);
     } catch (_) {
       if (isLiked) {
         reply.likedBy.add(uid);

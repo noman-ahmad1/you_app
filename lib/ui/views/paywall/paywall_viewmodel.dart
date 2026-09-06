@@ -47,6 +47,8 @@ class PaywallViewModel extends BaseViewModel {
         return "You've been showing up for people today.";
       case 'mention':
         return 'Mentioning people is a Premium feature';
+      case 'soothing_sounds':
+        return 'This one is part of YOU+.';
       default:
         return 'Unlock YOU+';
     }
@@ -105,6 +107,15 @@ class PaywallViewModel extends BaseViewModel {
               "limits are gone — post as many threads and replies as you like, "
               "and mention people directly to bring them into the conversation.",
           AppColors.secondary,
+        );
+      case 'soothing_sounds':
+        return FeatureUpsell(
+          AppConstants.soothing,
+          'The full sound library',
+          "A handful of sounds are always free to listen to. YOU+ opens the "
+              "rest of the library — longer soundscapes to fall asleep to, focus "
+              "with, or simply breathe alongside.",
+          AppColors.teal,
         );
       default:
         return FeatureUpsell(

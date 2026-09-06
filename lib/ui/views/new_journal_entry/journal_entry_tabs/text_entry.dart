@@ -76,8 +76,8 @@ class TextJournalEntryView extends StatelessWidget {
                           height: height * 0.065,
                           decoration: BoxDecoration(
                             color: AppColors.background.withAlpha(200),
-                            border:
-                                Border.all(color: AppColors.background, width: 2),
+                            border: Border.all(
+                                color: AppColors.background, width: 2),
                             borderRadius: BorderRadius.circular(23),
                             boxShadow: [
                               BoxShadow(

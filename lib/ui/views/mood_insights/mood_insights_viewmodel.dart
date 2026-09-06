@@ -77,22 +77,35 @@ class MoodInsightsViewModel extends BaseViewModel {
   String reflection = '';
 
   static const List<String> weekdayNames = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
   ];
   static const List<String> weekdayShort = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   static const List<String> bucketNames = [
-    'Morning', 'Afternoon', 'Evening', 'Night'
+    'Morning',
+    'Afternoon',
+    'Evening',
+    'Night'
   ];
   static const List<String> bucketPlural = [
-    'mornings', 'afternoons', 'evenings', 'nights'
+    'mornings',
+    'afternoons',
+    'evenings',
+    'nights'
   ];
 
   static const Set<String> _positive = {
-    'Energized', 'Joyful', 'Blessed', 'Happy'
+    'Energized',
+    'Joyful',
+    'Blessed',
+    'Happy'
   };
-  static const Set<String> _negative = {
-    'Sad', 'Restless', 'Anxious', 'Angry'
-  };
+  static const Set<String> _negative = {'Sad', 'Restless', 'Anxious', 'Angry'};
 
   Future<void> load() async {
     final uid = _authService.currentUser?.uid;
@@ -164,10 +177,14 @@ class MoodInsightsViewModel extends BaseViewModel {
     for (int i = 0; i < 7; i++) {
       weekdayAverages[i] = buckets[i].isEmpty ? null : _mean(buckets[i]);
     }
-    final candidates = [for (int i = 0; i < 7; i++) if (buckets[i].length >= 2) i];
+    final candidates = [
+      for (int i = 0; i < 7; i++)
+        if (buckets[i].length >= 2) i
+    ];
     showWeekday = candidates.length >= 2;
     if (!showWeekday) return;
-    candidates.sort((a, b) => weekdayAverages[a]!.compareTo(weekdayAverages[b]!));
+    candidates
+        .sort((a, b) => weekdayAverages[a]!.compareTo(weekdayAverages[b]!));
     toughestWeekday = candidates.first;
     brightestWeekday = candidates.last;
     final spread =
@@ -183,7 +200,10 @@ class MoodInsightsViewModel extends BaseViewModel {
     for (int i = 0; i < 4; i++) {
       timeAverages[i] = buckets[i].isEmpty ? null : _mean(buckets[i]);
     }
-    final candidates = [for (int i = 0; i < 4; i++) if (buckets[i].length >= 2) i];
+    final candidates = [
+      for (int i = 0; i < 4; i++)
+        if (buckets[i].length >= 2) i
+    ];
     showTimeOfDay = candidates.length >= 2;
     if (!showTimeOfDay) return;
     candidates.sort((a, b) => timeAverages[a]!.compareTo(timeAverages[b]!));

@@ -180,14 +180,17 @@ class _RecorderPanel extends StatelessWidget {
     final active = session || captured; // something exists → side actions on
 
     final busy = viewModel.isBusy; // saving / uploading the clip
-    final processing = viewModel.isProcessing; // start/stop transition in flight
+    final processing =
+        viewModel.isProcessing; // start/stop transition in flight
     final locked = busy || processing; // controls inert while either is true
 
     // Center: re-record (refresh) once captured, else mic/pause. Shows a spinner
     // while a transition is resolving so a tap always gives instant feedback.
     final String centerAsset = captured
         ? AppConstants.refresh
-        : (!session ? AppConstants.mic : (live ? AppConstants.pause : AppConstants.mic));
+        : (!session
+            ? AppConstants.mic
+            : (live ? AppConstants.pause : AppConstants.mic));
     final VoidCallback centerAction = captured || !session
         ? viewModel.startRecording
         : (live ? viewModel.pauseRecording : viewModel.resumeRecording);

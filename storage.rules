@@ -1,0 +1,110 @@
+rules_version = '2';
+
+// =============================================================================
+// Cloud Storage rules — you-app-c6b1f
+//
+// ⚠️ INTRODUCING THIS FILE IS A BREAKING CHANGE IF INCOMPLETE. Storage denies by
+// default, so EVERY prefix the app writes must appear below or that upload
+// starts failing. The app uploads to exactly these paths (all
+// `<prefix>/{uid}/{millis}.{ext}` via StorageService.uploadFile):
+//   user_profiles, volunteer_profiles, volunteer_id_cards,
+//   volunteer_id_cards_back, volunteer_student_ids, volunteer_student_ids_back,
+//   journal_audio
+// …plus community_covers/{communityId}/… uploaded by the ADMIN PANEL.
+//
+// NOTE ON READS: Firebase download URLs carry an access token and BYPASS these
+// rules. Tightening `read` therefore protects the SDK/gs:// path and any future
+// listing — it does NOT retroactively hide an already-issued download URL for an
+// ID card. Treat those URLs as secrets.
+// =============================================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ---- helpers ----
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    // Mirrors the Firestore isAdmin(): the caller's own users doc says role=admin.
+    function isAdmin() {
+      return isSignedIn()
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid))
+             .data.role == 'admin';
+    }
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    function isAudio() {
+      return request.resource.contentType.matches('audio/.*');
+    }
+    function underMb(n) {
+      return request.resource.size < n * 1024 * 1024;
+    }
+
+    // ---- profile pictures (user + volunteer) ----
+    // Rendered to other members via download URL, so keep read open to signed-in.
+    match /user_profiles/{uid}/{file} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(uid) && isImage() && underMb(10);
+    }
+    match /volunteer_profiles/{uid}/{file} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(uid) && isImage() && underMb(10);
+    }
+
+    // ---- volunteer vetting documents (IDENTITY DOCUMENTS — sensitive) ----
+    // Only the owner (who uploads them) and admins (who review them) may read.
+    // Business-critical: these are part of the volunteer vetting flow.
+    match /volunteer_id_cards/{uid}/{file} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) && isImage() && underMb(10);
+    }
+    match /volunteer_id_cards_back/{uid}/{file} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) && isImage() && underMb(10);
+    }
+    match /volunteer_student_ids/{uid}/{file} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) && isImage() && underMb(10);
+    }
+    match /volunteer_student_ids_back/{uid}/{file} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) && isImage() && underMb(10);
+    }
+
+    // ---- voice journal entries (PRIVATE — owner only, never admins) ----
+    // Mirrors the Firestore rule: admins must NOT read journal content.
+    match /journal_audio/{uid}/{file} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // ---- community cover photos (admin panel upload) ----
+    // Public read: shown on the communities list to every member.
+    match /community_covers/{communityId}/{file} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage() && underMb(5);
+    }
+
+    // ---- soothing sounds (admin panel upload) ----
+    // Covers are public, exactly like community covers.
+    match /sound_covers/{soundId}/{file} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage() && underMb(5);
+    }
+    // Audio is DELIBERATELY UNREADABLE by clients. A premium sound's mp3 must not
+    // be fetchable just because its path is discoverable in the `sounds` doc —
+    // that's what makes `is_premium` a real gate. The app calls the
+    // `getSoundAudioUrl` callable, which checks entitlement and returns a 1-hour
+    // SIGNED url; signed urls are authenticated by signature and bypass these
+    // rules, so playback works while direct SDK reads stay denied.
+    match /sound_audio/{soundId}/{file} {
+      allow read: if false;
+      allow write: if isAdmin() && isAudio() && underMb(30);
+    }
+
+    // NO catch-all: anything not matched above is denied by default.
+  }
+}

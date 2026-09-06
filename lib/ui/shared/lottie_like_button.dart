@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:collection/collection.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
@@ -10,11 +9,11 @@ class LottieLikeButton extends StatefulWidget {
   final double size;
 
   const LottieLikeButton({
-    Key? key,
+    super.key,
     required this.isLiked,
     required this.onTap,
     this.size = 36.0,
-  }) : super(key: key);
+  });
 
   @override
   State<LottieLikeButton> createState() => _LottieLikeButtonState();
@@ -75,7 +74,8 @@ class _LottieLikeButtonState extends State<LottieLikeButton>
               Icon(
                 Icons.favorite_border_rounded,
                 size: widget.size * 0.6,
-                color: const Color(0xFF1E1E1E).withAlpha(100), // AppColors.primaryVeryDark
+                color: const Color(0xFF1E1E1E)
+                    .withAlpha(100), // AppColors.primaryVeryDark
               ),
             OverflowBox(
               maxWidth: widget.size *

@@ -35,7 +35,8 @@ class BlockService with FirestoreServiceMixin {
           .doc('${userId}_$volunteerId')
           .get();
       final expiresAt = doc.data()?['expiresAt'];
-      return expiresAt is Timestamp && expiresAt.toDate().isAfter(DateTime.now());
+      return expiresAt is Timestamp &&
+          expiresAt.toDate().isAfter(DateTime.now());
     } catch (e) {
       AppLog.error('BlockService.isBlocked', e);
       return false;

@@ -8,7 +8,6 @@ import 'package:you_app/services/base/firestore_base.dart';
 class JournalService with FirestoreServiceMixin {
   AnalyticsService get _analytics => locator<AnalyticsService>();
 
-
   /// Adds a new journal entry to a subcollection for the current user.
   Future<void> addJournalEntry(JournalEntry entry) async {
     try {

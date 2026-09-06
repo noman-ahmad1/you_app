@@ -50,7 +50,8 @@ class ChatRequestService {
             .toList());
   }
 
-  Future<void> acceptRequest(ChatRequest request, String volunteerName, String? volunteerAvatarUrl) async {
+  Future<void> acceptRequest(ChatRequest request, String volunteerName,
+      String? volunteerAvatarUrl) async {
     // Use a transaction for atomicity
     await _firestore.runTransaction((transaction) async {
       final requestRef = _firestore.collection('chat_requests').doc(request.id);

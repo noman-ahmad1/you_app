@@ -15,7 +15,7 @@ import 'package:you_app/ui/views/journal/journal_tabs/work_tab.dart';
 import 'journal_viewmodel.dart';
 
 class JournalView extends StackedView<JournalViewModel> {
-  const JournalView({Key? key}) : super(key: key);
+  const JournalView({super.key});
 
   @override
   Widget builder(
@@ -67,8 +67,7 @@ class JournalView extends StackedView<JournalViewModel> {
                               : viewModel.allEntries);
                       // Empty Work/Personal: center the animation and place the
                       // upgrade button right beneath it (no large gap between).
-                      final centeredEmpty =
-                          !isAllTab && currentEntries.isEmpty;
+                      final centeredEmpty = !isAllTab && currentEntries.isEmpty;
                       final tabMinHeight = (isAllTab || centeredEmpty)
                           ? 0.0
                           : (constraints.maxHeight - filterExtent)
@@ -236,9 +235,10 @@ class _UnlockHistoryBanner extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.secondary.withOpacity(0.08),
+          color: AppColors.secondary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.secondary.withOpacity(0.25)),
+          border:
+              Border.all(color: AppColors.secondary.withValues(alpha: 0.25)),
         ),
         child: Row(
           children: [
@@ -248,7 +248,7 @@ class _UnlockHistoryBanner extends StatelessWidget {
             Expanded(
               child: Text(
                 'Showing your last ${viewModel.historyWindowDays} days. '
-                'Unlock your full history with Premium.',
+                'Unlock voice journalling and your full history with YOU+.',
                 style: GoogleFonts.crimsonPro(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,

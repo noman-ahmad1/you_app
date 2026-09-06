@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
-import 'package:you_app/ui/common/ui_helpers.dart';
 
 enum SwipeDirection { left, right, both }
 
@@ -70,7 +69,6 @@ class _SwipeButtonState extends State<SwipeButton>
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final width = mediaQuery.size.width;
-    final height = mediaQuery.size.height;
     final borderRadius = BorderRadius.circular(widget.height / 2);
     final thumbSize = widget.height;
 
@@ -101,7 +99,8 @@ class _SwipeButtonState extends State<SwipeButton>
                   alignment: Alignment.center,
                   child: widget.direction == SwipeDirection.both
                       ? Padding(
-                          padding: EdgeInsets.symmetric(horizontal: width * 0.05),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: width * 0.05),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -222,7 +221,7 @@ class _SwipeButtonState extends State<SwipeButton>
                           borderRadius: BorderRadius.circular(thumbSize / 2),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.25),
+                              color: Colors.black.withValues(alpha: 0.25),
                               blurRadius: 20,
                               offset: const Offset(0, 4),
                             ),
@@ -298,7 +297,7 @@ class _SwipeButtonState extends State<SwipeButton>
                               borderRadius: borderRadius,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.25),
+                                  color: Colors.black.withValues(alpha: 0.25),
                                   blurRadius: 20,
                                   offset: const Offset(0, 4),
                                 ),

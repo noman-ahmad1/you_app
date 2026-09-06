@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
@@ -10,11 +9,10 @@ import 'package:you_app/ui/shared/widgets.dart';
 import 'package:you_app/ui/shared/verify_email_prompt.dart';
 
 import 'volunteer_edit_profile_viewmodel.dart';
-import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class VolunteerEditProfileView
     extends StackedView<VolunteerEditProfileViewModel> {
-  const VolunteerEditProfileView({Key? key}) : super(key: key);
+  const VolunteerEditProfileView({super.key});
 
   @override
   Widget builder(
@@ -22,8 +20,6 @@ class VolunteerEditProfileView
     VolunteerEditProfileViewModel viewModel,
     Widget? child,
   ) {
-    final screenSize = MediaQuery.of(context).size;
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       // appBar: const TopBar(title: 'Edit Volunteer Profile'),
@@ -87,10 +83,15 @@ class VolunteerEditProfileView
                                                 fit: BoxFit.cover,
                                                 errorBuilder: (context, error,
                                                         stackTrace) =>
-                                                    Image.asset(
-                                                        viewModel.currentUser?.defaultAvatar ?? AppConstants.avatarBinary),
+                                                    Image.asset(viewModel
+                                                            .currentUser
+                                                            ?.defaultAvatar ??
+                                                        AppConstants
+                                                            .avatarBinary),
                                               )
-                                            : Image.asset(viewModel.currentUser?.defaultAvatar ?? AppConstants.avatarBinary)),
+                                            : Image.asset(viewModel.currentUser
+                                                    ?.defaultAvatar ??
+                                                AppConstants.avatarBinary)),
                                   ),
                                 ),
                                 Positioned(
@@ -254,7 +255,7 @@ class VolunteerEditProfileView
   Widget _buildGenderDropdown(
       BuildContext context, VolunteerEditProfileViewModel viewModel) {
     return DropdownButtonFormField<String>(
-      value: viewModel.selectedGender,
+      initialValue: viewModel.selectedGender,
       decoration: InputDecoration(
         labelText: 'Gender',
         labelStyle: const TextStyle(color: AppColors.secondaryLight),
@@ -296,7 +297,7 @@ class VolunteerEditProfileView
   Widget _buildLevelDropdown(
       BuildContext context, VolunteerEditProfileViewModel viewModel) {
     return DropdownButtonFormField<String>(
-      value: viewModel.selectedLevel,
+      initialValue: viewModel.selectedLevel,
       decoration: InputDecoration(
         labelText: 'Current Level of Study',
         labelStyle: const TextStyle(color: AppColors.secondaryLight),
@@ -346,7 +347,7 @@ class VolunteerEditProfileView
           selected: isSelected,
           onSelected: (_) => viewModel.toggleTag(tag),
           selectedColor: AppColors.peach,
-          backgroundColor: AppColors.primaryDark.withOpacity(0.5),
+          backgroundColor: AppColors.primaryDark.withValues(alpha: 0.5),
           labelStyle: TextStyle(
             color: isSelected ? AppColors.background : AppColors.secondary,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

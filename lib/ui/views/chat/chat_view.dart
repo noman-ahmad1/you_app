@@ -19,11 +19,11 @@ class ChatView extends StackedView<ChatViewModel> {
   final String volunteerName;
   final String requestId;
   const ChatView({
-    Key? key,
+    super.key,
     required this.volunteerId,
     required this.volunteerName,
     required this.requestId,
-  }) : super(key: key);
+  });
 
   @override
   Widget builder(
@@ -31,9 +31,6 @@ class ChatView extends StackedView<ChatViewModel> {
     ChatViewModel viewModel,
     Widget? child,
   ) {
-    final mediaQuery = MediaQuery.of(context);
-    final width = mediaQuery.size.width;
-    final height = mediaQuery.size.height;
     return Scaffold(
         // appBar: TopBar(
         //   title: viewModel.volunteerName,
@@ -164,7 +161,7 @@ class ChatView extends StackedView<ChatViewModel> {
 }
 
 class _MessageInputField extends ViewModelWidget<ChatViewModel> {
-  const _MessageInputField({super.key});
+  const _MessageInputField();
 
   @override
   Widget build(BuildContext context, ChatViewModel viewModel) {

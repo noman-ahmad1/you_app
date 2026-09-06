@@ -11,7 +11,8 @@ class MonetizationService with ListenableServiceMixin, FirestoreServiceMixin {
   final AuthenticationService _authService = locator<AuthenticationService>();
   AnalyticsService get _analytics => locator<AnalyticsService>();
 
-  final ReactiveValue<bool> _isSubscriptionRequired = ReactiveValue<bool>(false);
+  final ReactiveValue<bool> _isSubscriptionRequired =
+      ReactiveValue<bool>(false);
   final ReactiveValue<int> _daysSinceLogin = ReactiveValue<int>(0);
 
   // Free-tier limits, live-tunable via app_settings/global_config. Each falls
@@ -87,21 +88,23 @@ class MonetizationService with ListenableServiceMixin, FirestoreServiceMixin {
   Future<void> _initializeTracking(String uid) async {
     try {
       // 1. Fetch Global Toggle (Fail-open: defaults to false if it fails)
-      final globalConfigDoc = await db.collection('app_settings').doc('global_config').get();
+      final globalConfigDoc =
+          await db.collection('app_settings').doc('global_config').get();
       if (globalConfigDoc.exists && globalConfigDoc.data() != null) {
         final data = globalConfigDoc.data()!;
         if (data.containsKey('is_subscription_required')) {
-          _isSubscriptionRequired.value = data['is_subscription_required'] == true;
+          _isSubscriptionRequired.value =
+              data['is_subscription_required'] == true;
         } else {
           _isSubscriptionRequired.value = false;
         }
         // Live-tunable free-tier limits (fail-open to constant defaults).
-        _dodoDailyCap.value =
-            _asPositiveInt(data['dodo_daily_cap'], AppConstants.dodoDailyCapDefault);
-        _welcomeChats.value =
-            _asPositiveInt(data['welcome_chats'], AppConstants.welcomeChatsDefault);
-        _journalHistoryDays.value = _asPositiveInt(
-            data['journal_history_days'], AppConstants.journalHistoryDaysDefault);
+        _dodoDailyCap.value = _asPositiveInt(
+            data['dodo_daily_cap'], AppConstants.dodoDailyCapDefault);
+        _welcomeChats.value = _asPositiveInt(
+            data['welcome_chats'], AppConstants.welcomeChatsDefault);
+        _journalHistoryDays.value = _asPositiveInt(data['journal_history_days'],
+            AppConstants.journalHistoryDaysDefault);
         _moodWindowDays.value = _asPositiveInt(
             data['mood_window_days'], AppConstants.moodWindowDaysDefault);
         _communityThreadsMonthly.value = _asPositiveInt(
@@ -122,10 +125,11 @@ class MonetizationService with ListenableServiceMixin, FirestoreServiceMixin {
       // 2. User Account Age Tracker (Fail-open: defaults to 0 if it fails)
       final userRef = db.collection('users').doc(uid);
       final userDoc = await userRef.get();
-      
+
       if (userDoc.exists && userDoc.data() != null) {
         final data = userDoc.data()!;
-        if (data.containsKey('first_login_at') && data['first_login_at'] != null) {
+        if (data.containsKey('first_login_at') &&
+            data['first_login_at'] != null) {
           final Timestamp firstLoginAt = data['first_login_at'] as Timestamp;
           final DateTime loginDate = firstLoginAt.toDate();
           final int days = DateTime.now().difference(loginDate).inDays;

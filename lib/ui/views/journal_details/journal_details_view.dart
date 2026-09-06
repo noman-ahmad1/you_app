@@ -16,9 +16,9 @@ import 'journal_details_viewmodel.dart';
 class JournalDetailsView extends StackedView<JournalDetailsViewModel> {
   final JournalEntry journalEntry;
   const JournalDetailsView({
-    Key? key,
+    super.key,
     required this.journalEntry,
-  }) : super(key: key);
+  });
 
   @override
   Widget builder(

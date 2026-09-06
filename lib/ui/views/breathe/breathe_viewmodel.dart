@@ -23,7 +23,6 @@ class BreatheViewModel extends BaseViewModel {
       case BreathePhase.exhale:
         return 'Breathe Out';
       case BreathePhase.idle:
-      default:
         return ' Let\'s breathe together.';
     }
   }

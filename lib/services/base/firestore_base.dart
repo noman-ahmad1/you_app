@@ -18,7 +18,8 @@ mixin FirestoreServiceMixin {
   static List<List<T>> chunk<T>(List<T> items, int size) {
     final chunks = <List<T>>[];
     for (var i = 0; i < items.length; i += size) {
-      chunks.add(items.sublist(i, i + size > items.length ? items.length : i + size));
+      chunks.add(
+          items.sublist(i, i + size > items.length ? items.length : i + size));
     }
     return chunks;
   }

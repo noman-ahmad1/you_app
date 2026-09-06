@@ -66,7 +66,9 @@ class AnalyticsService {
     await _safe('setUser', () async {
       await _analytics.setUserId(id: uid);
       await _crashlytics.setUserIdentifier(uid);
-      if (role != null) await _analytics.setUserProperty(name: 'role', value: role);
+      if (role != null) {
+        await _analytics.setUserProperty(name: 'role', value: role);
+      }
       if (gender != null) {
         await _analytics.setUserProperty(name: 'gender', value: gender);
       }
@@ -206,10 +208,12 @@ class AnalyticsService {
       // or future) can trip that assertion — e.g. subscription_gate.required.
       clean[key] = value is bool ? (value ? 1 : 0) : value;
     });
-    await _safe(name, () => _analytics.logEvent(
-          name: name,
-          parameters: clean.isEmpty ? null : clean,
-        ));
+    await _safe(
+        name,
+        () => _analytics.logEvent(
+              name: name,
+              parameters: clean.isEmpty ? null : clean,
+            ));
   }
 
   Future<void> _safe(String context, Future<void> Function() op) async {

@@ -3,7 +3,6 @@ import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/base/firestore_base.dart';
 
 class UserService with FirestoreServiceMixin {
-
   // GET: Fetch a single user document data
   Future<Map<String, dynamic>?> get(String uid) async {
     final doc = await db.collection('users').doc(uid).get();
@@ -37,12 +36,22 @@ class UserService with FirestoreServiceMixin {
     });
   }
 
+  /// The volunteer's availability toggle — the ONE thing that decides whether
+  /// they appear in discovery. Once on, it stays on until they switch it off.
+  ///
+  /// Going online also stamps `lastSeen` so the liveness trail starts right away
+  /// (see PresenceService); nothing reads it for discovery today, but it's what
+  /// staleness expiry will use when it's eventually switched on.
+  ///
+  /// NOTE: this is presence — NOT the account status. It must NOT write
+  /// `lastStatusChange`: the admin panel uses that key as the audit trail for
+  /// suspensions/bans, and a volunteer toggling availability would clobber it
+  /// (it's also owner-denied by security rules).
   Future<void> updateUserAvailability(String uid, String status) async {
-    // Consider adding validation to ensure status is 'online' or 'offline'
     await db.collection('users').doc(uid).update({
       'availabilityStatus': status,
-      'lastStatusChange':
-          FieldValue.serverTimestamp(), // Optional: track when it changed
+      if (status == 'online') 'lastSeen': FieldValue.serverTimestamp(),
+      'lastAvailabilityChange': FieldValue.serverTimestamp(),
     });
   }
 
@@ -79,7 +88,6 @@ class UserService with FirestoreServiceMixin {
   }
 
   Future<List<AppUser>> getAvailableVolunteers() async {
-    // Fetches users with the 'volunteer' role who are 'active'
     final snapshot = await db
         .collection('users')
         .where('role', isEqualTo: 'volunteer')
@@ -87,10 +95,23 @@ class UserService with FirestoreServiceMixin {
         .where('availabilityStatus', isEqualTo: 'online')
         .get();
 
-    // You'll need an AppUser.fromJson method in your model
     return snapshot.docs.map((doc) => AppUser.fromJson(doc.data())).toList();
   }
 
+  /// The volunteers a user can reach.
+  ///
+  /// Queries the volunteer's own toggle and NOTHING else: a volunteer stays
+  /// listed until they explicitly switch themselves off. This is deliberate.
+  /// With a small volunteer pool, auto-expiring anyone who hasn't opened the app
+  /// recently would empty this list — and a user who opens the app to find NO
+  /// listeners at all has no path to help, which is far worse than reaching a
+  /// listener who takes a while to reply.
+  ///
+  /// The liveness machinery still runs quietly underneath (`lastSeen` is beaten
+  /// by PresenceService), so when the pool is big enough to afford being strict,
+  /// staleness expiry can be switched on from the admin panel —
+  /// `app_settings/global_config.presence_expiry_enabled` — with no app release.
+  /// See `sweepStalePresence` in functions/index.js.
   Stream<List<AppUser>> streamAvailableVolunteers() {
     return db
         .collection('users')

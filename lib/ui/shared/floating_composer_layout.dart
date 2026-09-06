@@ -25,12 +25,12 @@ class FloatingComposerLayout extends StatefulWidget {
   final double initialInset;
 
   const FloatingComposerLayout({
-    Key? key,
+    super.key,
     required this.listBuilder,
     required this.composer,
     this.gap = -24,
     this.initialInset = 96,
-  }) : super(key: key);
+  });
 
   @override
   State<FloatingComposerLayout> createState() => _FloatingComposerLayoutState();

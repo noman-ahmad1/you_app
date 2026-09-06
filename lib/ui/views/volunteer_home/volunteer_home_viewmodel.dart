@@ -14,13 +14,8 @@ import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/user_service.dart';
-import 'package:you_app/services/volunteer_service.dart';
-import 'package:you_app/services/mood_service.dart';
-import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:you_app/services/community_service.dart';
 
 class VolunteerHomeViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
@@ -90,16 +85,10 @@ class VolunteerHomeViewModel extends BaseViewModel {
     listenForNotifications();
   }
 
-  int _counter = 0;
   int currentIndex = 1;
   void onTabTapped(int index) {
     currentIndex = index;
     notifyListeners();
-  }
-
-  void incrementCounter() {
-    _counter++;
-    rebuildUi();
   }
 
   void initialize() {

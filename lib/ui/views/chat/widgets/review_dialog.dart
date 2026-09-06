@@ -5,7 +5,7 @@ import 'package:you_app/ui/common/app_colors.dart';
 class ReviewDialog extends StatefulWidget {
   final String volunteerName;
 
-  const ReviewDialog({Key? key, required this.volunteerName}) : super(key: key);
+  const ReviewDialog({super.key, required this.volunteerName});
 
   @override
   _ReviewDialogState createState() => _ReviewDialogState();
@@ -87,7 +87,8 @@ class _ReviewDialogState extends State<ReviewDialog> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: AppColors.secondary, width: 2),
+                  borderSide:
+                      const BorderSide(color: AppColors.secondary, width: 2),
                 ),
               ),
             ),
@@ -119,7 +120,8 @@ class _ReviewDialogState extends State<ReviewDialog> {
                     if (_rating == 0) {
                       // Optional: enforce rating
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Please select a star rating.")),
+                        const SnackBar(
+                            content: Text("Please select a star rating.")),
                       );
                       return;
                     }

@@ -11,8 +11,7 @@ import 'mood_recommendation_viewmodel.dart';
 class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
   final String emoji;
 
-  const MoodRecommendationView({Key? key, required this.emoji})
-      : super(key: key);
+  const MoodRecommendationView({super.key, required this.emoji});
 
   @override
   Widget builder(
@@ -60,66 +59,64 @@ class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
                   color: AppColors.secondary),
             ),
             Space.verticalSpaceMedium(context),
-            ...viewModel.recommendations
-                .map((item) => Container(
-                      margin: const EdgeInsets.only(bottom: 15),
-                      child: InkWell(
-                        onTap: item.onTap,
-                        child: Container(
-                          width: width * 0.9,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: AppColors.background.withAlpha(200),
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              )
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Image.asset(
-                                item.iconAsset,
-                                width: 40,
-                                height: 40,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.star,
-                                      color: AppColors.primary);
-                                },
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.title,
-                                      style: GoogleFonts.crimsonPro(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.primaryVeryDark),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item.subtitle,
-                                      style: GoogleFonts.crimsonPro(
-                                          fontSize: 16,
-                                          color: AppColors.primaryDark),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.arrow_forward_ios,
-                                  color: AppColors.primary, size: 18),
-                            ],
-                          ),
-                        ),
+            ...viewModel.recommendations.map((item) => Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  child: InkWell(
+                    onTap: item.onTap,
+                    child: Container(
+                      width: width * 0.9,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.background.withAlpha(200),
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          )
+                        ],
                       ),
-                    ))
-                .toList(),
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            item.iconAsset,
+                            width: 40,
+                            height: 40,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.star,
+                                  color: AppColors.primary);
+                            },
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.title,
+                                  style: GoogleFonts.crimsonPro(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primaryVeryDark),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  item.subtitle,
+                                  style: GoogleFonts.crimsonPro(
+                                      fontSize: 16,
+                                      color: AppColors.primaryDark),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios,
+                              color: AppColors.primary, size: 18),
+                        ],
+                      ),
+                    ),
+                  ),
+                )),
             const Spacer(),
             TextButton(
               onPressed: viewModel.skip,
@@ -128,7 +125,7 @@ class MoodRecommendationView extends StackedView<MoodRecommendationViewModel> {
                 style: GoogleFonts.crimsonPro(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.secondary.withOpacity(0.8)),
+                    color: AppColors.secondary.withValues(alpha: 0.8)),
               ),
             ),
             Space.verticalSpaceMedium(context),

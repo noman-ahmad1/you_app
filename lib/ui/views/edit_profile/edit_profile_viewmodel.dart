@@ -30,7 +30,7 @@ class EditProfileViewModel extends BaseViewModel {
   String? _selectedGender;
   File? _selectedProfileImage;
   String _fullPhoneNumber = '';
-  
+
   final List<String> genders = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
   AppUser? get currentUser => _authService.currentUser;
@@ -43,7 +43,7 @@ class EditProfileViewModel extends BaseViewModel {
       firstNameController.text = currentUser!.firstName;
       lastNameController.text = currentUser!.lastName;
       usernameController.text = currentUser!.username ?? '';
-      
+
       String phone = currentUser!.phoneNumber ?? '';
       _fullPhoneNumber = phone;
       if (phone.startsWith('+92')) {
@@ -51,7 +51,7 @@ class EditProfileViewModel extends BaseViewModel {
       } else {
         phoneController.text = phone;
       }
-      
+
       _selectedDate = currentUser!.dateOfBirth;
       _selectedGender = currentUser!.gender;
       notifyListeners();
@@ -93,8 +93,9 @@ class EditProfileViewModel extends BaseViewModel {
       if (pickedFile != null) {
         final originalFile = File(pickedFile.path);
         // Compress the image before setting it
-        final compressedFile = await ImageCompressorHelper.compressImage(originalFile);
-        
+        final compressedFile =
+            await ImageCompressorHelper.compressImage(originalFile);
+
         _selectedProfileImage = compressedFile;
         notifyListeners();
         Navigator.of(context).pop(); // Close the modal
@@ -172,7 +173,7 @@ class EditProfileViewModel extends BaseViewModel {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -202,8 +203,10 @@ class EditProfileViewModel extends BaseViewModel {
     final uid = currentUser?.uid;
     if (uid == null) return;
 
-    if (firstNameController.text.trim().isEmpty || lastNameController.text.trim().isEmpty) {
-      _dialogService.showDialog(title: 'Error', description: 'First and last name cannot be empty.');
+    if (firstNameController.text.trim().isEmpty ||
+        lastNameController.text.trim().isEmpty) {
+      _dialogService.showDialog(
+          title: 'Error', description: 'First and last name cannot be empty.');
       return;
     }
 
@@ -220,15 +223,18 @@ class EditProfileViewModel extends BaseViewModel {
         }
 
         // Upload new profile picture
-        final path = 'user_profiles/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
-        newProfilePictureUrl = await _storageService.uploadFile(_selectedProfileImage!, path);
+        final path =
+            'user_profiles/$uid/${DateTime.now().millisecondsSinceEpoch}.jpg';
+        newProfilePictureUrl =
+            await _storageService.uploadFile(_selectedProfileImage!, path);
       }
 
       final updateData = {
         'firstName': firstNameController.text.trim(),
         'lastName': lastNameController.text.trim(),
         'username': usernameController.text.trim(),
-        'phoneNumber': phoneController.text.trim().isEmpty ? '' : _fullPhoneNumber.trim(),
+        'phoneNumber':
+            phoneController.text.trim().isEmpty ? '' : _fullPhoneNumber.trim(),
         'dateOfBirth': _selectedDate,
         'gender': _selectedGender,
         'profilePictureUrl': newProfilePictureUrl,
@@ -236,10 +242,11 @@ class EditProfileViewModel extends BaseViewModel {
 
       await _userService.update(uid, updateData);
       await _authService.checkCurrentUserStatus(); // Refresh local user data
-      
+
       _navigationService.back();
     } catch (e) {
-      _dialogService.showDialog(title: 'Update Failed', description: e.toString());
+      _dialogService.showDialog(
+          title: 'Update Failed', description: e.toString());
     } finally {
       setBusy(false);
     }

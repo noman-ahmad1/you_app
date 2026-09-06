@@ -15,7 +15,7 @@ class PaywallView extends StackedView<PaywallViewModel> {
   /// The gate that triggered this paywall (see PaywallFeature.*).
   final String feature;
 
-  const PaywallView({this.feature = 'general', Key? key}) : super(key: key);
+  const PaywallView({this.feature = 'general', super.key});
 
   @override
   PaywallViewModel viewModelBuilder(BuildContext context) =>
@@ -123,8 +123,8 @@ class _Header extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            viewModel.accent.withOpacity(0.20),
-            viewModel.accent.withOpacity(0.06),
+            viewModel.accent.withValues(alpha: 0.20),
+            viewModel.accent.withValues(alpha: 0.06),
           ],
         ),
       ),
@@ -155,7 +155,7 @@ class _UpsellCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -209,7 +209,7 @@ class _MoreNote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: viewModel.accent.withOpacity(0.07),
+        color: viewModel.accent.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

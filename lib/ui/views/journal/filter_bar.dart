@@ -113,9 +113,7 @@ class _TabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final barHeight =
-        MediaQuery.of(context).size.height * 0.06; // match BottomBar height
-    final iconSize = barHeight * 0.6; // 60% of bar height
+    MediaQuery.of(context).size.height * 0.06; // match BottomBar height
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -128,8 +126,8 @@ class _TabItem extends StatelessWidget {
             style: GoogleFonts.crimsonPro(
               fontSize: isSelected ? 19 : 18,
               fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-              color: AppColors.secondary
-                  .withOpacity(isSelected ? 1.0 : 0.6),
+              color:
+                  AppColors.secondary.withValues(alpha: isSelected ? 1.0 : 0.6),
             ),
             child: Text(text),
           ),

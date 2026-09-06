@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
@@ -98,7 +97,8 @@ class _AnimatedMoodScreenState extends State<AnimatedMoodScreen>
                       pageBuilder: (context, animation1, animation2) =>
                           MoodRecommendationView(emoji: widget.emoji),
                       transitionDuration: const Duration(milliseconds: 500),
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
                         return FadeTransition(opacity: animation, child: child);
                       },
                     ),
@@ -120,8 +120,8 @@ class _AnimatedMoodScreenState extends State<AnimatedMoodScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.deepPurple.withOpacity(0.8),
-                  Colors.blueAccent.withOpacity(0.6),
+                  Colors.deepPurple.withValues(alpha: 0.8),
+                  Colors.blueAccent.withValues(alpha: 0.6),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -180,15 +180,16 @@ class _AnimatedMoodScreenState extends State<AnimatedMoodScreen>
                                   shape: BoxShape.circle,
                                   gradient: LinearGradient(
                                     colors: [
-                                      Colors.white.withOpacity(0.3),
-                                      Colors.white.withOpacity(0.1),
+                                      Colors.white.withValues(alpha: 0.3),
+                                      Colors.white.withValues(alpha: 0.1),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.2),
                                       blurRadius: 20,
                                       spreadRadius: 5,
                                     ),
@@ -211,7 +212,8 @@ class _AnimatedMoodScreenState extends State<AnimatedMoodScreen>
                               borderRadius: BorderRadius.circular(10),
                               child: LinearProgressIndicator(
                                 value: value,
-                                backgroundColor: Colors.white.withOpacity(0.2),
+                                backgroundColor:
+                                    Colors.white.withValues(alpha: 0.2),
                                 valueColor: const AlwaysStoppedAnimation<Color>(
                                     Colors.white),
                               ),
@@ -269,7 +271,7 @@ class ParticlePainter extends CustomPainter {
       if (p.life > 0) {
         // Safety check
         paint.color =
-            Colors.white.withOpacity(0.7 * (p.life / 30).clamp(0.0, 1.0));
+            Colors.white.withValues(alpha: 0.7 * (p.life / 30).clamp(0.0, 1.0));
         canvas.drawCircle(
             Offset(p.x.clamp(0, size.width), p.y.clamp(0, size.height)),
             (p.size / 2).clamp(0.5, 10.0),
@@ -295,7 +297,7 @@ class _BackgroundPainter extends CustomPainter {
     final paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          Colors.purpleAccent.withOpacity(0.2 * animValue),
+          Colors.purpleAccent.withValues(alpha: 0.2 * animValue),
           Colors.transparent,
         ],
       ).createShader(Rect.fromCircle(

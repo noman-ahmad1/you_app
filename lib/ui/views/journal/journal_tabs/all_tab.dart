@@ -19,9 +19,9 @@ import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
 class AllEntriesView extends ViewModelWidget<JournalViewModel> {
   final List<JournalEntry> entries;
   const AllEntriesView({
-    Key? key,
+    super.key,
     required this.entries,
-  }) : super(key: key, reactive: false);
+  }) : super(reactive: false);
   @override
   Widget build(BuildContext context, JournalViewModel viewModel) {
     final mediaQuery = MediaQuery.of(context);

@@ -12,7 +12,7 @@ import 'package:you_app/ui/views/premium/premium_helper.dart';
 import 'profile_viewmodel.dart';
 
 class ProfileView extends StackedView<ProfileViewModel> {
-  const ProfileView({Key? key}) : super(key: key);
+  const ProfileView({super.key});
 
   @override
   Widget builder(
@@ -162,7 +162,8 @@ class ProfileView extends StackedView<ProfileViewModel> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 5),
                             decoration: BoxDecoration(
-                              color: AppColors.darkYellow.withOpacity(0.18),
+                              color:
+                                  AppColors.darkYellow.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
@@ -174,7 +175,7 @@ class ProfileView extends StackedView<ProfileViewModel> {
                                     color: AppColors.camel),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Premium',
+                                  'YOU+',
                                   style: GoogleFonts.crimsonPro(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
@@ -271,6 +272,22 @@ class ProfileView extends StackedView<ProfileViewModel> {
                             ],
                           ),
                         ),
+                        // Always available while unverified — unlike the banner
+                        // above, which the user can dismiss for 7 days and would
+                        // otherwise leave them no route back to verification.
+                        if (viewModel.needsEmailVerification) ...[
+                          Space.verticalSpaceTiny(context),
+                          CustomButton(
+                            text: "Verify Email",
+                            backgroundColor: AppColors.secondary,
+                            icon: const Icon(
+                              Icons.mark_email_unread_outlined,
+                              color: AppColors.background,
+                              size: 18,
+                            ),
+                            onPressed: viewModel.openVerifyEmail,
+                          ),
+                        ],
                         Space.verticalSpaceTiny(context),
                         CustomButton(
                             text: "Edit",

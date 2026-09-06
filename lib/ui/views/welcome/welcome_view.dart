@@ -7,7 +7,7 @@ import 'package:you_app/ui/common/ui_helpers.dart';
 import 'welcome_viewmodel.dart';
 
 class WelcomeView extends StackedView<WelcomeViewModel> {
-  const WelcomeView({Key? key}) : super(key: key);
+  const WelcomeView({super.key});
 
   @override
   Widget builder(
@@ -15,7 +15,6 @@ class WelcomeView extends StackedView<WelcomeViewModel> {
     WelcomeViewModel viewModel,
     Widget? child,
   ) {
-    final screenSize = MediaQuery.of(context).size;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(

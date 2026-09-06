@@ -14,13 +14,7 @@ import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/views/mood_tracker/animated_mood.dart';
 
 // Import the necessary model and service
-import 'package:you_app/services/user_service.dart';
-import 'package:you_app/services/volunteer_service.dart';
 import 'package:you_app/services/mood_service.dart';
-import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_service.dart';
-import 'package:you_app/services/chat_request_service.dart';
-import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/monetization_service.dart';
 import 'package:you_app/models/mood_model.dart';
@@ -41,7 +35,8 @@ class MoodTrackerViewModel extends BaseViewModel {
   Key chartKey = UniqueKey();
 
   int moodStreak = 0;
-  String dailyQuote = "Taking a moment to acknowledge your feelings\nis a step toward self-care.";
+  String dailyQuote =
+      "Taking a moment to acknowledge your feelings\nis a step toward self-care.";
   StreamSubscription<List<MoodEntry>>? _moodSubscription;
 
   bool swiped = false;
@@ -128,44 +123,50 @@ class MoodTrackerViewModel extends BaseViewModel {
     int streak = 0;
     DateTime now = DateTime.now();
     DateTime currentDate = DateTime(now.year, now.month, now.day);
-    
+
     // Check if the first entry is from today or yesterday
-    DateTime firstEntryDate = DateTime(entryDates.first.year, entryDates.first.month, entryDates.first.day);
-    if (firstEntryDate.isBefore(currentDate.subtract(const Duration(days: 1)))) {
-       moodStreak = 0;
-       notifyListeners();
-       return;
+    DateTime firstEntryDate = DateTime(
+        entryDates.first.year, entryDates.first.month, entryDates.first.day);
+    if (firstEntryDate
+        .isBefore(currentDate.subtract(const Duration(days: 1)))) {
+      moodStreak = 0;
+      notifyListeners();
+      return;
     }
 
     Set<String> uniqueDates = {};
     for (var date in entryDates) {
-       uniqueDates.add("${date.year}-${date.month}-${date.day}");
+      uniqueDates.add("${date.year}-${date.month}-${date.day}");
     }
 
     List<DateTime> sortedUniqueDates = uniqueDates.map((s) {
-       var parts = s.split('-');
-       return DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+      var parts = s.split('-');
+      return DateTime(
+          int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
     }).toList();
-    
+
     sortedUniqueDates.sort((a, b) => b.compareTo(a));
 
     DateTime checkDate = currentDate;
     for (int i = 0; i < sortedUniqueDates.length; i++) {
-        if (i == 0) {
-            if (sortedUniqueDates[i] == checkDate || sortedUniqueDates[i] == checkDate.subtract(const Duration(days: 1))) {
-                streak++;
-                checkDate = sortedUniqueDates[i];
-            } else {
-                break;
-            }
+      if (i == 0) {
+        if (sortedUniqueDates[i] == checkDate ||
+            sortedUniqueDates[i] ==
+                checkDate.subtract(const Duration(days: 1))) {
+          streak++;
+          checkDate = sortedUniqueDates[i];
         } else {
-            if (sortedUniqueDates[i] == checkDate.subtract(const Duration(days: 1))) {
-                streak++;
-                checkDate = sortedUniqueDates[i];
-            } else {
-                break;
-            }
+          break;
         }
+      } else {
+        if (sortedUniqueDates[i] ==
+            checkDate.subtract(const Duration(days: 1))) {
+          streak++;
+          checkDate = sortedUniqueDates[i];
+        } else {
+          break;
+        }
+      }
     }
 
     moodStreak = streak;
@@ -301,7 +302,7 @@ class MoodTrackerViewModel extends BaseViewModel {
 
   Future<void> back() async {
     if (!_isDisposed) {
-      await _navigationService.back();
+      _navigationService.back();
     }
   }
 

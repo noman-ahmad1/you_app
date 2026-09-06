@@ -22,6 +22,13 @@ class ProfileViewModel extends ReactiveViewModel {
   bool get showVerifyEmailNudge =>
       _authService.needsEmailVerification && !_verifyNudgeDismissed;
 
+  /// Drives the persistent "Verify email" button on the profile.
+  ///
+  /// Deliberately NOT gated on [_verifyNudgeDismissed]: the banner above can be
+  /// dismissed for 7 days, and without this the user would have no way back to
+  /// verification until it reappeared. False for Google users (already verified).
+  bool get needsEmailVerification => _authService.needsEmailVerification;
+
   Future<void> _loadVerifyNudgeDismissal() async {
     _verifyNudgeDismissed = await VerifyEmailNudgePrefs.isDismissedActive();
     if (_verifyNudgeDismissed) notifyListeners();
@@ -81,16 +88,22 @@ class ProfileViewModel extends ReactiveViewModel {
 
     if (currentUser!.firstName.isNotEmpty) completedFields++;
     if (currentUser!.lastName.isNotEmpty) completedFields++;
-    if (currentUser!.username != null && currentUser!.username!.isNotEmpty)
+    if (currentUser!.username != null && currentUser!.username!.isNotEmpty) {
       completedFields++;
+    }
     if (currentUser!.email.isNotEmpty) completedFields++;
     if (currentUser!.phoneNumber != null &&
-        currentUser!.phoneNumber!.isNotEmpty) completedFields++;
-    if (currentUser!.dateOfBirth != null) completedFields++;
-    if (currentUser!.gender != null && currentUser!.gender!.isNotEmpty)
+        currentUser!.phoneNumber!.isNotEmpty) {
       completedFields++;
+    }
+    if (currentUser!.dateOfBirth != null) completedFields++;
+    if (currentUser!.gender != null && currentUser!.gender!.isNotEmpty) {
+      completedFields++;
+    }
     if (currentUser!.profilePictureUrl != null &&
-        currentUser!.profilePictureUrl!.isNotEmpty) completedFields++;
+        currentUser!.profilePictureUrl!.isNotEmpty) {
+      completedFields++;
+    }
 
     return completedFields / totalFields;
   }

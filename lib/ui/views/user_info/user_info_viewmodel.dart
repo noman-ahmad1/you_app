@@ -78,7 +78,7 @@ class UserInfoViewModel extends BaseViewModel {
               primary: AppColors.primary,
               onPrimary: Colors.white,
             ),
-            dialogBackgroundColor: Colors.white,
+            dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );

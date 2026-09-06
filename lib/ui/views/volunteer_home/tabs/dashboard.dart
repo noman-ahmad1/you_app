@@ -9,7 +9,7 @@ import 'package:you_app/ui/views/volunteer_home/volunteer_home_viewmodel.dart';
 import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -23,7 +23,7 @@ class ImageCompressorHelper {
 
       if (result != null) {
         final compressedFile = File(result.path);
-        
+
         return compressedFile;
       }
     } catch (e) {

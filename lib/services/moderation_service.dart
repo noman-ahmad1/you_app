@@ -5,7 +5,15 @@ import 'package:you_app/ui/common/moderation_keywords.dart';
 enum ModerationContext { chat, community }
 
 /// Content categories a message can match.
-enum ModerationCategory { hate, violence, sexual, romance, offTopic, pii, banned }
+enum ModerationCategory {
+  hate,
+  violence,
+  sexual,
+  romance,
+  offTopic,
+  pii,
+  banned
+}
 
 /// What the caller should do with the message.
 enum ModerationAction {
@@ -99,7 +107,19 @@ class ModerationService {
     }
   }
 
-  /// Replace the keyword lists from a remote config (any null arg is kept).
+  /// `version` from the remote config; bumped by the admin panel on every save so
+  /// client and server can detect a change. 0 = never received a versioned config.
+  int _configVersion = 0;
+  int get configVersion => _configVersion;
+
+  /// Replace the per-category keyword lists from the admin panel's
+  /// `app_settings/moderation_config` (any null arg keeps the bundled default).
+  /// Terms are lowercased/trimmed/de-duped defensively — matching is
+  /// case-insensitive and word-boundary based, so casing must not leak in.
+  ///
+  /// SAFETY INVARIANT: self-harm / suicidal phrasing must NEVER appear in these
+  /// lists — those are crisis disclosures to escalate, not violations to block.
+  /// See lib/ui/common/moderation_keywords.dart.
   void updateLists({
     List<String>? hate,
     List<String>? violence,
@@ -107,13 +127,21 @@ class ModerationService {
     List<String>? romance,
     List<String>? offTopic,
     List<String>? contactIntent,
+    int? version,
   }) {
-    if (hate != null) _hate = hate;
-    if (violence != null) _violence = violence;
-    if (sexual != null) _sexual = sexual;
-    if (romance != null) _romance = romance;
-    if (offTopic != null) _offTopic = offTopic;
-    if (contactIntent != null) _contactIntent = contactIntent;
+    List<String> clean(List<String> raw) => raw
+        .map((k) => k.toLowerCase().trim())
+        .where((k) => k.isNotEmpty)
+        .toSet()
+        .toList();
+
+    if (hate != null) _hate = clean(hate);
+    if (violence != null) _violence = clean(violence);
+    if (sexual != null) _sexual = clean(sexual);
+    if (romance != null) _romance = clean(romance);
+    if (offTopic != null) _offTopic = clean(offTopic);
+    if (contactIntent != null) _contactIntent = clean(contactIntent);
+    if (version != null) _configVersion = version;
   }
 
   ModerationResult inspect(String text, {required ModerationContext context}) {

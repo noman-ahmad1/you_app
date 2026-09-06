@@ -5,13 +5,7 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/journal_model.dart';
-import 'package:you_app/services/user_service.dart';
-import 'package:you_app/services/volunteer_service.dart';
-import 'package:you_app/services/mood_service.dart';
 import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_service.dart';
-import 'package:you_app/services/chat_request_service.dart';
-import 'package:you_app/services/community_service.dart';
 
 class JournalDetailsViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();

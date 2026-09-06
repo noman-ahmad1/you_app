@@ -14,13 +14,13 @@ class InAppNotificationBanner extends StatefulWidget {
   final VoidCallback onDismiss;
 
   const InAppNotificationBanner({
-    Key? key,
+    super.key,
     required this.title,
     required this.body,
     required this.type,
     this.onTap,
     required this.onDismiss,
-  }) : super(key: key);
+  });
 
   /// Triggers a sliding banner from anywhere in the app using the global navigator overlay.
   static void show({

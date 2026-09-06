@@ -19,7 +19,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isDodo;
 
   const TopBar({
-    Key? key,
+    super.key,
     this.title,
     this.subtitle,
     this.leadingIconAsset,
@@ -31,7 +31,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
     this.height = kToolbarHeight + 5,
     this.isCenterTitle = true, // Defaults to true for all other screens!
     this.isDodo = true, // Defaults to false for all other screens!
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +104,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                 Text(
                   title!,
                   style: GoogleFonts.crimsonPro(
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primaryVeryDark),
                   maxLines: 1,
@@ -200,7 +200,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
               title!,
               textAlign: TextAlign.center,
               style: GoogleFonts.crimsonPro(
-                  fontSize: 26,
+                  fontSize: 22,
                   fontWeight: FontWeight.w500,
                   color: titleColor ?? AppColors.primaryVeryDark),
               maxLines: 1,

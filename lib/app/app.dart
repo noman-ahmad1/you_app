@@ -15,8 +15,10 @@ import 'package:you_app/services/chat_service.dart';
 import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/chatbot_service.dart';
+import 'package:you_app/services/presence_service.dart';
 import 'package:you_app/services/push_notification_service.dart';
 import 'package:you_app/services/security_log_service.dart';
+import 'package:you_app/services/sound_service.dart';
 import 'package:you_app/services/storage_service.dart';
 import 'package:you_app/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:you_app/ui/dialogs/info_alert/info_alert_dialog.dart';
@@ -66,8 +68,7 @@ import 'package:you_app/services/monetization_service.dart';
     MaterialRoute(page: ResetPasswordView),
     MaterialRoute(page: UserInfoView),
     MaterialRoute(page: JournalView),
-    CustomRoute(
-        page: MoodTrackerView, transitionsBuilder: scaleFadeTransition),
+    CustomRoute(page: MoodTrackerView, transitionsBuilder: scaleFadeTransition),
     MaterialRoute(page: NewJournalEntryView),
     CustomRoute(page: ChatbotView, transitionsBuilder: slideUpTransition),
     MaterialRoute(page: VolunteerSignupView),
@@ -86,8 +87,7 @@ import 'package:you_app/services/monetization_service.dart';
     MaterialRoute(page: VolunteerEditProfileView),
     CustomRoute(page: PaywallView, transitionsBuilder: slideUpTransition),
     CustomRoute(page: PremiumView, transitionsBuilder: slideUpTransition),
-    CustomRoute(
-        page: MoodInsightsView, transitionsBuilder: slideUpTransition),
+    CustomRoute(page: MoodInsightsView, transitionsBuilder: slideUpTransition),
     CustomRoute(page: VerifyEmailView, transitionsBuilder: slideUpTransition),
 // @stacked-route
   ],
@@ -116,6 +116,8 @@ import 'package:you_app/services/monetization_service.dart';
     LazySingleton(classType: ModerationFlagService),
     LazySingleton(classType: EscalationService),
     LazySingleton(classType: AppContentService),
+    LazySingleton(classType: SoundService),
+    LazySingleton(classType: PresenceService),
     LazySingleton(classType: BlockService),
     LazySingleton(classType: SecurityLogService),
 

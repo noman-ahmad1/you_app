@@ -12,13 +12,13 @@ class CustomLottieLoader extends StatelessWidget {
   final double loaderHeight;
 
   const CustomLottieLoader({
-    Key? key,
+    super.key,
     this.fullScreen = false,
     this.width = 300,
     this.height = 300,
     this.loaderWidth = 200,
     this.loaderHeight = 200,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

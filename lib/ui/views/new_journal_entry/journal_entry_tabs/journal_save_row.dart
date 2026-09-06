@@ -21,8 +21,7 @@ class JournalSaveRow extends StatelessWidget {
       height: height * 0.065,
       child: Row(
         children: [
-          _CategoryDropdown(
-              viewModel: viewModel, width: width, height: height),
+          _CategoryDropdown(viewModel: viewModel, width: width, height: height),
           SizedBox(width: width * 0.03),
           Expanded(child: _SaveButton(viewModel: viewModel)),
         ],
@@ -66,8 +65,8 @@ class _CategoryDropdown extends StatelessWidget {
             initialValue: viewModel.selectedLabel,
             onSelected: viewModel.setLabel,
             color: AppColors.background,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             padding: EdgeInsets.zero,
             itemBuilder: (_) => [
               _menuItem(JournalLabel.personal),

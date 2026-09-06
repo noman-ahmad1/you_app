@@ -22,10 +22,10 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
   final String communityName;
 
   const ThreadRepliesView({
-    Key? key,
+    super.key,
     required this.post,
     required this.communityName,
-  }) : super(key: key);
+  });
 
   @override
   Widget builder(
@@ -82,6 +82,9 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                               isLiked: post.likedBy
                                   .contains(viewModel.currentUserId),
                               onLike: viewModel.toggleLike,
+                              onDelete: viewModel.isMyPost
+                                  ? viewModel.deletePost
+                                  : null,
                             ),
                           ),
                         ),
@@ -118,6 +121,9 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
                                             .contains(viewModel.currentUserId),
                                         onLike: () =>
                                             viewModel.toggleReplyLike(reply),
+                                        onDelete: isMe
+                                            ? () => viewModel.deleteReply(reply)
+                                            : null,
                                       ),
                                     );
                                   },
@@ -185,7 +191,7 @@ class ThreadRepliesView extends StackedView<ThreadRepliesViewModel> {
 // -------------------------------------------------------------------
 
 class _ReplyComposer extends ViewModelWidget<ThreadRepliesViewModel> {
-  const _ReplyComposer({Key? key}) : super(key: key);
+  const _ReplyComposer();
 
   @override
   Widget build(BuildContext context, ThreadRepliesViewModel viewModel) {
@@ -205,65 +211,66 @@ class _ReplyComposer extends ViewModelWidget<ThreadRepliesViewModel> {
             if (!viewModel.canMention && viewModel.mentionQuery != null)
               _MentionPremiumChip(viewModel: viewModel),
             Stack(
-          children: [
-            TextField(
-              controller: viewModel.replyController,
-              keyboardType: TextInputType.multiline,
-              maxLines: 5,
-              minLines: 1,
-              cursorColor: AppColors.secondary,
-              style: GoogleFonts.crimsonPro(
-                color: AppColors.secondary,
-              ),
-              decoration: InputDecoration(
-                hintText: viewModel.canMention
-                    ? "Reply... (@ to mention)"
-                    : "Reply...",
-                hintStyle: GoogleFonts.crimsonPro(
-                  color: AppColors.secondary.withAlpha(150),
-                ),
-                filled: true,
-                fillColor: AppColors.secondaryVeryLight.withAlpha(240),
-                contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide:
-                      const BorderSide(color: AppColors.secondary, width: 2),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide:
-                      const BorderSide(color: AppColors.secondary, width: 2),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide:
-                      const BorderSide(color: AppColors.secondary, width: 2),
-                ),
-              ),
-              onSubmitted: (_) => viewModel.sendReply(),
-            ),
-            Positioned(
-              right: 8.0,
-              bottom: 5.5,
-              child: GestureDetector(
-                onTap: viewModel.sendReply,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryVeryLight.withAlpha(75),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.secondary, width: 2),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: Image.asset(
-                    AppConstants.send,
+              children: [
+                TextField(
+                  controller: viewModel.replyController,
+                  keyboardType: TextInputType.multiline,
+                  maxLines: 5,
+                  minLines: 1,
+                  cursorColor: AppColors.secondary,
+                  style: GoogleFonts.crimsonPro(
                     color: AppColors.secondary,
-                    width: 25,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: viewModel.canMention
+                        ? "Reply... (@ to mention)"
+                        : "Reply...",
+                    hintStyle: GoogleFonts.crimsonPro(
+                      color: AppColors.secondary.withAlpha(150),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.secondaryVeryLight.withAlpha(240),
+                    contentPadding: const EdgeInsets.fromLTRB(16, 16, 60, 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: const BorderSide(
+                          color: AppColors.secondary, width: 2),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: const BorderSide(
+                          color: AppColors.secondary, width: 2),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: const BorderSide(
+                          color: AppColors.secondary, width: 2),
+                    ),
+                  ),
+                  onSubmitted: (_) => viewModel.sendReply(),
+                ),
+                Positioned(
+                  right: 8.0,
+                  bottom: 5.5,
+                  child: GestureDetector(
+                    onTap: viewModel.sendReply,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryVeryLight.withAlpha(75),
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: AppColors.secondary, width: 2),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: Image.asset(
+                        AppConstants.send,
+                        color: AppColors.secondary,
+                        width: 25,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ],
+              ],
             ),
           ],
         ),
@@ -387,8 +394,7 @@ class _MentionPremiumChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           onTap: viewModel.openMentionPaywall,
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
               color: AppColors.secondary.withAlpha(20),
               borderRadius: BorderRadius.circular(20),
@@ -418,7 +424,7 @@ class _MentionPremiumChip extends StatelessWidget {
 }
 
 class _LockedBanner extends StatelessWidget {
-  const _LockedBanner({Key? key}) : super(key: key);
+  const _LockedBanner();
 
   @override
   Widget build(BuildContext context) {
@@ -463,10 +469,14 @@ class _OriginalPostCard extends StatelessWidget {
   final bool isLiked;
   final VoidCallback onLike;
 
+  /// Only supplied when the thread is the viewer's own.
+  final VoidCallback? onDelete;
+
   const _OriginalPostCard({
     required this.post,
     required this.isLiked,
     required this.onLike,
+    this.onDelete,
   });
 
   @override
@@ -537,6 +547,10 @@ class _OriginalPostCard extends StatelessWidget {
                   color: AppColors.primaryVeryDark.withAlpha(130),
                 ),
               ),
+              if (onDelete != null) ...[
+                const SizedBox(width: 2),
+                DeleteButton(onDelete: onDelete!),
+              ],
             ],
           ),
           const SizedBox(height: 16),
@@ -577,11 +591,15 @@ class _ReplyCard extends StatelessWidget {
   final bool isLiked;
   final VoidCallback onLike;
 
+  /// Only supplied for the user's own reply — see [isMe].
+  final VoidCallback? onDelete;
+
   const _ReplyCard({
     required this.reply,
     required this.isMe,
     required this.isLiked,
     required this.onLike,
+    this.onDelete,
   });
 
   @override
@@ -646,12 +664,21 @@ class _ReplyCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Text(
-                      timeString,
-                      style: GoogleFonts.crimsonPro(
-                        fontSize: 12.5,
-                        color: AppColors.primaryVeryDark.withAlpha(130),
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          timeString,
+                          style: GoogleFonts.crimsonPro(
+                            fontSize: 12.5,
+                            color: AppColors.primaryVeryDark.withAlpha(130),
+                          ),
+                        ),
+                        if (isMe && onDelete != null) ...[
+                          const SizedBox(width: 2),
+                          DeleteButton(onDelete: onDelete!),
+                        ],
+                      ],
                     ),
                   ],
                 ),

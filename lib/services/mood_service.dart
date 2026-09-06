@@ -28,7 +28,8 @@ class MoodService with FirestoreServiceMixin {
 
       await db.collection('mood').add(data);
       _analytics.logMoodLogged(moodLabel: entry.moodLabel);
-      AppLog.info('MoodService.saveMoodEntry', 'saved for $userId - ${entry.moodLabel}');
+      AppLog.info('MoodService.saveMoodEntry',
+          'saved for $userId - ${entry.moodLabel}');
     } on FirebaseException catch (e) {
       AppLog.firebase('MoodService.saveMoodEntry', '${e.code} - ${e.message}');
     } catch (e) {
@@ -58,7 +59,8 @@ class MoodService with FirestoreServiceMixin {
   Future<List<MoodEntry>> getAllMoodEntriesForAdmin() async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) {
-      AppLog.info('MoodService.getAllMoodEntriesForAdmin', 'No authenticated user.');
+      AppLog.info(
+          'MoodService.getAllMoodEntriesForAdmin', 'No authenticated user.');
       return [];
     }
 
@@ -66,7 +68,8 @@ class MoodService with FirestoreServiceMixin {
     final userDoc = await db.collection('users').doc(userId).get();
     final isAdmin = userDoc.data()?['role'] == 'admin';
     if (!isAdmin) {
-      AppLog.info('MoodService.getAllMoodEntriesForAdmin', 'Access denied. Not an admin.');
+      AppLog.info('MoodService.getAllMoodEntriesForAdmin',
+          'Access denied. Not an admin.');
       return [];
     }
 
@@ -80,7 +83,8 @@ class MoodService with FirestoreServiceMixin {
           .map((doc) => MoodEntry.fromFirestore(doc.data(), doc.id))
           .toList();
     } on FirebaseException catch (e) {
-      AppLog.firebase('MoodService.getAllMoodEntriesForAdmin', '${e.code} - ${e.message}');
+      AppLog.firebase(
+          'MoodService.getAllMoodEntriesForAdmin', '${e.code} - ${e.message}');
       return [];
     } catch (e) {
       AppLog.error('MoodService.getAllMoodEntriesForAdmin', e);
@@ -98,12 +102,15 @@ class MoodService with FirestoreServiceMixin {
 
     final userDoc = await db.collection('users').doc(userId).get();
     if (userDoc.data()?['role'] != 'admin') {
-      AppLog.info('MoodService.getMoodEntriesPageForAdmin', 'Access denied. Not an admin.');
+      AppLog.info('MoodService.getMoodEntriesPageForAdmin',
+          'Access denied. Not an admin.');
       return (items: <MoodEntry>[], lastDoc: null);
     }
 
-    Query<Map<String, dynamic>> query =
-        db.collection('mood').orderBy('timestamp', descending: true).limit(limit);
+    Query<Map<String, dynamic>> query = db
+        .collection('mood')
+        .orderBy('timestamp', descending: true)
+        .limit(limit);
     if (startAfter != null) query = query.startAfterDocument(startAfter);
 
     final snap = await query.get();

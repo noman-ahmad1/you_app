@@ -12,14 +12,9 @@ import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/escalation_service.dart';
 import 'package:you_app/services/moderation_flag_service.dart';
 import 'package:you_app/services/moderation_service.dart';
-import 'package:you_app/services/user_service.dart';
 import 'package:you_app/services/volunteer_service.dart';
-import 'package:you_app/services/mood_service.dart';
-import 'package:you_app/services/journal_service.dart';
 import 'package:you_app/services/chat_service.dart';
-import 'package:you_app/services/chat_request_service.dart';
 import 'package:you_app/ui/views/chat/widgets/review_dialog.dart';
-import 'package:you_app/services/community_service.dart';
 
 class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   // --- Services ---
@@ -133,11 +128,13 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   }
 
   void _navigateAway() {
-    final isVolunteer = _authenticationService.currentUser?.isVolunteer ?? false;
+    final isVolunteer =
+        _authenticationService.currentUser?.isVolunteer ?? false;
     if (isVolunteer) {
       _navigationService.clearStackAndShow(Routes.volunteerHomeView);
     } else {
-      _navigationService.clearStackAndShow(Routes.homeView, arguments: const HomeViewArguments(initialIndex: 2));
+      _navigationService.clearStackAndShow(Routes.homeView,
+          arguments: const HomeViewArguments(initialIndex: 2));
     }
   }
 
@@ -250,7 +247,8 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   }
 
   Future<void> endChat() async {
-    final isVolunteer = _authenticationService.currentUser?.isVolunteer ?? false;
+    final isVolunteer =
+        _authenticationService.currentUser?.isVolunteer ?? false;
 
     final response = await _dialogService.showConfirmationDialog(
       title: 'End Chat',
@@ -265,7 +263,8 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
       // be offered the review from the volunteers screen.
       bool reviewHandledInline = false;
       // If the current user is NOT the volunteer, prompt for a review
-      if (!isVolunteer && _navigationService.navigatorKey?.currentContext != null) {
+      if (!isVolunteer &&
+          _navigationService.navigatorKey?.currentContext != null) {
         final context = _navigationService.navigatorKey!.currentContext!;
         final reviewResult = await showDialog<Map<String, dynamic>>(
           context: context,
@@ -364,7 +363,10 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   /// Opens a `type:'moderation'` escalation for the highest-risk (violence)
   /// blocks only, so the supervisor feed isn't flooded by every blocked word.
   void _maybeEscalateModeration(ModerationResult moderation) {
-    if (!moderation.categories.contains(ModerationCategory.violence)) return;
+    // Escalate on ANY severe block (banned/hate/violence/sexual), not just
+    // violence — the admin panel's crisis feed expects "a severe auto-moderation
+    // block" to raise an escalation. `moderate`/`pii` blocks still don't.
+    if (moderation.severity != 'severe') return;
     final me = _authenticationService.currentUser;
     locator<EscalationService>().escalateModeration(
       userId: currentUserId!,

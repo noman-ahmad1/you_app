@@ -2,6 +2,8 @@ import 'package:you_app/env.dart';
 
 class AppConstants {
   static const String appName = Environments.appName;
+  static const String privacyUrl = Environments.privacyUrl;
+  static const String termsUrl = Environments.termsUrl;
   static const String defaultCurrencyCode =
       'PKR'; // your currency code in 3 digit
   static const String defaultCurrencySide =
@@ -106,13 +108,12 @@ class AppConstants {
   static const String soothing2 = 'assets/images/soothing2.jpg';
   static const String lonliness = 'assets/images/lonliness.png';
 
-  //sounds
+  // UI sound effects. The soothing-sounds TRACKS are no longer bundled — they
+  // live in Cloud Storage and are authored by the admin in the `sounds`
+  // collection (see SoundService). Only these tiny SFX ship in the app.
   static const String drop = 'assets/sounds/drop.mp3';
   static const String page = 'assets/sounds/journal.mp3';
   static const String swipe = 'assets/sounds/swipe.mp3';
-  static const String natureWater = 'assets/sounds/nature_water.mp3';
-  static const String calm = 'assets/sounds/calm.mp3';
-  static const String focus = 'assets/sounds/focus.mp3';
 
   //animations
   static const String like = 'assets/animations/like.lottie';

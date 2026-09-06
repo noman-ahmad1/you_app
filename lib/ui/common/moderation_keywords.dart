@@ -93,8 +93,7 @@ class ModerationKeywords {
   // --- PII regexes (used for both detection and masking) ---
 
   /// Phone-like digit runs (7+ digits, optional +, spaces, dashes, parens).
-  static final RegExp phone =
-      RegExp(r'(\+?\d[\d\s().-]{5,}\d)');
+  static final RegExp phone = RegExp(r'(\+?\d[\d\s().-]{5,}\d)');
 
   /// Email addresses.
   static final RegExp email =

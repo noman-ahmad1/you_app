@@ -9,7 +9,7 @@ import 'package:you_app/ui/shared/widgets.dart';
 import 'package:you_app/ui/views/breathe/breathe_viewmodel.dart';
 
 class BreatheView extends StatefulWidget {
-  const BreatheView({Key? key}) : super(key: key);
+  const BreatheView({super.key});
 
   @override
   State<BreatheView> createState() => _BreatheViewState();
@@ -137,12 +137,11 @@ class _BreatheAnimationContent extends StatefulWidget {
   final Function(BreathePhase) onPhaseChanged;
 
   const _BreatheAnimationContent({
-    Key? key,
     required this.viewModel,
     required this.animationController,
     required this.scaleAnimation,
     required this.onPhaseChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<_BreatheAnimationContent> createState() =>
@@ -184,15 +183,15 @@ class _BreatheAnimationContentState extends State<_BreatheAnimationContent> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.secondary.withOpacity(0.8),
-                        AppColors.primaryLight.withOpacity(0.4),
+                        AppColors.secondary.withValues(alpha: 0.8),
+                        AppColors.primaryLight.withValues(alpha: 0.4),
                         Colors.transparent,
                       ],
                       stops: const [0.2, 0.7, 1.0],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.secondary.withOpacity(0.5),
+                        color: AppColors.secondary.withValues(alpha: 0.5),
                         blurRadius: 40,
                         spreadRadius: 10,
                       )
@@ -205,7 +204,7 @@ class _BreatheAnimationContentState extends State<_BreatheAnimationContent> {
                         child: Container(
                           width: 200,
                           height: 200,
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           child: Center(
                             child: widget.viewModel.isActive
                                 ? Text(
@@ -219,7 +218,7 @@ class _BreatheAnimationContentState extends State<_BreatheAnimationContent> {
                                 : Icon(
                                     Icons.play_arrow_rounded,
                                     size: 64,
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withValues(alpha: 0.8),
                                   ),
                           ),
                         ),

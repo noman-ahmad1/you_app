@@ -2,15 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:lottie/lottie.dart';
 
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/mood_service.dart';
 import 'package:you_app/models/mood_model.dart';
-import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
-import 'package:you_app/ui/common/app_constants.dart';
 import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class WeeklyMoodChart extends StatefulWidget {
@@ -111,7 +108,6 @@ class _WeeklyMoodChartState extends State<WeeklyMoodChart> {
           .reduce((a, b) => a.value > b.value ? a : b)
           .key;
       // Get emoji from map, default to 😊 if not found or asset is empty
-      final asset = moodDataMap[topLabel]?['assetId'];
       _topMoodEmoji = _getEmojiCharacterForLabel(topLabel);
     } else {
       _topMoodEmoji = '😊';
@@ -279,7 +275,7 @@ class _WeeklyMoodChartState extends State<WeeklyMoodChart> {
             border: Border.all(color: AppColors.background, width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               )
@@ -295,7 +291,7 @@ class _WeeklyMoodChartState extends State<WeeklyMoodChart> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     )
@@ -384,7 +380,7 @@ class _WeeklyMoodChartState extends State<WeeklyMoodChart> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )

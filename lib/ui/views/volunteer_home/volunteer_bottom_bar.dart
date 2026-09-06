@@ -79,7 +79,8 @@ class VolunteerBottomBar extends StatelessWidget {
                     unreadNotificationsCount: unreadNotificationsCount,
                     showcaseKey: requestsKey,
                     showcaseTitle: 'Requests',
-                    showcaseDescription: 'Find users needing your support here.',
+                    showcaseDescription:
+                        'Find users needing your support here.',
                   ),
                   _TabItem(
                     assetPath: AppConstants.chat,
@@ -88,7 +89,8 @@ class VolunteerBottomBar extends StatelessWidget {
                     onTap: () => onTap(1),
                     showcaseKey: homeFeedKey,
                     showcaseTitle: 'Home Feed',
-                    showcaseDescription: 'Reply anonymously to community threads.',
+                    showcaseDescription:
+                        'Reply anonymously to community threads.',
                   ),
                   _TabItem(
                     assetPath: AppConstants.stat,
@@ -97,7 +99,8 @@ class VolunteerBottomBar extends StatelessWidget {
                     onTap: () => onTap(2),
                     showcaseKey: dashboardKey,
                     showcaseTitle: 'Dashboard',
-                    showcaseDescription: 'Track your positive impact over time.',
+                    showcaseDescription:
+                        'Track your positive impact over time.',
                   ),
                 ],
               ),
@@ -148,58 +151,60 @@ class _TabItem extends StatelessWidget {
     final barHeight =
         MediaQuery.of(context).size.height * 0.06; // match BottomBar height
     final iconSize = barHeight * 0.6; // 60% of bar height
-    
+
     Widget content = GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-          alignment: Alignment.center,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Image.asset(
-                assetPath,
-                height: iconSize,
-                width: iconSize,
-                color: isSelected ? AppColors.secondary : AppColors.secondary,
-              ),
-              if (assetPath == AppConstants.notification)
-                Positioned(
-                  right: -4,
-                  top: -4,
-                  child: IgnorePointer(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 300),
-                      opacity: unreadNotificationsCount > 0 ? 1.0 : 0.0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
+        alignment: Alignment.center,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Image.asset(
+              assetPath,
+              height: iconSize,
+              width: iconSize,
+              color: isSelected ? AppColors.secondary : AppColors.secondary,
+            ),
+            if (assetPath == AppConstants.notification)
+              Positioned(
+                right: -4,
+                top: -4,
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: unreadNotificationsCount > 0 ? 1.0 : 0.0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
+                      child: Text(
+                        '$unreadNotificationsCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
                         ),
-                        constraints: const BoxConstraints(
-                          minWidth: 14,
-                          minHeight: 14,
-                        ),
-                        child: Text(
-                          '$unreadNotificationsCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
-      );
+      ),
+    );
 
-    if (showcaseKey != null && showcaseTitle != null && showcaseDescription != null) {
+    if (showcaseKey != null &&
+        showcaseTitle != null &&
+        showcaseDescription != null) {
       content = AppShowcase.step(
         key: showcaseKey!,
         title: showcaseTitle!,

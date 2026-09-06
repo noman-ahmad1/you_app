@@ -1,10 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart'; // Import for date formatting
 import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
-import 'package:you_app/models/chat_request_model.dart'; // Import ChatRequest
+// Import ChatRequest
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
@@ -16,7 +15,7 @@ import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 // This is likely a tab, so ViewModelWidget is appropriate
 class VolunteerHome extends ViewModelWidget<VolunteerHomeViewModel> {
-  const VolunteerHome({Key? key}) : super(key: key);
+  const VolunteerHome({super.key});
 
   @override
   Widget build(BuildContext context, VolunteerHomeViewModel viewModel) {

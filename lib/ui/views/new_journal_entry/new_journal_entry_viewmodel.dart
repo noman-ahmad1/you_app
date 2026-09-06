@@ -132,7 +132,9 @@ class NewJournalEntryViewModel extends BaseViewModel {
   Future<void> discardRecording() => _runControl(_discardRecording);
 
   Future<void> _runControl(Future<void> Function() action) async {
-    if (_isProcessing || isBusy) return; // ignore taps mid-transition / mid-save
+    if (_isProcessing || isBusy) {
+      return; // ignore taps mid-transition / mid-save
+    }
     _isProcessing = true;
     notifyListeners();
     try {
@@ -394,7 +396,8 @@ class NewJournalEntryViewModel extends BaseViewModel {
       if (isVoiceTab) {
         // Re-recorded → upload the new clip; otherwise keep the existing audio.
         if (_localPath != null) {
-          final url = await _uploadRecording(_editingEntry!.userId, _localPath!);
+          final url =
+              await _uploadRecording(_editingEntry!.userId, _localPath!);
           if (url == null) throw Exception('Audio upload failed.');
           data['audioUrl'] = url;
           data['audioDurationMs'] = _recordDuration.inMilliseconds;

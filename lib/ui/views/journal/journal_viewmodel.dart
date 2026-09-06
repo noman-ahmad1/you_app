@@ -9,13 +9,7 @@ import 'package:you_app/models/journal_model.dart'; // Make sure this is your Jo
 import 'package:you_app/services/app_content_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
-import 'package:you_app/services/user_service.dart';
-import 'package:you_app/services/volunteer_service.dart';
-import 'package:you_app/services/mood_service.dart';
 import 'package:you_app/services/journal_service.dart';
-import 'package:you_app/services/chat_service.dart';
-import 'package:you_app/services/chat_request_service.dart';
-import 'package:you_app/services/community_service.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/monetization_service.dart';
 import 'package:you_app/ui/common/app_constants.dart';
@@ -86,10 +80,10 @@ class JournalViewModel extends BaseViewModel {
 
     _journalStreamSubscription = locator<JournalService>()
         .getJournalEntriesStream(
-          userId: userId,
-          // Free users see a recent window; premium gets the full history.
-          sinceDays: isPremium ? null : historyWindowDays,
-        )
+      userId: userId,
+      // Free users see a recent window; premium gets the full history.
+      sinceDays: isPremium ? null : historyWindowDays,
+    )
         .listen((entries) {
       _allEntries = entries; // Update the main list with new data
       setBusy(false); // Data has arrived
@@ -106,12 +100,12 @@ class JournalViewModel extends BaseViewModel {
       locator<AppContentService>().promptOfTheDay();
 
   /// Gentle fallback used when there's no active prompt for today.
-  String get defaultPrompt =>
-      'What is one thing that brought you peace today?';
+  String get defaultPrompt => 'What is one thing that brought you peace today?';
 
   /// Free-tier "unlock full history" action → gate analytics + paywall.
   Future<void> onUnlockHistory() async {
-    locator<AnalyticsService>().logGateHit(feature: PaywallFeature.journalHistory);
+    locator<AnalyticsService>()
+        .logGateHit(feature: PaywallFeature.journalHistory);
     await PaywallHelper.show(feature: PaywallFeature.journalHistory);
   }
 

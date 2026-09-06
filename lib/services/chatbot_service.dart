@@ -37,7 +37,8 @@ class ChatbotService {
         reply: (data['reply'] ?? '').toString(),
       );
     } on FirebaseFunctionsException catch (e) {
-      AppLog.error('ChatbotService.generateResponse', '${e.code}: ${e.message}');
+      AppLog.error(
+          'ChatbotService.generateResponse', '${e.code}: ${e.message}');
       rethrow;
     } catch (e) {
       AppLog.error('ChatbotService.generateResponse', e);

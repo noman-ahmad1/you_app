@@ -36,6 +36,7 @@ class EscalationService with FirestoreServiceMixin {
         'status': 'open',
         'createdAt': FieldValue.serverTimestamp(),
       });
+      await _markChatEscalated(chatId);
       // Safety trail (fire-and-forget; server captures the IP).
       locator<SecurityLogService>().log(SecurityAction.reportFiled);
     } catch (e) {
@@ -64,6 +65,7 @@ class EscalationService with FirestoreServiceMixin {
         'status': 'open',
         'createdAt': FieldValue.serverTimestamp(),
       });
+      if (chatId != null) await _markChatEscalated(chatId);
       // Safety trail (fire-and-forget; server captures the IP).
       locator<SecurityLogService>().log(SecurityAction.reportFiled);
     } catch (e) {
@@ -71,15 +73,36 @@ class EscalationService with FirestoreServiceMixin {
     }
   }
 
+  /// Mirrors "this chat was escalated" onto the chat doc itself.
+  ///
+  /// `escalations` is **admin-read-only**, so a participant cannot query it —
+  /// but they CAN read their own chat. This flag is what [hasUnresolvedEscalation]
+  /// checks. The admin panel clears it (`escalated: false`) when it resolves the
+  /// escalation. Best-effort: a failure here must never break the crisis flow.
+  Future<void> _markChatEscalated(String chatId) async {
+    try {
+      await db.collection('chats').doc(chatId).set({
+        'escalated': true,
+        'escalatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      AppLog.error('EscalationService._markChatEscalated', e);
+    }
+  }
+
   /// True if [chatId] has an escalation a supervisor hasn't resolved yet, so the
   /// chat (and its transcript) must be preserved as evidence.
+  ///
+  /// Reads the `escalated` flag on the chat doc rather than querying
+  /// `escalations` — that collection is admin-read-only, so the query was always
+  /// permission-denied and this guard silently never fired.
+  ///
+  /// Advisory only: it stops the in-app "delete chat" button, not a determined
+  /// client. Server-side retention is the real guarantee.
   Future<bool> hasUnresolvedEscalation(String chatId) async {
     try {
-      final snap = await db
-          .collection('escalations')
-          .where('chatId', isEqualTo: chatId)
-          .get();
-      return snap.docs.any((d) => (d.data()['status'] as String?) != 'resolved');
+      final snap = await db.collection('chats').doc(chatId).get();
+      return snap.data()?['escalated'] == true;
     } catch (e) {
       AppLog.error('EscalationService.hasUnresolvedEscalation', e);
       return false; // fail-open: don't block deletion on a transient read error

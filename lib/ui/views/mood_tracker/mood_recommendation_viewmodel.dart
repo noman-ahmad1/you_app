@@ -5,7 +5,6 @@ import 'package:you_app/app/app.router.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/models/mood_model.dart';
 import 'package:you_app/ui/views/home/home_view.dart';
-import 'package:you_app/ui/views/volunteer_signup/volunteer_signup_view.dart';
 
 class RecommendationItem {
   final String title;

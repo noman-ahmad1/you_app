@@ -1,7 +1,5 @@
-import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/ui/common/app_colors.dart';
@@ -14,7 +12,7 @@ import 'package:you_app/ui/views/mood_tracker/swipe_card.dart';
 import 'mood_tracker_viewmodel.dart';
 
 class MoodTrackerView extends StackedView<MoodTrackerViewModel> {
-  const MoodTrackerView({Key? key}) : super(key: key);
+  const MoodTrackerView({super.key});
 
   @override
   Widget builder(
@@ -316,9 +314,10 @@ class _AdvancedInsightsTeaser extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.secondary.withOpacity(0.08),
+          color: AppColors.secondary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.secondary.withOpacity(0.25)),
+          border:
+              Border.all(color: AppColors.secondary.withValues(alpha: 0.25)),
         ),
         child: Row(
           children: [
@@ -341,7 +340,7 @@ class _AdvancedInsightsTeaser extends StatelessWidget {
                     'Deep patterns, triggers & personal reports with Premium.',
                     style: GoogleFonts.crimsonPro(
                       fontSize: 12,
-                      color: AppColors.secondary.withOpacity(0.9),
+                      color: AppColors.secondary.withValues(alpha: 0.9),
                     ),
                   ),
                 ],

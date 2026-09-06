@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart'; // For formatting time ago
 import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
-import 'package:you_app/models/chat_request_model.dart'; // Import model
+// Import model
 import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
@@ -14,7 +14,7 @@ import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 // Assuming this is a StackedView for a standalone screen displaying PENDING requests.
 class RequestScreen extends StackedView<VolunteerHomeViewModel> {
-  const RequestScreen({Key? key}) : super(key: key);
+  const RequestScreen({super.key});
 
   @override
   Widget builder(
@@ -111,9 +111,7 @@ class RequestScreen extends StackedView<VolunteerHomeViewModel> {
                       // ✅ Use the correct list: pendingRequests
                       child: viewModel.isBusyRequests &&
                               viewModel.pendingRequests.isEmpty
-                          ? const Center(
-                              child: CustomLottieLoader()
-                              )
+                          ? const Center(child: CustomLottieLoader())
                           : viewModel.pendingRequests
                                   .isEmpty // ✅ Use pendingRequests
                               ? Center(

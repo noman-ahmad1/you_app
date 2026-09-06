@@ -22,10 +22,10 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
   final String communityName;
 
   const CommunityChatView({
-    Key? key,
+    super.key,
     required this.communityId,
     required this.communityName,
-  }) : super(key: key);
+  });
 
   @override
   Widget builder(
@@ -112,8 +112,8 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                               child: SizedBox(
                                 width: 24,
                                 height: 24,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
                             ),
                           );
@@ -130,6 +130,8 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
                                 post.likedBy.contains(viewModel.currentUserId),
                             onTap: () => viewModel.navigateToThread(post),
                             onLike: () => viewModel.toggleLike(post),
+                            onDelete:
+                                isMe ? () => viewModel.deletePost(post) : null,
                           ),
                         );
                       },
@@ -180,7 +182,7 @@ class CommunityChatView extends StackedView<CommunityChatViewModel> {
 // -------------------------------------------------------------------
 
 class _PostComposer extends ViewModelWidget<CommunityChatViewModel> {
-  const _PostComposer({Key? key}) : super(key: key);
+  const _PostComposer();
 
   @override
   Widget build(BuildContext context, CommunityChatViewModel viewModel) {
@@ -311,7 +313,7 @@ class _ThreadUpgradeButton extends ViewModelWidget<CommunityChatViewModel> {
 }
 
 class _LockedBanner extends StatelessWidget {
-  const _LockedBanner({Key? key}) : super(key: key);
+  const _LockedBanner();
 
   @override
   Widget build(BuildContext context) {
@@ -358,12 +360,16 @@ class _CommunityPostCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onLike;
 
+  /// Only supplied for the author's own thread — see [isMe].
+  final VoidCallback? onDelete;
+
   const _CommunityPostCard({
     required this.post,
     required this.isMe,
     required this.isLiked,
     required this.onTap,
     required this.onLike,
+    this.onDelete,
   });
 
   @override
@@ -439,6 +445,8 @@ class _CommunityPostCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (isMe && onDelete != null)
+                    DeleteButton(onDelete: onDelete!),
                 ],
               ),
               const SizedBox(height: 12),

@@ -21,7 +21,7 @@ class UserCard extends StatelessWidget {
   final VoidCallback? onRejectTap;
 
   const UserCard({
-    Key? key,
+    super.key,
     required this.username,
     required this.lastMessage,
     required this.avatarPath,
@@ -33,7 +33,7 @@ class UserCard extends StatelessWidget {
     this.onMessageTap,
     this.onAcceptTap,
     this.onRejectTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +60,7 @@ class UserCard extends StatelessWidget {
                 ],
               ),
               border: Border.all(
-                  color: AppColors.secondary.withOpacity(0.3), width: 1),
+                  color: AppColors.secondary.withValues(alpha: 0.3), width: 1),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -177,7 +177,7 @@ class UserCard extends StatelessWidget {
             style: GoogleFonts.crimsonPro(
               fontSize: 12,
               fontWeight: FontWeight.w400,
-              color: AppColors.red.withOpacity(0.8),
+              color: AppColors.red.withValues(alpha: 0.8),
             ),
           ),
         // SizedBox(height: height * 0.01),
@@ -203,24 +203,6 @@ class UserCard extends StatelessWidget {
   //     ),
   //   );
   // }
-
-  Color _getCategoryColor(String category) {
-    // Define colors based on category
-    switch (category.toLowerCase()) {
-      case 'anxiety':
-        return Colors.orange;
-      case 'depression':
-        return Colors.blue;
-      case 'relationships':
-        return Colors.pink;
-      case 'stress':
-        return Colors.red;
-      case 'trauma':
-        return Colors.purple;
-      default:
-        return AppColors.secondary;
-    }
-  }
 
   Widget _buildActions(double width, double height) {
     if (type == UserCardType.activeChat) {
@@ -253,7 +235,7 @@ class UserCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.secondary.withOpacity(0.3),
+                    color: AppColors.secondary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: Offset(1, 5),
                   ),
@@ -280,7 +262,7 @@ class UserCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryDark.withOpacity(0.3),
+                    color: AppColors.primaryDark.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: Offset(0, 3),
                   ),
@@ -303,7 +285,7 @@ class UserCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.red.withOpacity(0.3),
+                    color: Colors.red.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: Offset(0, 3),
                   ),

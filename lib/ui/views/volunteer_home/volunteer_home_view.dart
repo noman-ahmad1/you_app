@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:you_app/ui/shared/app_showcase.dart';
-import 'package:you_app/ui/views/home/widgets/bottom_bar.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/volunteer_home.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/request.dart';
 import 'package:you_app/ui/views/volunteer_home/tabs/dashboard.dart';
@@ -13,7 +12,7 @@ import 'package:you_app/ui/shared/verify_email_block.dart';
 import 'volunteer_home_viewmodel.dart';
 
 class VolunteerHomeView extends StackedView<VolunteerHomeViewModel> {
-  const VolunteerHomeView({Key? key}) : super(key: key);
+  const VolunteerHomeView({super.key});
 
   @override
   Widget builder(
@@ -49,7 +48,8 @@ class VolunteerHomeView extends StackedView<VolunteerHomeViewModel> {
                     child: VolunteerBottomBar(
                       currentIndex: viewModel.currentIndex,
                       onTap: viewModel.setTab,
-                      unreadNotificationsCount: viewModel.pendingRequests.length,
+                      unreadNotificationsCount:
+                          viewModel.pendingRequests.length,
                       requestsKey: viewModel.requestsKey,
                       homeFeedKey: viewModel.homeFeedKey,
                       dashboardKey: viewModel.dashboardKey,

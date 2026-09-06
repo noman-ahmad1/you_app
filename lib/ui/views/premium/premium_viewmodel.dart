@@ -93,7 +93,8 @@ class PremiumViewModel extends ReactiveViewModel {
   }
 
   // --- Billing plan selection ---
-  BillingPeriod _selected = BillingPeriod.yearly; // yearly = best value, default
+  BillingPeriod _selected =
+      BillingPeriod.yearly; // yearly = best value, default
   BillingPeriod get selected => _selected;
   bool isSelected(BillingPeriod p) => _selected == p;
   void selectPlan(BillingPeriod p) {
@@ -106,10 +107,12 @@ class PremiumViewModel extends ReactiveViewModel {
   // if offerings haven't loaded (offline / not yet configured). ---
   String get currency => AppConstants.defaultCurrencyCode; // 'PKR'
   String get monthlyPrice =>
-      _monthlyPkg?.storeProduct.priceString ?? '$currency 300';
+      _monthlyPkg?.storeProduct.priceString ?? '$currency 320';
   String get yearlyPrice =>
-      _yearlyPkg?.storeProduct.priceString ?? '$currency 3,000';
-  String get yearlyPerMonth => '$currency 250 / mo';
+      _yearlyPkg?.storeProduct.priceString ?? '$currency 3,200';
+  // PKR 3,200 / 12 ≈ 266.67, rounded up so we never understate the price.
+  String get yearlyPerMonth => '$currency 267 / mo';
+  // 12 × 320 = 3,840 vs 3,200 → 16.7% saved.
   String get yearlySaveLabel => 'Save 17%';
 
   String get ctaLabel => _activating ? 'Activating…' : 'Subscribe to You+';
@@ -127,22 +130,28 @@ class PremiumViewModel extends ReactiveViewModel {
         ),
         PremiumHighlight(
           AppConstants.brain,
-          'Priority listeners',
+          'Unbounded and Priority listeners',
           'Skip the queue and connect with a trained listener first.',
           AppColors.secondary.withAlpha(36),
         ),
         PremiumHighlight(
-          AppConstants.journalImg,
-          'Unlimited journaling + voice',
-          'Your full history, forever — write it or speak it.',
-          AppColors.green.withAlpha(36),
+          AppConstants.community2,
+          'Unlimited community',
+          'Post and reply without monthly limits — and mention people directly.',
+          AppColors.lightPurple.withAlpha(56),
         ),
         PremiumHighlight(
-          AppConstants.emoji_2,
-          'Deeper mood insights',
-          'Patterns, triggers and gentle weekly reflections.',
-          AppColors.teal.withAlpha(56),
+          AppConstants.journalImg,
+          'Unlock voice journaling + Deeper mood insights',
+          'Your full history, forever — write it or speak it. Patterns, triggers and gentle weekly reflections',
+          AppColors.green.withAlpha(36),
         ),
+        // PremiumHighlight(
+        //   AppConstants.emoji_2,
+        //   'Deeper mood insights',
+        //   'Patterns, triggers and gentle weekly reflections.',
+        //   AppColors.teal.withAlpha(56),
+        // ),
       ];
 
   /// The full Free-vs-Premium breakdown, shown in the Compare sheet.
@@ -150,11 +159,14 @@ class PremiumViewModel extends ReactiveViewModel {
         PlanRow('Dodo AI companion', free: 'Daily limit', premium: 'Unlimited'),
         PlanRow('Listener chats',
             free: '2–3 welcome', premium: 'Priority & unlimited'),
-        PlanRow('Journaling history', free: 'Recent only', premium: 'Unlimited'),
+        PlanRow('Journaling history',
+            free: 'Recent only', premium: 'Unlimited'),
         PlanRow('Voice journaling', free: '', premium: 'Included'),
         PlanRow('Mood insights', free: 'Basic', premium: 'Advanced reports'),
-        PlanRow('Community threads', free: 'Limited / mo', premium: 'Unlimited'),
-        PlanRow('Community replies', free: 'Limited / mo', premium: 'Unlimited'),
+        PlanRow('Community threads',
+            free: 'Limited / mo', premium: 'Unlimited'),
+        PlanRow('Community replies',
+            free: 'Limited / mo', premium: 'Unlimited'),
         PlanRow('Mention people in replies', free: '', premium: 'Included'),
         PlanRow('Ads', free: 'None', premium: 'None'),
         PlanRow('Crisis support', free: 'Always free', premium: 'Always free'),
@@ -360,21 +372,54 @@ class PremiumViewModel extends ReactiveViewModel {
 
   Future<void> _syncEntitlement() async {
     try {
-      await FirebaseFunctions.instance.httpsCallable('refreshEntitlement').call();
+      await FirebaseFunctions.instance
+          .httpsCallable('refreshEntitlement')
+          .call();
     } catch (e) {
       // Non-fatal: the webhook path will still unlock shortly.
       AppLog.error('PremiumViewModel.refreshEntitlement', e);
     }
   }
 
+  /// The footer links under the plans. [which] is the label the view renders —
+  /// keep these strings in sync with `_LegalRow` in premium_view.dart, or the
+  /// tap silently falls through to the "unknown link" dialog.
   Future<void> onLegalTap(String which) async {
-    if (which == 'Restore purchase') {
-      await _restore();
-      return;
+    switch (which) {
+      case 'Restore purchase':
+        await _restore();
+        return;
+      case 'Terms':
+        await _openLegalUrl(AppConstants.termsUrl, which);
+        return;
+      case 'Privacy':
+        await _openLegalUrl(AppConstants.privacyUrl, which);
+        return;
     }
     await _dialogService.showDialog(
       title: which,
-      description: 'This will be available once subscriptions go live.',
+      description: 'This link isn’t available right now.',
+      buttonTitle: 'OK',
+    );
+  }
+
+  /// Opens a policy page in the browser. Play requires these to be reachable
+  /// from the purchase screen, so a failure is surfaced rather than swallowed.
+  Future<void> _openLegalUrl(String url, String label) async {
+    var opened = false;
+    final uri = Uri.tryParse(url);
+    if (uri != null) {
+      try {
+        opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        AppLog.error('PremiumViewModel.onLegalTap($label)', e);
+      }
+    }
+    if (opened) return;
+
+    await _dialogService.showDialog(
+      title: 'Couldn’t open $label',
+      description: 'Please visit $url in your browser.',
       buttonTitle: 'OK',
     );
   }

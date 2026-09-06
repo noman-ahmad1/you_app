@@ -11,17 +11,15 @@ class AppBanner extends StatelessWidget {
   final IconData icon;
 
   const AppBanner({
-    Key? key,
+    super.key,
     required this.title,
     required this.description,
     // this.backgroundColor = AppColors.primary,
     this.icon = Icons.info_outline,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
     return ClipRRect(
       borderRadius: BorderRadius.circular(23),
       child: BackdropFilter(

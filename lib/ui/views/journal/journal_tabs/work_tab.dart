@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/models/journal_model.dart';
 import 'package:you_app/ui/common/animation_decoder.dart';
-import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/fade_slide_in.dart';
@@ -18,9 +14,9 @@ import 'package:you_app/ui/views/journal/journal_viewmodel.dart';
 class WorkEntriesView extends ViewModelWidget<JournalViewModel> {
   final List<JournalEntry> entries;
   const WorkEntriesView({
-    Key? key,
+    super.key,
     required this.entries,
-  }) : super(key: key, reactive: false);
+  }) : super(reactive: false);
   @override
   Widget build(BuildContext context, JournalViewModel viewModel) {
     final mediaQuery = MediaQuery.of(context);

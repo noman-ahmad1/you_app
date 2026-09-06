@@ -10,9 +10,9 @@ import 'user_info_viewmodel.dart';
 
 class UserInfoView extends StackedView<UserInfoViewModel> {
   const UserInfoView({
-    Key? key,
+    super.key,
     required this.uid,
-  }) : super(key: key);
+  });
 
   final String uid;
 
@@ -22,7 +22,6 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
     UserInfoViewModel viewModel,
     Widget? child,
   ) {
-    final emailController = TextEditingController();
     final screenSize = MediaQuery.of(context).size;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
@@ -219,7 +218,7 @@ class UserInfoView extends StackedView<UserInfoViewModel> {
                         Space.verticalSpaceTiny(context),
                       ],
                     ),
-                    Container(
+                    SizedBox(
                         height: screenSize.height * 0.33,
                         child: Image.asset(AppConstants.register)),
                   ],

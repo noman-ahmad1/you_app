@@ -1,12 +1,10 @@
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
-import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
@@ -76,8 +74,8 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
       final volunteerInfo = await _volunteerService.get(appUser.uid);
 
       // Pre-fill Personal Info
-      firstNameController.text = appUser.firstName ?? '';
-      lastNameController.text = appUser.lastName ?? '';
+      firstNameController.text = appUser.firstName;
+      lastNameController.text = appUser.lastName;
 
       String phone = appUser.phoneNumber ?? '';
       _fullPhoneNumber = phone;
@@ -153,7 +151,7 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
               primary: AppColors.primary,
               onPrimary: Colors.white,
             ),
-            dialogBackgroundColor: Colors.white,
+            dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -271,7 +269,7 @@ class VolunteerEditProfileViewModel extends BaseViewModel {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

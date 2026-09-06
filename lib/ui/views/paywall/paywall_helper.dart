@@ -14,6 +14,7 @@ class PaywallFeature {
   static const String communityThreads = 'community_threads';
   static const String communityReplies = 'community_replies';
   static const String mention = 'mention';
+  static const String soothingSounds = 'soothing_sounds';
 }
 
 /// Centralized entry point for showing the paywall. Call from any gate (view,

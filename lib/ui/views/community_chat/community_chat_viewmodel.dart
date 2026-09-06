@@ -37,7 +37,8 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
 
   /// Opens the Premium paywall from the thread cap-reached button.
   Future<void> openThreadPaywall() async {
-    locator<AnalyticsService>().logGateHit(feature: PaywallFeature.communityThreads);
+    locator<AnalyticsService>()
+        .logGateHit(feature: PaywallFeature.communityThreads);
     await PaywallHelper.show(feature: PaywallFeature.communityThreads);
   }
 
@@ -91,7 +92,8 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   }
 
   String get currentUserId => _authService.currentUser?.uid ?? '';
-  String get currentUserName => _authService.currentUser?.fullName ?? 'Anonymous';
+  String get currentUserName =>
+      _authService.currentUser?.fullName ?? 'Anonymous';
 
   CommunityChatViewModel({
     required this.communityId,
@@ -160,8 +162,8 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
   }
 
   @override
-  Stream<List<CommunityPost>> get stream =>
-      locator<CommunityService>().getCommunityPosts(communityId, limit: _postLimit);
+  Stream<List<CommunityPost>> get stream => locator<CommunityService>()
+      .getCommunityPosts(communityId, limit: _postLimit);
 
   @override
   void onData(List<CommunityPost>? data) {
@@ -215,7 +217,9 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
         text: text,
         result: moderation,
       );
-      if (moderation.categories.contains(ModerationCategory.violence)) {
+      // Any SEVERE block (banned/hate/violence/sexual) raises an escalation —
+      // the admin crisis feed expects severe blocks, not just violence.
+      if (moderation.severity == 'severe') {
         locator<EscalationService>().escalateModeration(
           userId: currentUserId,
           userName: currentUserName,
@@ -242,7 +246,8 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
     _pendingPosts.add(pending);
     notifyListeners();
     // Safety net: never leave a stuck card if the write never propagates.
-    Future.delayed(const Duration(seconds: 15), () => _removePending(pending.id));
+    Future.delayed(
+        const Duration(seconds: 15), () => _removePending(pending.id));
 
     try {
       // New-thread mentions are out of scope (premium @-mentions live in the
@@ -268,6 +273,35 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
       _snackbarService.showSnackbar(
         title: 'Error',
         message: 'Could not create post. Please try again.',
+      );
+    }
+  }
+
+  /// Deletes the user's own thread, after confirming. Deleting a post cascades
+  /// its replies server-side (`onPostDeleted`), so the confirmation says so —
+  /// the author is also removing other people's replies to them.
+  Future<void> deletePost(CommunityPost post) async {
+    if (post.authorId != currentUserId) return;
+
+    final response = await locator<DialogService>().showConfirmationDialog(
+      title: 'Delete thread?',
+      description: post.replyCount > 0
+          ? 'This will permanently delete your thread and its '
+              '${post.replyCount} ${post.replyCount == 1 ? 'reply' : 'replies'}. '
+              'This cannot be undone.'
+          : 'This will permanently delete your thread. This cannot be undone.',
+      confirmationTitle: 'Delete',
+      cancelTitle: 'Cancel',
+    );
+    if (response?.confirmed != true) return;
+
+    try {
+      await locator<CommunityService>().deletePost(post.id);
+      // No local list surgery needed — the Firestore stream drops it for us.
+    } catch (e) {
+      _snackbarService.showSnackbar(
+        title: 'Error',
+        message: 'Could not delete this thread. Please try again.',
       );
     }
   }
@@ -324,4 +358,3 @@ class CommunityChatViewModel extends StreamViewModel<List<CommunityPost>> {
     super.dispose();
   }
 }
-
