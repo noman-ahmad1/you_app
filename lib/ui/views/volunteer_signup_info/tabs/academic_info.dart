@@ -12,8 +12,8 @@ import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_vie
 // preserving the state of the controllers.
 class AcademicInfoView extends StatelessWidget {
   const AcademicInfoView({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +38,8 @@ class AcademicInfoView extends StatelessWidget {
 
         // --- Current Level of Study Dropdown ---
         DropdownButtonFormField<String>(
-          value: viewModel.selectedLevel, // Use value instead of initialValue
+          initialValue:
+              viewModel.selectedLevel, // Use value instead of initialValue
           decoration: InputDecoration(
             fillColor: AppColors.background,
             filled: true,

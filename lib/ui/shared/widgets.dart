@@ -27,7 +27,7 @@ class CustomTextField extends StatelessWidget {
   final Color? focusedBorderColor;
 
   const CustomTextField({
-    Key? key,
+    super.key,
     required this.controller,
     this.labelText = '',
     this.hintText = '',
@@ -45,7 +45,7 @@ class CustomTextField extends StatelessWidget {
     this.labelColor = AppColors.secondaryLight,
     this.enabledBorderColor = AppColors.primaryDark,
     this.focusedBorderColor = AppColors.primaryVeryDark,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +92,74 @@ class CustomTextField extends StatelessWidget {
   }
 }
 
+/// A password input with a show/hide toggle.
+///
+/// Wraps [CustomTextField], which is stateless and therefore cannot own the
+/// obscured flag itself. Every password entry point in the app should use this
+/// rather than passing `obscureText` by hand — a field that forgets the flag
+/// renders the password in clear text, which is exactly the bug this replaces.
+class PasswordField extends StatefulWidget {
+  final TextEditingController controller;
+  final String labelText;
+  final String hintText;
+  final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
+  final Color? fillColor;
+  final Color? labelColor;
+  final Color? enabledBorderColor;
+  final Color? focusedBorderColor;
+
+  const PasswordField({
+    super.key,
+    required this.controller,
+    this.labelText = 'Password',
+    this.hintText = '',
+    this.validator,
+    this.onChanged,
+    this.fillColor = AppColors.background,
+    this.labelColor = AppColors.secondaryLight,
+    this.enabledBorderColor = AppColors.primaryDark,
+    this.focusedBorderColor = AppColors.primaryVeryDark,
+  });
+
+  @override
+  State<PasswordField> createState() => _PasswordFieldState();
+}
+
+class _PasswordFieldState extends State<PasswordField> {
+  bool _obscured = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomTextField(
+      controller: widget.controller,
+      labelText: widget.labelText,
+      hintText: widget.hintText,
+      obscureText: _obscured,
+      keyboardType: TextInputType.visiblePassword,
+      validator: widget.validator,
+      onChanged: widget.onChanged,
+      fillColor: widget.fillColor,
+      labelColor: widget.labelColor,
+      enabledBorderColor: widget.enabledBorderColor,
+      focusedBorderColor: widget.focusedBorderColor,
+      suffixIcon: IconButton(
+        // IconButton gives us the 48dp minimum tap target for free.
+        icon: Icon(
+          _obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          color: AppColors.primaryVeryDark,
+          size: 20,
+        ),
+        tooltip: _obscured ? 'Show password' : 'Hide password',
+        onPressed: () => setState(() => _obscured = !_obscured),
+      ),
+    );
+  }
+}
+
 class PhoneNumberField extends StatefulWidget {
   const PhoneNumberField({
-    Key? key,
+    super.key,
     required this.controller,
     this.labelText = 'Phone Number',
     this.hintText = '300 123 4567',
@@ -112,7 +177,7 @@ class PhoneNumberField extends StatefulWidget {
     this.showCountryFlag = true,
     this.showCountryName = true,
     this.autofocus = false,
-  }) : super(key: key);
+  });
 
   final TextEditingController controller;
   final String labelText;
@@ -216,7 +281,7 @@ class _PhoneNumberFieldState extends State<PhoneNumberField> {
           decoration: InputDecoration(
             fillColor: widget.fillColor,
             hintStyle: GoogleFonts.crimsonPro(
-              color: AppColors.primaryVeryDark.withOpacity(0.6),
+              color: AppColors.primaryVeryDark.withValues(alpha: 0.6),
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -309,8 +374,6 @@ class _PhoneNumberFieldState extends State<PhoneNumberField> {
   }
 
   Widget _buildCountryCodeDropdown() {
-    final Country selectedCountry = _selectedCountry;
-
     return Padding(
       // Padding adjusted to shift the dropdown left, closer to the border
       padding: const EdgeInsets.only(left: 12.0, right: 0.0),
@@ -403,12 +466,12 @@ class CustomOtpField extends StatelessWidget {
   final bool autoFocus;
 
   const CustomOtpField({
-    Key? key,
+    super.key,
     this.length = 6,
     required this.onCompleted,
     this.controller,
     this.autoFocus = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -455,7 +518,7 @@ class CustomButton extends StatelessWidget {
   final Widget? icon;
 
   const CustomButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.backgroundColor = AppColors.primaryVeryDark,
@@ -466,14 +529,14 @@ class CustomButton extends StatelessWidget {
     this.fontSize,
     this.fontWeight = FontWeight.w900,
     this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Container(
+    return SizedBox(
       height: screenHeight * 0.065, // 6% of screen height
       width: double.infinity,
       child: ElevatedButton(
@@ -560,7 +623,7 @@ class CenteredDividerWithText extends StatelessWidget {
           text,
           style: textStyle ??
               GoogleFonts.crimsonPro(
-                color: Theme.of(context).colorScheme.onBackground,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 14,
               ),
         ),
@@ -595,7 +658,7 @@ class PaddedImageContainer extends StatelessWidget {
   final List<BoxShadow>? shadow;
 
   const PaddedImageContainer({
-    Key? key,
+    super.key,
     required this.image,
     required this.containerWidth,
     required this.containerHeight,
@@ -606,7 +669,7 @@ class PaddedImageContainer extends StatelessWidget {
     this.borderRadius = 10,
     this.border,
     this.shadow,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

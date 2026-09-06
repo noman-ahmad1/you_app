@@ -9,7 +9,7 @@ import 'package:you_app/ui/shared/widgets.dart';
 import 'package:you_app/ui/views/volunteer_signup/volunteer_signup_viewmodel.dart';
 
 class VolunteerOtpView extends StackedView<VolunteerSignupViewModel> {
-  const VolunteerOtpView({Key? key}) : super(key: key);
+  const VolunteerOtpView({super.key});
 
   @override
   Widget builder(

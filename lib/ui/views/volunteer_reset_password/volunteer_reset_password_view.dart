@@ -11,7 +11,7 @@ class VolunteerResetPasswordView
     extends StackedView<VolunteerResetPasswordViewModel> {
   // Added optional oobCode parameter for the new password phase
   final String? oobCode;
-  const VolunteerResetPasswordView({Key? key, this.oobCode}) : super(key: key);
+  const VolunteerResetPasswordView({super.key, this.oobCode});
 
   @override
   Widget builder(
@@ -225,17 +225,15 @@ class _SetNewPasswordForm extends StatelessWidget {
           children: [
             Space.verticalSpaceVTiny(context),
             // Bind to New Password Controller
-            CustomTextField(
+            PasswordField(
               controller: viewModel.newPasswordController,
               labelText: 'Type a new password',
-              obscureText: true,
             ),
             Space.verticalSpaceVTiny(context),
             // Bind to Confirm Password Controller
-            CustomTextField(
+            PasswordField(
               controller: viewModel.confirmPasswordController,
               labelText: 'Confirm new password',
-              obscureText: true,
             ),
             SizedBox(height: screenSize.height * 0.045),
             CustomButton(

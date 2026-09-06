@@ -37,7 +37,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
   DateTime? _selectedDate;
   String? _selectedGender;
   String? _selectedLevel;
-  List<String> _selectedTags = [];
+  final List<String> _selectedTags = [];
   int _currentPage = 0;
   bool _agreementAccepted = false;
   String? _validationError;
@@ -154,7 +154,8 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
         if (secondNameController.text.trim().isEmpty) {
           return 'Please enter your last name.';
         }
-        if (_selectedDate == null || dateOfBirthController.text.trim().isEmpty) {
+        if (_selectedDate == null ||
+            dateOfBirthController.text.trim().isEmpty) {
           return 'Please select your date of birth.';
         }
         if (_selectedGender == null) {
@@ -174,7 +175,8 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
         if (institutionController.text.trim().isEmpty) {
           return 'Please enter your institution name.';
         }
-        final yearError = Validators.graduationYear(graduationYearController.text);
+        final yearError =
+            Validators.graduationYear(graduationYearController.text);
         if (yearError != null) return yearError;
         if (_selectedTags.isEmpty) {
           return 'Please select at least one specialization tag.';
@@ -215,7 +217,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
               primary: AppColors.primary,
               onPrimary: Colors.white,
             ),
-            dialogBackgroundColor: Colors.white,
+            dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -255,7 +257,8 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
 
       if (pickedFile != null) {
         final originalFile = File(pickedFile.path);
-        final compressedFile = await ImageCompressorHelper.compressImage(originalFile);
+        final compressedFile =
+            await ImageCompressorHelper.compressImage(originalFile);
 
         // Updated logic to set the correct state variable
         if (imageType == 'profile') {
@@ -306,7 +309,7 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

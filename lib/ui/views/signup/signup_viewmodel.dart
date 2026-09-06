@@ -128,7 +128,8 @@ class SignupViewModel extends BaseViewModel {
       if (user != null) {
         // 2. Success: Navigate to the next screen (User Info/Profile Completion)
         // This handles both new sign-ups and existing sign-ins via Google.
-        _navigationService.clearStackAndShow(Routes.userInfoView, arguments: UserInfoViewArguments(uid: user.uid));
+        _navigationService.clearStackAndShow(Routes.userInfoView,
+            arguments: UserInfoViewArguments(uid: user.uid));
       } else {
         // Safety fallback, though the service usually throws an error if it fails
         throw Exception(

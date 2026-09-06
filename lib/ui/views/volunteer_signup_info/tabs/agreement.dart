@@ -13,9 +13,9 @@ import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_vie
 // preserving the state of the agreement checkbox.
 class AgreementInfoView extends StatelessWidget {
   const AgreementInfoView({
-    Key? key,
+    super.key,
     // Removed required this.uid as it's not strictly necessary here since we use Provider
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

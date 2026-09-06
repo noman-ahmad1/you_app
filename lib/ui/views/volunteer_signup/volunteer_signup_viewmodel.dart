@@ -56,8 +56,8 @@ class VolunteerSignupViewModel extends BaseViewModel {
 
     // Validate international phone number format
     if (!RegExp(r'^\+\d{1,4}\d{10,15}$').hasMatch(fullPhoneNumber)) {
-      _setError('Invalid number',
-          'Please enter a valid international phone number.');
+      _setError(
+          'Invalid number', 'Please enter a valid international phone number.');
       return;
     }
 
@@ -98,8 +98,8 @@ class VolunteerSignupViewModel extends BaseViewModel {
 
     if (!RegExp(r'^[0-9]{6}$').hasMatch(smsCode)) {
       setBusy(false);
-      _setError(
-          'Invalid code', 'Please enter the 6-digit verification code we sent.');
+      _setError('Invalid code',
+          'Please enter the 6-digit verification code we sent.');
       return;
     }
 
@@ -165,7 +165,8 @@ class VolunteerSignupViewModel extends BaseViewModel {
 
     // Comprehensive validation (each failure shows a specific dialog)
     if (email.isEmpty || password.isEmpty || confirm.isEmpty) {
-      _setError('Missing information', 'Please fill out all fields to continue.');
+      _setError(
+          'Missing information', 'Please fill out all fields to continue.');
       return;
     }
     final emailError = Validators.email(email);
@@ -224,7 +225,7 @@ class VolunteerSignupViewModel extends BaseViewModel {
   }
 
   Future<void> back() async {
-    await _navigationService.back();
+    _navigationService.back();
   }
 
   /// Sets the inline error and shows an explanatory dialog.

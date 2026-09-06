@@ -94,6 +94,9 @@ class LoginViewModel extends BaseViewModel {
   /// Routes by the user's actual role/status (mirrors StartupViewModel), so a
   /// single login handles users, admins, and volunteers in every state.
   void _navigateByRole(AppUser user) {
+    // Defence in depth: AuthenticationService already rejects a blocked account
+    // at sign-in, so we should never get here — but never route one into the app.
+    if (user.isBlocked) return;
     if (user.role == UserRole.volunteer) {
       if (user.status == 'profile_incomplete') {
         _navigationService.clearStackAndShow(

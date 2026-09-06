@@ -16,9 +16,9 @@ import 'volunteer_signup_info_viewmodel.dart';
 class VolunteerSignupInfoView
     extends StackedView<VolunteerSignupInfoViewModel> {
   const VolunteerSignupInfoView({
-    Key? key,
+    super.key,
     required this.uid,
-  }) : super(key: key);
+  });
 
   final String uid;
 
@@ -67,21 +67,26 @@ class VolunteerSignupInfoView
       VolunteerSignupInfoViewModel viewModel, BuildContext context) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(3, (index) {
-            return Container(
-              width: 100,
-              height: 6,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                color: index <= viewModel.currentPage
-                    ? AppColors.primaryDark
-                    : AppColors.background.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(3),
-              ),
-            );
-          }),
+        // Flexible, not fixed-width: three 100dp bars plus margins needed
+        // 374dp of screen, which overflowed every 360dp Android device.
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Row(
+            children: List.generate(3, (index) {
+              return Expanded(
+                child: Container(
+                  height: 6,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: index <= viewModel.currentPage
+                        ? AppColors.primaryDark
+                        : AppColors.background.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              );
+            }),
+          ),
         ),
         Space.verticalSpaceTiny(context),
         Text(

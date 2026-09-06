@@ -8,7 +8,7 @@ import 'package:you_app/ui/shared/widgets.dart';
 import 'login_viewmodel.dart';
 
 class LoginView extends StackedView<LoginViewModel> {
-  const LoginView({Key? key}) : super(key: key);
+  const LoginView({super.key});
 
   @override
   Widget builder(
@@ -60,10 +60,9 @@ class LoginView extends StackedView<LoginViewModel> {
                           keyboardType: TextInputType.emailAddress,
                         ),
                         Space.verticalSpaceVTiny(context),
-                        CustomTextField(
+                        PasswordField(
                           controller: viewModel.passwordController,
                           labelText: 'Type your password',
-                          obscureText: true,
                         ),
                         SizedBox(height: screenSize.height * 0.045),
                         CustomButton(

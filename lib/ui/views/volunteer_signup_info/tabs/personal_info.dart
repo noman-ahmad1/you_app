@@ -12,9 +12,9 @@ import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_vie
 // preserving the state of the controllers.
 class PersonalInfoView extends StatelessWidget {
   const PersonalInfoView({
-    Key? key,
+    super.key,
     // Removed required this.uid as it's not needed by a StatelessWidget that uses Provider
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +135,8 @@ class PersonalInfoView extends StatelessWidget {
 
         // Gender Dropdown styled to match CustomTextField
         DropdownButtonFormField<String>(
-          value: viewModel.selectedGender, // Use value instead of initialValue
+          initialValue:
+              viewModel.selectedGender, // Use value instead of initialValue
           decoration: InputDecoration(
             fillColor: AppColors.background,
             filled: true,

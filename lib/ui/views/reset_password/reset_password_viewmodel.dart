@@ -32,7 +32,7 @@ class ResetPasswordViewModel extends BaseViewModel {
 
   // NOTE: This state is currently unused in the updated View logic,
   // as the View will rely on the presence of the oobCode to determine Phase 2.
-  int _isVerified = 1;
+  final int _isVerified = 1;
   int get isVerified => _isVerified;
 
   Future<void> sendPasswordResetLink(String email) async {

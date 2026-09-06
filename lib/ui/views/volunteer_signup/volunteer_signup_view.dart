@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
 import 'package:stacked/stacked.dart';
-import 'package:you_app/ui/common/animation_decoder.dart';
 import 'package:you_app/ui/common/app_colors.dart';
-import 'package:you_app/ui/common/app_constants.dart';
 import 'package:you_app/ui/common/ui_helpers.dart';
 import 'package:you_app/ui/shared/widgets.dart';
 import 'package:you_app/app/app.locator.dart'; // Import locator
 
 import 'volunteer_signup_viewmodel.dart';
-import "package:you_app/ui/shared/custom_lottie_loader.dart";
 
 class VolunteerSignupView extends StackedView<VolunteerSignupViewModel> {
-  const VolunteerSignupView({Key? key}) : super(key: key);
+  const VolunteerSignupView({super.key});
 
   @override
   Widget builder(
@@ -156,18 +152,14 @@ class VolunteerSignupView extends StackedView<VolunteerSignupViewModel> {
                           keyboardType: TextInputType.emailAddress,
                         ),
                         Space.verticalSpaceVTiny(context),
-                        CustomTextField(
+                        PasswordField(
                           controller: viewModel.passwordController,
                           labelText: 'Type a password',
-                          obscureText: true,
-                          keyboardType: TextInputType.visiblePassword,
                         ),
                         Space.verticalSpaceVTiny(context),
-                        CustomTextField(
+                        PasswordField(
                           controller: viewModel.confirmPasswordController,
                           labelText: 'Confirm password',
-                          obscureText: true,
-                          keyboardType: TextInputType.visiblePassword,
                         ),
                         SizedBox(height: screenSize.height * 0.025),
 

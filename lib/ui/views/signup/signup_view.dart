@@ -10,7 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'signup_viewmodel.dart';
 
 class SignupView extends StackedView<SignupViewModel> {
-  const SignupView({Key? key}) : super(key: key);
+  const SignupView({super.key});
 
   @override
   Widget builder(
@@ -76,17 +76,14 @@ class SignupView extends StackedView<SignupViewModel> {
                           keyboardType: TextInputType.emailAddress,
                         ),
                         Space.verticalSpaceVTiny(context),
-                        CustomTextField(
+                        PasswordField(
                           controller: viewModel.passwordController,
                           labelText: 'Type a password',
-                          keyboardType: TextInputType.visiblePassword,
                         ),
                         Space.verticalSpaceVTiny(context),
-                        CustomTextField(
+                        PasswordField(
                           controller: viewModel.confirmPasswordController,
                           labelText: 'Confirm password',
-                          keyboardType: TextInputType.visiblePassword,
-                          obscureText: true,
                         ),
                         SizedBox(height: screenSize.height * 0.045),
                         if (viewModel.validationError != null)
