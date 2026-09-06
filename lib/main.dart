@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -49,6 +50,12 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
+    // FCM background handler. Firebase requires this to be registered as early
+    // as possible after initializeApp and before the first frame; it used to be
+    // registered inside PushNotificationService.initialise(), which runs after
+    // runApp() and only when the user had granted permission.
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
     // Route all uncaught Flutter framework + platform errors to Crashlytics.
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     PlatformDispatcher.instance.onError = (error, stack) {
@@ -67,20 +74,45 @@ Future<void> main() async {
     // Cheap + local, so it stays on the critical path.
     await locator<AnalyticsService>().init();
 
-    // Live-listen to the remote moderation config so admin edits (banned
-    // keywords / enabled toggle) apply without an app update. The first
-    // snapshot applies immediately; failures are non-fatal (defaults stand).
+    // Live-listen to the remote moderation config so admin edits apply without an
+    // app update. The first snapshot applies immediately; failures are non-fatal
+    // (bundled defaults stand).
+    //
+    // Two shapes are supported, deliberately:
+    //  • NEW (admin panel): per-category lists + `version`
+    //    { hate: [], violence: [], sexual: [], romance: [], offTopic: [],
+    //      contactIntent: [], version: n }
+    //  • LEGACY: { enabled: bool, bannedKeywords: [] } — still honoured, because
+    //    `enabled` is the only kill-switch and `bannedKeywords` is the admin's
+    //    ad-hoc hard-block list. Both may be present at once.
     FirebaseFirestore.instance
         .collection('app_settings')
         .doc('moderation_config')
         .snapshots()
         .listen((doc) {
       final data = doc.data();
-      locator<ModerationService>().applyRemoteConfig(
-        enabled: data?['enabled'] as bool?,
-        bannedKeywords: (data?['bannedKeywords'] as List?)
-            ?.map((e) => e.toString())
-            .toList(),
+      if (data == null) return; // no doc yet → bundled defaults stand
+
+      List<String>? list(String key) =>
+          (data[key] as List?)?.map((e) => e.toString()).toList();
+
+      final moderation = locator<ModerationService>();
+
+      // New per-category shape.
+      moderation.updateLists(
+        hate: list('hate'),
+        violence: list('violence'),
+        sexual: list('sexual'),
+        romance: list('romance'),
+        offTopic: list('offTopic'),
+        contactIntent: list('contactIntent'),
+        version: (data['version'] as num?)?.toInt(),
+      );
+
+      // Legacy kill-switch + explicit banned list (null args are ignored).
+      moderation.applyRemoteConfig(
+        enabled: data['enabled'] as bool?,
+        bannedKeywords: list('bannedKeywords'),
       );
     }, onError: (e) {
       debugPrint('Moderation config listener error: $e');
