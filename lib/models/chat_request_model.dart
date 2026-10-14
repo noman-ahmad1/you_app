@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/models/model_codec.dart';
 
 class ChatRequest {
   final String? id; // The document ID from Firestore
@@ -51,26 +51,24 @@ class ChatRequest {
       'requesterAvatarUrl': requesterAvatarUrl,
       'volunteerId': volunteerId,
       'status': status,
-      'createdAt': FieldValue.serverTimestamp(), // Let the server set the time
+      'createdAt': serverTimestamp, // Let the server set the time
       'topic': topic,
     };
   }
 
-  /// Creates a ChatRequest instance from a Firestore document snapshot.
-  factory ChatRequest.fromFirestore(
-      DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
+  /// Creates a ChatRequest from a stored document's [id] and [data].
+  factory ChatRequest.fromMap(String id, Map<String, dynamic> data) {
     return ChatRequest(
-      id: doc.id,
+      id: id,
       requesterId: data['requesterId'],
       requesterName: data['requesterName'],
       requesterAvatarUrl: data['requesterAvatarUrl'],
       volunteerId: data['volunteerId'],
       volunteerName: data['volunteerName'] as String?,
       status: data['status'],
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
-      acceptedAt: (data['acceptedAt'] as Timestamp?)?.toDate(),
-      endedAt: (data['endedAt'] as Timestamp?)?.toDate(),
+      createdAt: parseModelDate(data['createdAt']),
+      acceptedAt: parseModelDate(data['acceptedAt']),
+      endedAt: parseModelDate(data['endedAt']),
       userReviewed: data['userReviewed'] == true,
       topic: data['topic'],
     );

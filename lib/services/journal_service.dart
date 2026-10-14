@@ -17,8 +17,10 @@ class JournalService with FirestoreServiceMixin {
           .doc(entry.userId)
           .collection('journal')
           .withConverter<JournalEntry>(
-            fromFirestore: JournalEntry.fromFirestore,
-            toFirestore: (journalEntry, _) => journalEntry.toFirestore(),
+            fromFirestore: (snap, _) =>
+                JournalEntry.fromMap(snap.id, snap.data()!),
+            toFirestore: (journalEntry, _) =>
+                FirestoreServiceMixin.encode(journalEntry.toFirestore()),
           );
 
       await journalCollection.add(entry);
@@ -52,8 +54,10 @@ class JournalService with FirestoreServiceMixin {
     final journalCollection = query
         .orderBy('timestamp', descending: true) // Sorts with latest on top
         .withConverter<JournalEntry>(
-          fromFirestore: JournalEntry.fromFirestore,
-          toFirestore: (entry, _) => entry.toFirestore(),
+          fromFirestore: (snap, _) =>
+              JournalEntry.fromMap(snap.id, snap.data()!),
+          toFirestore: (entry, _) =>
+              FirestoreServiceMixin.encode(entry.toFirestore()),
         );
 
     // .snapshots() returns a Stream. The .map() converts the raw snapshot

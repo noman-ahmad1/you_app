@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -12,6 +11,7 @@ import 'package:image_picker_android/image_picker_android.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:you_app/services/analytics_service.dart';
 import 'package:you_app/services/billing_service.dart';
+import 'package:you_app/services/app_content_service.dart';
 import 'package:you_app/services/moderation_service.dart';
 import 'package:you_app/services/push_notification_service.dart';
 import 'package:you_app/app/app.bottomsheets.dart';
@@ -76,44 +76,11 @@ Future<void> main() async {
 
     // Live-listen to the remote moderation config so admin edits apply without an
     // app update. The first snapshot applies immediately; failures are non-fatal
-    // (bundled defaults stand).
-    //
-    // Two shapes are supported, deliberately:
-    //  • NEW (admin panel): per-category lists + `version`
-    //    { hate: [], violence: [], sexual: [], romance: [], offTopic: [],
-    //      contactIntent: [], version: n }
-    //  • LEGACY: { enabled: bool, bannedKeywords: [] } — still honoured, because
-    //    `enabled` is the only kill-switch and `bannedKeywords` is the admin's
-    //    ad-hoc hard-block list. Both may be present at once.
-    FirebaseFirestore.instance
-        .collection('app_settings')
-        .doc('moderation_config')
-        .snapshots()
-        .listen((doc) {
-      final data = doc.data();
+    // (bundled defaults stand). The document shapes are documented on
+    // ModerationService.applyConfigDocument.
+    locator<AppContentService>().watchModerationConfig().listen((data) {
       if (data == null) return; // no doc yet → bundled defaults stand
-
-      List<String>? list(String key) =>
-          (data[key] as List?)?.map((e) => e.toString()).toList();
-
-      final moderation = locator<ModerationService>();
-
-      // New per-category shape.
-      moderation.updateLists(
-        hate: list('hate'),
-        violence: list('violence'),
-        sexual: list('sexual'),
-        romance: list('romance'),
-        offTopic: list('offTopic'),
-        contactIntent: list('contactIntent'),
-        version: (data['version'] as num?)?.toInt(),
-      );
-
-      // Legacy kill-switch + explicit banned list (null args are ignored).
-      moderation.applyRemoteConfig(
-        enabled: data['enabled'] as bool?,
-        bannedKeywords: list('bannedKeywords'),
-      );
+      locator<ModerationService>().applyConfigDocument(data);
     }, onError: (e) {
       debugPrint('Moderation config listener error: $e');
     });

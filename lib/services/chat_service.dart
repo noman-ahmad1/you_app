@@ -10,7 +10,39 @@ import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/base/firestore_base.dart';
 import 'package:you_app/services/security_log_service.dart';
 
+/// The parts of a chat document the open chat screen watches to notice the
+/// chat being ended from the other side. Plain Dart — no Firestore types.
+class ChatStatusSnapshot {
+  final bool exists;
+  final String? status;
+  final String? endedBy;
+
+  /// True when this came from the local cache rather than the server. A cached
+  /// "missing" or "completed" can be stale, so callers ignore those.
+  final bool isFromCache;
+
+  const ChatStatusSnapshot({
+    required this.exists,
+    required this.status,
+    required this.endedBy,
+    required this.isFromCache,
+  });
+}
+
 class ChatService with FirestoreServiceMixin {
+  /// Live status of one chat document.
+  Stream<ChatStatusSnapshot> watchChatStatus(String chatId) {
+    return db.collection('chats').doc(chatId).snapshots().map((snap) {
+      final data = snap.data();
+      return ChatStatusSnapshot(
+        exists: snap.exists,
+        status: data?['status'] as String?,
+        endedBy: data?['endedBy'] as String?,
+        isFromCache: snap.metadata.isFromCache,
+      );
+    });
+  }
+
   AnalyticsService get _analytics => locator<AnalyticsService>();
 
   Future<void> deleteChatAndRequest({
@@ -232,7 +264,7 @@ class ChatService with FirestoreServiceMixin {
     // Atomically add the message and update the parent's lastMessage in a
     // single commit (was two sequential round-trips).
     final batch = db.batch();
-    batch.set(messageRef, message.toJson());
+    batch.set(messageRef, FirestoreServiceMixin.encode(message.toJson()));
     batch.update(chatRef, {
       'lastMessage': {
         'text': message.text,

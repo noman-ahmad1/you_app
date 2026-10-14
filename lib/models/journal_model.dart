@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/models/model_codec.dart';
 
 // An enum for the labels ensures type safety.
 enum JournalLabel { personal, work }
@@ -39,15 +39,12 @@ class JournalEntry {
     return '$m:$s';
   }
 
-  // --- FIRESTORE CONVERTERS ---
+  // --- SERIALIZATION ---
 
-  factory JournalEntry.fromFirestore(
-    DocumentSnapshot<Map<String, dynamic>> snapshot,
-    SnapshotOptions? options,
-  ) {
-    final data = snapshot.data()!;
+  /// Creates a JournalEntry from a stored document's [id] and [data].
+  factory JournalEntry.fromMap(String id, Map<String, dynamic> data) {
     return JournalEntry(
-      id: snapshot.id,
+      id: id,
       userId: data['userId'] ?? '',
       title: data['title'] ?? '',
       content: data['content'] ?? '',
@@ -57,7 +54,7 @@ class JournalEntry {
       type: JournalType.values.byName(data['type'] ?? 'text'),
       audioUrl: data['audioUrl'] as String?,
       audioDurationMs: (data['audioDurationMs'] as num?)?.toInt(),
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate(),
+      timestamp: parseModelDate(data['timestamp']),
     );
   }
 
@@ -71,7 +68,7 @@ class JournalEntry {
       // Only voice entries carry an audio payload.
       if (audioUrl != null) 'audioUrl': audioUrl,
       if (audioDurationMs != null) 'audioDurationMs': audioDurationMs,
-      'timestamp': FieldValue.serverTimestamp(),
+      'timestamp': serverTimestamp,
     };
   }
 }

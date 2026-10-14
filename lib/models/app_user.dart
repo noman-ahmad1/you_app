@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/models/model_codec.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
 enum UserRole { user, volunteer, admin }
@@ -81,14 +81,8 @@ class AppUser {
   }
 
   /// Coerces the several shapes a date has taken in this collection over time
-  /// (Timestamp, ISO string, DateTime) into a DateTime, or null if unparseable.
-  static DateTime? _dateFrom(dynamic raw) {
-    if (raw == null) return null;
-    if (raw is Timestamp) return raw.toDate();
-    if (raw is DateTime) return raw;
-    if (raw is String) return DateTime.tryParse(raw);
-    return null;
-  }
+  /// (backend timestamp, ISO string, DateTime) into a DateTime, or null.
+  static DateTime? _dateFrom(dynamic raw) => parseModelDate(raw);
 
   factory AppUser.fromJson(Map<String, dynamic> data) {
     return AppUser(

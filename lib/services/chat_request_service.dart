@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:you_app/services/base/service_exception.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/models/chat_request_model.dart';
 import 'package:you_app/services/analytics_service.dart';
@@ -21,13 +22,21 @@ class ChatRequestService {
   /// the request + volunteer notification server-side (direct client writes to
   /// chat_requests are denied by security rules), which closes the concurrent-
   /// request bypass a client-side counter would leave open.
+  ///
+  /// Throws [ServiceException] with the server's code — `failed-precondition`
+  /// or `not-found` mean the volunteer went offline after the list rendered.
   Future<ChatRequestResult> sendChatRequest(ChatRequest request) async {
-    final result = await _functions.httpsCallable('requestVolunteerChat').call({
-      'volunteerId': request.volunteerId,
-      'requesterName': request.requesterName,
-      'requesterAvatarUrl': request.requesterAvatarUrl,
-      'topic': request.topic,
-    });
+    final HttpsCallableResult result;
+    try {
+      result = await _functions.httpsCallable('requestVolunteerChat').call({
+        'volunteerId': request.volunteerId,
+        'requesterName': request.requesterName,
+        'requesterAvatarUrl': request.requesterAvatarUrl,
+        'topic': request.topic,
+      });
+    } on FirebaseFunctionsException catch (e) {
+      throw ServiceException(e.code, message: e.message, cause: e);
+    }
 
     final data = Map<String, dynamic>.from(result.data as Map);
     if (data['capReached'] == true) {
@@ -46,7 +55,7 @@ class ChatRequestService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => ChatRequest.fromFirestore(doc))
+            .map((doc) => ChatRequest.fromMap(doc.id, doc.data()))
             .toList());
   }
 
@@ -141,7 +150,7 @@ class ChatRequestService {
             descending: true) // Or order by last message time later
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => ChatRequest.fromFirestore(doc))
+            .map((doc) => ChatRequest.fromMap(doc.id, doc.data()))
             .toList());
   }
 
@@ -154,7 +163,7 @@ class ChatRequestService {
             descending: true) // Or order by last message time later
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => ChatRequest.fromFirestore(doc))
+            .map((doc) => ChatRequest.fromMap(doc.id, doc.data()))
             .toList());
   }
 
@@ -179,7 +188,7 @@ class ChatRequestService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => ChatRequest.fromFirestore(doc))
+            .map((doc) => ChatRequest.fromMap(doc.id, doc.data()))
             .toList());
   }
 

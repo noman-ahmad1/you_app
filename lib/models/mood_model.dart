@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/models/model_codec.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
 // --- Mood Configuration Map (The Source of Truth) ---
@@ -72,15 +72,13 @@ class MoodEntry {
     final label = data['moodLabel'] as String? ?? 'Neutral';
     final derivedData = moodDataMap[label] ?? moodDataMap['Neutral']!;
 
-    // Safely handle Firestore Timestamp object
-    String formattedTimestamp;
-    if (data['timestamp'] is Timestamp) {
-      formattedTimestamp =
-          (data['timestamp'] as Timestamp).toDate().toIso8601String();
-    } else {
-      formattedTimestamp =
-          data['timestamp'] as String? ?? DateTime.now().toIso8601String();
-    }
+    // Strings are kept verbatim; anything date-like is normalised to ISO. A
+    // missing value (a just-written entry whose server time hasn't arrived)
+    // falls back to now.
+    final raw = data['timestamp'];
+    final String formattedTimestamp = raw is String
+        ? raw
+        : (parseModelDate(raw) ?? DateTime.now()).toIso8601String();
 
     return MoodEntry(
       id: docId,
@@ -99,7 +97,7 @@ class MoodEntry {
       'userId': userId,
       'moodLabel': moodLabel, // Only the label is saved
       'extraField': extraField,
-      // Note: 'timestamp' will be added by FieldValue.serverTimestamp() in the service.
+      // Note: 'timestamp' is set to the server's clock by MoodService.
     };
   }
 }

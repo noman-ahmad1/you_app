@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/models/model_codec.dart';
 
 class CommunityPost {
   final String id;
@@ -32,7 +32,7 @@ class CommunityPost {
       authorId: data['authorId'] ?? '',
       authorUsername: data['authorUsername'] ?? 'Anonymous',
       content: data['content'] ?? '',
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: parseModelDate(data['createdAt']) ?? DateTime.now(),
       likeCount: data['likeCount'] ?? 0,
       replyCount: data['replyCount'] ?? 0,
       mentionedUsers: List<String>.from(data['mentionedUsers'] ?? []),
@@ -46,7 +46,7 @@ class CommunityPost {
       'authorId': authorId,
       'authorUsername': authorUsername,
       'content': content,
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt': serverTimestamp,
       'likeCount': likeCount,
       'replyCount': replyCount,
       'mentionedUsers': mentionedUsers,

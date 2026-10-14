@@ -77,9 +77,14 @@ class VolunteerService with FirestoreServiceMixin {
   /// Vetting URLs are split out into `volunteer_info/{uid}/private/vetting`,
   /// which the rules restrict to the owner and admins. Both writes go in one
   /// batch so a volunteer's application can never land half-written.
-  Future<void> saveInfo(String uid, Map<String, dynamic> data) async {
+  ///
+  /// [stampCreatedAt] sets `createdAt` to the server's clock — used when an
+  /// application is first submitted, so callers never touch FieldValue.
+  Future<void> saveInfo(String uid, Map<String, dynamic> data,
+      {bool stampCreatedAt = false}) async {
     final public = Map<String, dynamic>.from(data)
       ..removeWhere((k, _) => vettingFields.contains(k));
+    if (stampCreatedAt) public['createdAt'] = FieldValue.serverTimestamp();
     final vetting = <String, dynamic>{
       for (final k in vettingFields)
         if (data.containsKey(k)) k: data[k],

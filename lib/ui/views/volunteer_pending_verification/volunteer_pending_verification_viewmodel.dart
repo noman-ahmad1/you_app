@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/models/app_user.dart';
@@ -10,7 +11,7 @@ import 'package:you_app/services/user_service.dart';
 class VolunteerPendingVerificationViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final _userService = locator<UserService>();
-  final _auth = FirebaseAuth.instance;
+  final _authService = locator<AuthenticationService>();
 
   StreamSubscription<AppUser?>? _userStreamSubscription;
 
@@ -19,7 +20,7 @@ class VolunteerPendingVerificationViewModel extends BaseViewModel {
   }
 
   void _listenToUserStatus() {
-    final uid = _auth.currentUser?.uid;
+    final uid = _authService.currentUid;
     if (uid == null) return;
 
     _userStreamSubscription = _userService.streamUser(uid).listen((appUser) {
@@ -35,8 +36,17 @@ class VolunteerPendingVerificationViewModel extends BaseViewModel {
     });
   }
 
+  // Goes through AuthenticationService so sign-out also removes the FCM token
+  // and clears session caches — calling FirebaseAuth directly skipped both,
+  // leaving the device registered for this account's pushes.
   void logout() async {
-    await _auth.signOut();
+    try {
+      await _authService.signOut();
+    } catch (e) {
+      // Still signed in — stay put rather than show the welcome screen.
+      debugPrint('Pending verification sign-out failed: $e');
+      return;
+    }
     _navigationService.clearStackAndShow(Routes.welcomeView);
   }
 

@@ -1,4 +1,3 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -372,9 +371,7 @@ class PremiumViewModel extends ReactiveViewModel {
 
   Future<void> _syncEntitlement() async {
     try {
-      await FirebaseFunctions.instance
-          .httpsCallable('refreshEntitlement')
-          .call();
+      await _monetizationService.refreshEntitlement();
     } catch (e) {
       // Non-fatal: the webhook path will still unlock shortly.
       AppLog.error('PremiumViewModel.refreshEntitlement', e);

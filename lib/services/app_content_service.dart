@@ -9,6 +9,16 @@ import 'package:you_app/services/base/firestore_base.dart';
 /// Both streams emit null when the content is missing, inactive, or empty so
 /// callers can fall back to a default (prompt) or render nothing (announcement).
 class AppContentService with FirestoreServiceMixin {
+  /// Live `app_settings/moderation_config`, or null while the document doesn't
+  /// exist. Parsed by ModerationService.applyConfigDocument.
+  Stream<Map<String, dynamic>?> watchModerationConfig() {
+    return db
+        .collection('app_settings')
+        .doc('moderation_config')
+        .snapshots()
+        .map((doc) => doc.data());
+  }
+
   /// Today's `YYYY-MM-DD` in **Asia/Karachi (UTC+5, no DST)** — the
   /// journal_prompts doc id.
   ///

@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/models/model_codec.dart';
 
 /// The PUBLIC half of a volunteer's application — readable by any signed-in
 /// user, because the discovery UI shows tags, institution and ratings.
@@ -50,11 +50,7 @@ class VolunteerInfo {
       tags: data['tags'] != null ? List<String>.from(data['tags']) : null,
       agreementAccepted: data['agreementAccepted'] as bool? ?? false,
       status: data['status'] as String? ?? 'pending_verification',
-      createdAt: (data['createdAt'] is Timestamp)
-          ? (data['createdAt'] as Timestamp).toDate()
-          : data['createdAt'] != null
-              ? DateTime.parse(data['createdAt'])
-              : null,
+      createdAt: parseModelDate(data['createdAt']),
       completedChats: data['completedChats'] as int? ?? 0,
       averageRating: (data['averageRating'] as num?)?.toDouble() ?? 0.0,
       totalReviews: data['totalReviews'] as int? ?? 0,

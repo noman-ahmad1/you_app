@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:you_app/services/base/service_exception.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:you_app/models/sound_track.dart';
 import 'package:you_app/services/base/firestore_base.dart';
@@ -39,10 +40,18 @@ class SoundService with FirestoreServiceMixin {
   /// Throws [FirebaseFunctionsException] with code `permission-denied` when the
   /// sound is premium and the caller isn't — the caller should have shown the
   /// paywall before ever getting here, so treat that as a bug-or-tamper path.
+  ///
+  /// Throws [ServiceException] with the server's code (`permission-denied`
+  /// when the caller isn't entitled, `unavailable` when offline).
   Future<String> getPlaybackUrl(String soundId) async {
-    final result = await _functions
-        .httpsCallable('getSoundAudioUrl')
-        .call({'soundId': soundId});
+    final HttpsCallableResult result;
+    try {
+      result = await _functions
+          .httpsCallable('getSoundAudioUrl')
+          .call({'soundId': soundId});
+    } on FirebaseFunctionsException catch (e) {
+      throw ServiceException(e.code, message: e.message, cause: e);
+    }
     final data = Map<String, dynamic>.from(result.data as Map);
     final url = data['url'] as String?;
     if (url == null || url.isEmpty) {

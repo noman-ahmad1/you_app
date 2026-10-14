@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/models/model_codec.dart';
 
 /// Represents a single message document in the `messages` subcollection.
 class ChatMessage {
@@ -19,8 +19,7 @@ class ChatMessage {
     return ChatMessage(
       senderId: data['senderId'] ?? '',
       text: data['text'] ?? '',
-      // Safely convert Firestore Timestamp to DateTime
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate(),
+      timestamp: parseModelDate(data['timestamp']),
     );
   }
 
@@ -29,8 +28,8 @@ class ChatMessage {
     return {
       'senderId': senderId,
       'text': text,
-      // Let Firestore's server generate the timestamp for accuracy
-      'timestamp': FieldValue.serverTimestamp(),
+      // Let the server generate the timestamp for accuracy
+      'timestamp': serverTimestamp,
     };
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:stacked/stacked.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:you_app/services/base/service_exception.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/models/app_user.dart';
@@ -52,6 +53,10 @@ class AuthenticationService with ListenableServiceMixin {
       _userDocSubscription;
 
   AppUser? get currentUser => _currentUser.value;
+
+  /// The signed-in account's uid, available even before the profile document
+  /// has loaded into [currentUser].
+  String? get currentUid => _auth.currentUser?.uid;
   AuthStatus get authStatus => _authStatus.value;
   bool get isLoading => _isLoading.value;
   String? get error => _error.value;
@@ -337,8 +342,13 @@ class AuthenticationService with ListenableServiceMixin {
 
   /// Sends (or re-sends) the verification email. Lets [FirebaseAuthException]
   /// (e.g. `too-many-requests`) propagate so the UI can handle throttling.
+  /// Throws [ServiceException] (e.g. `too-many-requests`) on an auth failure.
   Future<void> sendVerificationEmail() async {
-    await _auth.currentUser?.sendEmailVerification();
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } on FirebaseAuthException catch (e) {
+      throw ServiceException(e.code, message: e.message, cause: e);
+    }
   }
 
   /// Reloads the FirebaseUser (its `emailVerified` flag is cached locally, so a

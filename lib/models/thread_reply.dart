@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/models/model_codec.dart';
 
 class ThreadReply {
   final String id;
@@ -30,7 +30,7 @@ class ThreadReply {
       authorId: data['authorId'] ?? '',
       authorUsername: data['authorUsername'] ?? 'Anonymous',
       content: data['content'] ?? '',
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: parseModelDate(data['createdAt']) ?? DateTime.now(),
       mentionedUsers: List<String>.from(data['mentionedUsers'] ?? []),
       likedBy: List<String>.from(data['likedBy'] ?? []),
       likeCount: data['likeCount'] ?? 0,
@@ -43,7 +43,7 @@ class ThreadReply {
       'authorId': authorId,
       'authorUsername': authorUsername,
       'content': content,
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt': serverTimestamp,
       'mentionedUsers': mentionedUsers,
       'likedBy': likedBy,
       'likeCount': likeCount,

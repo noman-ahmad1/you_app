@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -605,7 +604,8 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
 
   // UPDATED: Now uses firestoreService.volunteer_info.saveInfo
   Future<void> _saveVolunteerInfo(Map<String, dynamic> volunteerData) async {
-    await locator<VolunteerService>().saveInfo(uid, volunteerData);
+    await locator<VolunteerService>()
+        .saveInfo(uid, volunteerData, stampCreatedAt: true);
   }
 
   void submitForm() async {
@@ -688,7 +688,6 @@ class VolunteerSignupInfoViewModel extends BaseViewModel {
         'tags': _selectedTags,
         'agreementAccepted': _agreementAccepted,
         'status': 'pending_verification',
-        'createdAt': FieldValue.serverTimestamp(),
       };
       await _saveVolunteerInfo(volunteerInfoData);
 

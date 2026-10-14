@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:stacked/stacked.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/services/analytics_service.dart';
@@ -8,6 +9,13 @@ import 'package:you_app/services/base/firestore_base.dart';
 import 'package:you_app/ui/common/app_constants.dart';
 
 class MonetizationService with ListenableServiceMixin, FirestoreServiceMixin {
+  /// Asks the server to re-read the caller's RevenueCat entitlement and write
+  /// it to their user doc. Used right after a purchase or restore so premium
+  /// unlocks without waiting for the webhook.
+  Future<void> refreshEntitlement() async {
+    await FirebaseFunctions.instance.httpsCallable('refreshEntitlement').call();
+  }
+
   final AuthenticationService _authService = locator<AuthenticationService>();
   AnalyticsService get _analytics => locator<AnalyticsService>();
 

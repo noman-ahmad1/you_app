@@ -1,11 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
+import 'package:you_app/models/app_notification.dart';
 import 'package:you_app/services/auth_service.dart';
+import 'package:you_app/services/in_app_notification_service.dart';
 import 'package:you_app/ui/common/app_colors.dart';
 import 'package:you_app/ui/shared/notification_style.dart';
 
@@ -37,29 +38,22 @@ class NotificationsDrawer extends StatelessWidget {
       return _buildDrawerContent(context, []);
     }
 
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUserId)
-          .collection('notifications')
-          .orderBy('createdAt', descending: true)
-          .snapshots(),
+    return StreamBuilder<List<AppNotification>>(
+      stream: locator<InAppNotificationService>().streamAll(currentUserId),
       builder: (context, snapshot) {
         List<Map<String, dynamic>> liveNotifications = [];
         if (snapshot.hasData && snapshot.data != null) {
-          for (var doc in snapshot.data!.docs) {
-            final data = doc.data();
-            final title = data['title'] as String? ?? 'Notification';
-            final body = data['body'] as String? ?? '';
-            final type = data['type'] as String? ?? '';
-            final isRead = data['isRead'] as bool? ?? false;
-            final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
-            final customData = data['data'] as Map<String, dynamic>?;
+          for (final n in snapshot.data!) {
+            final title = n.title;
+            final body = n.body;
+            final type = n.type;
+            final isRead = n.isRead;
+            final createdAt = n.createdAt;
 
             VoidCallback? onTap;
 
             if (type == 'request_accepted') {
-              final requestId = customData?['requestId'] as String?;
+              final requestId = n.requestId;
               if (requestId != null) {
                 onTap = () {
                   Navigator.of(context).pop(); // Close drawer
@@ -68,7 +62,7 @@ class NotificationsDrawer extends StatelessWidget {
                 };
               }
             } else if (type == 'new_message') {
-              final chatId = customData?['chatId'] as String?;
+              final chatId = n.chatId;
               if (chatId != null) {
                 onTap = () {
                   Navigator.of(context).pop(); // Close drawer

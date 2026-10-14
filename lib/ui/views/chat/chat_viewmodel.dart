@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/app/app.router.dart';
 
 import 'package:flutter/material.dart';
@@ -40,7 +39,7 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
   static bool isActive = false;
   static String? activeChatId;
 
-  StreamSubscription<DocumentSnapshot>? _chatStatusSubscription;
+  StreamSubscription<ChatStatusSnapshot>? _chatStatusSubscription;
 
   ChatViewModel({
     required this.volunteerId,
@@ -98,20 +97,16 @@ class ChatViewModel extends StreamViewModel<List<ChatMessage>> {
 
   void _listenToChatStatus() {
     if (_chatId == null || _chatStatusSubscription != null) return;
-    _chatStatusSubscription = FirebaseFirestore.instance
-        .collection('chats')
-        .doc(_chatId)
-        .snapshots()
-        .listen((snapshot) {
+    _chatStatusSubscription =
+        locator<ChatService>().watchChatStatus(_chatId!).listen((snapshot) {
       if (!snapshot.exists) {
-        if (snapshot.metadata.isFromCache) return;
+        if (snapshot.isFromCache) return;
         _handleChatEndedRemotely();
         return;
       }
-      final data = snapshot.data();
-      if (data != null && data['status'] == 'completed') {
-        if (snapshot.metadata.isFromCache) return;
-        _handleChatEndedRemotely(byAdmin: data['endedBy'] == 'admin');
+      if (snapshot.status == 'completed') {
+        if (snapshot.isFromCache) return;
+        _handleChatEndedRemotely(byAdmin: snapshot.endedBy == 'admin');
       }
     });
   }

@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:you_app/models/model_codec.dart';
+
 import 'app_log.dart';
 
 /// Shared Firestore access + uniform error handling for services.
@@ -12,6 +14,19 @@ import 'app_log.dart';
 ///     with a [fallback] value to preserve fail-open behaviour.
 mixin FirestoreServiceMixin {
   FirebaseFirestore get db => FirebaseFirestore.instance;
+
+  /// Translates backend-neutral model values into Firestore ones before a
+  /// write. Today that means [ServerTimestamp] → `FieldValue.serverTimestamp()`.
+  /// Every write of a model's `toJson`/`toFirestore` map must go through this.
+  static Map<String, dynamic> encode(Map<String, dynamic> data) {
+    Object? convert(Object? v) {
+      if (v is ServerTimestamp) return FieldValue.serverTimestamp();
+      if (v is Map<String, dynamic>) return encode(v);
+      return v;
+    }
+
+    return data.map((k, v) => MapEntry(k, convert(v)));
+  }
 
   /// Splits [items] into chunks of at most [size]. Useful for `whereIn`
   /// (max 30 values) and batched writes (max 500 ops).

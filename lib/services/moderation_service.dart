@@ -97,6 +97,36 @@ class ModerationService {
 
   /// Applies the remote moderation config. Null args are ignored so a partial
   /// document never clobbers a field. Keywords are lowercased.
+  /// Applies the `app_settings/moderation_config` document.
+  ///
+  /// Two shapes are supported, deliberately:
+  ///  • NEW (admin panel): per-category lists + `version`
+  ///    { hate: [], violence: [], sexual: [], romance: [], offTopic: [],
+  ///      contactIntent: [], version: n }
+  ///  • LEGACY: { enabled: bool, bannedKeywords: [] } — still honoured, because
+  ///    `enabled` is the only kill-switch and `bannedKeywords` is the admin's
+  ///    ad-hoc hard-block list. Both may be present at once.
+  void applyConfigDocument(Map<String, dynamic> data) {
+    List<String>? list(String key) =>
+        (data[key] as List?)?.map((e) => e.toString()).toList();
+
+    updateLists(
+      hate: list('hate'),
+      violence: list('violence'),
+      sexual: list('sexual'),
+      romance: list('romance'),
+      offTopic: list('offTopic'),
+      contactIntent: list('contactIntent'),
+      version: (data['version'] as num?)?.toInt(),
+    );
+
+    // Legacy kill-switch + explicit banned list (null args are ignored).
+    applyRemoteConfig(
+      enabled: data['enabled'] as bool?,
+      bannedKeywords: list('bannedKeywords'),
+    );
+  }
+
   void applyRemoteConfig({bool? enabled, List<String>? bannedKeywords}) {
     if (enabled != null) _enabled = enabled;
     if (bannedKeywords != null) {

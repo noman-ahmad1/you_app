@@ -24,6 +24,7 @@ import '../services/chatbot_service.dart';
 import '../services/community_service.dart';
 import '../services/country_code_service.dart';
 import '../services/escalation_service.dart';
+import '../services/in_app_notification_service.dart';
 import '../services/journal_service.dart';
 import '../services/moderation_flag_service.dart';
 import '../services/moderation_service.dart';
@@ -74,5 +75,6 @@ Future<void> setupLocator(
   locator.registerLazySingleton(() => PresenceService());
   locator.registerLazySingleton(() => BlockService());
   locator.registerLazySingleton(() => SecurityLogService());
+  locator.registerLazySingleton(() => InAppNotificationService());
   locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:you_app/services/base/service_exception.dart';
 import 'package:flutter/widgets.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -78,7 +78,7 @@ class VerifyEmailViewModel extends BaseViewModel with WidgetsBindingObserver {
       _analytics.logVerificationEmailSent(context: source);
       _statusMessage = 'We sent a fresh link to your inbox.';
       _startCooldown();
-    } on FirebaseAuthException catch (e) {
+    } on ServiceException catch (e) {
       if (e.code == 'too-many-requests') {
         // Already sent recently — stay calm and still hold the cooldown.
         _statusMessage =

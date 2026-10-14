@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/models/model_codec.dart';
 
 /// Represents the top-level chat room document in the `chats` collection.
 class ChatRoom {
@@ -16,15 +16,13 @@ class ChatRoom {
     this.lastMessage,
   });
 
-  /// Creates a ChatRoom instance from a Firestore document snapshot.
-  factory ChatRoom.fromFirestore(
-      DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final data = snapshot.data()!;
+  /// Creates a ChatRoom from a stored document's [id] and [data].
+  factory ChatRoom.fromMap(String id, Map<String, dynamic> data) {
     return ChatRoom(
-      id: snapshot.id,
+      id: id,
       participants: List<String>.from(data['participants'] ?? []),
       participantInfo: Map<String, dynamic>.from(data['participantInfo'] ?? {}),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      createdAt: parseModelDate(data['createdAt']),
       lastMessage: data['lastMessage'] != null
           ? Map<String, dynamic>.from(data['lastMessage'])
           : null,
@@ -36,7 +34,7 @@ class ChatRoom {
     return {
       'participants': participants,
       'participantInfo': participantInfo,
-      'createdAt': FieldValue.serverTimestamp(), // Set on creation
+      'createdAt': serverTimestamp, // Set on creation
       'lastMessage': lastMessage,
     };
   }

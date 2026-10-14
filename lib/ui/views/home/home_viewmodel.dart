@@ -1,7 +1,7 @@
-import 'package:cloud_functions/cloud_functions.dart';
+import 'package:you_app/services/base/service_exception.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:you_app/services/in_app_notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:you_app/ui/shared/in_app_notification_banner.dart';
@@ -356,7 +356,7 @@ class HomeViewModel extends ReactiveViewModel {
         return;
       }
       // Success is handled by the stream listener updating the UI state.
-    } on FirebaseFunctionsException catch (e) {
+    } on ServiceException catch (e) {
       // The listener went dark between rendering this list and the tap — the
       // server re-checks presence and refuses rather than filing a request that
       // would never be answered. Say so plainly instead of a generic error.
@@ -751,100 +751,67 @@ class HomeViewModel extends ReactiveViewModel {
     _navigationService.navigateToChatbotView();
   }
 
-  /// Listens for unread In-App notifications in the user's subcollection in real-time.
+  /// Listens for unread in-app notifications in real time.
   void listenForNotifications() {
     final userId = _authenticationService.currentUser?.uid;
     if (userId == null) return;
 
     _notificationsSubscription?.cancel();
-
-    bool isInitial = true;
-    _notificationsSubscription = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('notifications')
-        .where('isRead', isEqualTo: false)
-        .snapshots()
-        .listen((snapshot) {
-      _unreadNotificationsCount = snapshot.docs.length;
+    _notificationsSubscription = locator<InAppNotificationService>()
+        .streamUnread(userId)
+        .listen((update) {
+      _unreadNotificationsCount = update.count;
       notifyListeners();
 
-      // Show sliding banner overlay in real-time when new notification document is added
-      if (!isInitial) {
-        for (var change in snapshot.docChanges) {
-          if (change.type == DocumentChangeType.added) {
-            final data = change.doc.data();
-            if (data != null) {
-              final title = data['title'] as String? ?? 'Notification';
-              final body = data['body'] as String? ?? '';
-              final type = data['type'] as String? ?? '';
-              final customData = data['data'] as Map<String, dynamic>?;
-
-              VoidCallback? onTap;
-              if (type == 'request_accepted') {
-                final requestId = customData?['requestId'] as String?;
-                if (requestId != null) {
-                  onTap = () {
-                    _navigationService.replaceWithHomeView(initialIndex: 2);
-                  };
-                }
-              } else if (type == 'new_message') {
-                final chatId = customData?['chatId'] as String?;
-                if (chatId != null) {
-                  onTap = () {
-                    final parts = chatId.split('_');
-                    final volunteerId = parts.firstWhere((id) => id != userId,
-                        orElse: () => '');
-                    locator<NavigationService>().navigateToChatView(
-                      volunteerId: volunteerId,
-                      volunteerName: "Volunteer",
-                      requestId: volunteerId,
-                    );
-                  };
-                }
-              } else if (type == 'request_received' || type == 'chat_request') {
-                onTap = () {
-                  setTab(0);
-                };
-              }
-
-              // Show the sliding custom overlay banner
-              InAppNotificationBanner.show(
-                title: title,
-                body: body,
-                type: type,
-                onTap: onTap,
-              );
-            }
+      // Slide in a banner for each notification that just arrived. The service
+      // leaves `added` empty on the first emission.
+      for (final n in update.added) {
+        VoidCallback? onTap;
+        if (n.type == 'request_accepted') {
+          if (n.requestId != null) {
+            onTap = () {
+              _navigationService.replaceWithHomeView(initialIndex: 2);
+            };
           }
+        } else if (n.type == 'new_message') {
+          final chatId = n.chatId;
+          if (chatId != null) {
+            onTap = () {
+              final parts = chatId.split('_');
+              final volunteerId =
+                  parts.firstWhere((id) => id != userId, orElse: () => '');
+              locator<NavigationService>().navigateToChatView(
+                volunteerId: volunteerId,
+                volunteerName: "Volunteer",
+                requestId: volunteerId,
+              );
+            };
+          }
+        } else if (n.type == 'request_received' || n.type == 'chat_request') {
+          onTap = () {
+            setTab(0);
+          };
         }
+
+        InAppNotificationBanner.show(
+          title: n.title,
+          body: n.body,
+          type: n.type,
+          onTap: onTap,
+        );
       }
-      isInitial = false;
     }, onError: (error) {
       debugPrint("Error listening for notifications: $error");
     });
   }
 
-  /// Marks all unread user notifications as read in Firestore.
+  /// Marks all unread user notifications as read.
   Future<void> markAllNotificationsAsRead() async {
     final userId = _authenticationService.currentUser?.uid;
     if (userId == null) return;
 
     try {
-      final query = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('notifications')
-          .where('isRead', isEqualTo: false)
-          .get();
-
-      if (query.docs.isNotEmpty) {
-        final batch = FirebaseFirestore.instance.batch();
-        for (var doc in query.docs) {
-          batch.update(doc.reference, {'isRead': true});
-        }
-        await batch.commit();
-      }
+      await locator<InAppNotificationService>().markAllRead(userId);
     } catch (e) {
       debugPrint("Error marking notifications as read: $e");
     }

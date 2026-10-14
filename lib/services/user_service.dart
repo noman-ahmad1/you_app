@@ -29,6 +29,23 @@ class UserService with FirestoreServiceMixin {
     await db.collection('users').doc(uid).update(data);
   }
 
+  /// Finishes onboarding: writes the profile fields, marks the account active
+  /// and stamps `profileCompletedAt` with the server's clock.
+  Future<void> completeProfile(
+    String uid, {
+    required String username,
+    required DateTime? dateOfBirth,
+    required String? gender,
+  }) async {
+    await update(uid, {
+      'username': username,
+      'dateOfBirth': dateOfBirth,
+      'gender': gender,
+      'status': 'active',
+      'profileCompletedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   // UPDATE: Specific update for last login (used during sign-in)
   Future<void> updateLastLogin(String uid) async {
     await db.collection('users').doc(uid).update({

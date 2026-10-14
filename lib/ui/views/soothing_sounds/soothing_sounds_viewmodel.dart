@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:cloud_functions/cloud_functions.dart';
+import 'package:you_app/services/base/service_exception.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -116,7 +116,7 @@ class SoothingSoundsViewModel extends StreamViewModel<List<SoundTrack>> {
       // spinning over an already-playing sound until you tapped pause.
       // setAudioSource() above has already done the loading we care about.
       unawaited(_player.play());
-    } on FirebaseFunctionsException catch (e) {
+    } on ServiceException catch (e) {
       // The gate above should make this unreachable; if it fires, the client and
       // the server disagree about entitlement — trust the server.
       if (e.code == 'permission-denied') {
@@ -161,8 +161,7 @@ class SoothingSoundsViewModel extends StreamViewModel<List<SoundTrack>> {
   void _showPlaybackError(Object e) {
     AppLog.error('SoothingSoundsViewModel.playback', e);
 
-    final serverFault =
-        e is FirebaseFunctionsException && e.code != 'unavailable';
+    final serverFault = e is ServiceException && !e.isUnavailable;
 
     _snackbarService.showSnackbar(
       title: 'Could not play',

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
 import 'package:you_app/services/user_service.dart';
@@ -162,18 +161,14 @@ class UserInfoViewModel extends BaseViewModel {
     setBusy(true);
 
     try {
-      final updateData = {
-        // Ensure the username is saved in lowercase for consistency and easy querying
-        'username': userNameController.text.trim().toLowerCase(),
-        'dateOfBirth':
-            _selectedDate, // Store as DateTime for Firestore Timestamp
-        'gender': _selectedGender,
-        'status': 'active', // Mark user profile as complete
-        'profileCompletedAt': FieldValue.serverTimestamp(),
-      };
-
-      // 1. Update the existing user document using the passed UID
-      await locator<UserService>().update(uid, updateData);
+      // 1. Save the profile and mark the account active. The username is
+      // stored lowercase for consistency and easy querying.
+      await locator<UserService>().completeProfile(
+        uid,
+        username: userNameController.text.trim().toLowerCase(),
+        dateOfBirth: _selectedDate,
+        gender: _selectedGender,
+      );
 
       // 2. Reflect the new data in the in-memory user instantly. We deliberately
       // do NOT call checkCurrentUserStatus() here — its firebaseUser.reload()
