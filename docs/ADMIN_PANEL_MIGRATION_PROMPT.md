@@ -154,6 +154,40 @@ accommodate it. The mobile repo has an emulator test suite
 (`firestore-tests/`, 52 assertions) that will catch a regression, and ten of those
 assertions specifically pin the admin panel's access paths.
 
+## Task 6 — minimum app version controls
+
+The app now has a minimum-version gate. On the splash screen it reads a new,
+**publicly readable** document (it runs before sign-in):
+
+```
+app_settings/app_version
+  min_build_android:  int     lowest allowed Android build number
+  min_build_ios:      int     lowest allowed iOS build number
+  update_url_android: string  optional; defaults to the Play Store listing
+  update_url_ios:     string  optional; iOS shows text only until this is set
+  update_message:     string  optional custom copy for the update screen
+```
+
+Rules: `read: if true`, `write: if isAdmin()`. A build number is the `+N` part
+of the app's `version` (e.g. `1.1.0+10` → `10`).
+
+Please add an editor for it, with two safeguards because this setting can block
+every user at once:
+
+1. **Confirm before saving** any increase to a `min_build_*` value. Spell out
+   that every install below that build will be unable to use the app until it
+   updates.
+2. **Validate**: positive integers only. An empty field must delete the key
+   rather than write `0` or `""`. The app ignores junk and fails open, but the
+   panel shouldn't produce it.
+
+## Task 7 — Dodo model setting
+
+`app_settings/global_config` gains an optional string `dodo_model` (default
+`gemini-2.5-flash`), which picks the Gemini model the Dodo chatbot uses without
+a redeploy. Add it to the existing global-config editor as a text field. Empty
+means the default; trim whitespace on save.
+
 ## Please also
 
 - Point out anywhere the panel reads user PII it does not actually need to display.
