@@ -6,57 +6,62 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:flutter/material.dart' as _i31;
+import 'package:flutter/material.dart' as _i32;
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart' as _i1;
-import 'package:stacked_services/stacked_services.dart' as _i34;
-import 'package:you_app/models/journal_model.dart' as _i33;
-import 'package:you_app/ui/shared/page_transitions.dart' as _i32;
-import 'package:you_app/ui/views/breathe/breathe_view.dart' as _i25;
-import 'package:you_app/ui/views/chat/chat_view.dart' as _i19;
-import 'package:you_app/ui/views/chatbot/chatbot_view.dart' as _i12;
+import 'package:stacked_services/stacked_services.dart' as _i36;
+import 'package:you_app/models/journal_model.dart' as _i35;
+import 'package:you_app/services/app_version_service.dart' as _i34;
+import 'package:you_app/ui/shared/page_transitions.dart' as _i33;
+import 'package:you_app/ui/views/breathe/breathe_view.dart' as _i26;
+import 'package:you_app/ui/views/chat/chat_view.dart' as _i20;
+import 'package:you_app/ui/views/chatbot/chatbot_view.dart' as _i13;
 import 'package:you_app/ui/views/community_chat/community_chat_view.dart'
-    as _i20;
-import 'package:you_app/ui/views/edit_profile/edit_profile_view.dart' as _i23;
-import 'package:you_app/ui/views/home/home_view.dart' as _i2;
-import 'package:you_app/ui/views/journal/journal_view.dart' as _i9;
-import 'package:you_app/ui/views/journal_details/journal_details_view.dart'
-    as _i18;
-import 'package:you_app/ui/views/login/login_view.dart' as _i5;
-import 'package:you_app/ui/views/mood_insights/mood_insights_view.dart' as _i29;
-import 'package:you_app/ui/views/mood_tracker/mood_tracker_view.dart' as _i10;
-import 'package:you_app/ui/views/new_journal_entry/new_journal_entry_view.dart'
-    as _i11;
-import 'package:you_app/ui/views/paywall/paywall_view.dart' as _i27;
-import 'package:you_app/ui/views/premium/premium_view.dart' as _i28;
-import 'package:you_app/ui/views/profile/profile_view.dart' as _i22;
-import 'package:you_app/ui/views/reset_password/reset_password_view.dart'
-    as _i7;
-import 'package:you_app/ui/views/signup/signup_view.dart' as _i6;
-import 'package:you_app/ui/views/soothing_sounds/soothing_sounds_view.dart'
-    as _i24;
-import 'package:you_app/ui/views/startup/startup_view.dart' as _i3;
-import 'package:you_app/ui/views/user_info/user_info_view.dart' as _i8;
-import 'package:you_app/ui/views/verify_email/verify_email_view.dart' as _i30;
-import 'package:you_app/ui/views/volunteer_edit_profile/volunteer_edit_profile_view.dart'
-    as _i26;
-import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart'
-    as _i15;
-import 'package:you_app/ui/views/volunteer_pending_verification/volunteer_pending_verification_view.dart'
     as _i21;
-import 'package:you_app/ui/views/volunteer_reset_password/volunteer_reset_password_view.dart'
+import 'package:you_app/ui/views/edit_profile/edit_profile_view.dart' as _i24;
+import 'package:you_app/ui/views/home/home_view.dart' as _i2;
+import 'package:you_app/ui/views/journal/journal_view.dart' as _i10;
+import 'package:you_app/ui/views/journal_details/journal_details_view.dart'
+    as _i19;
+import 'package:you_app/ui/views/login/login_view.dart' as _i6;
+import 'package:you_app/ui/views/mood_insights/mood_insights_view.dart' as _i30;
+import 'package:you_app/ui/views/mood_tracker/mood_tracker_view.dart' as _i11;
+import 'package:you_app/ui/views/new_journal_entry/new_journal_entry_view.dart'
+    as _i12;
+import 'package:you_app/ui/views/paywall/paywall_view.dart' as _i28;
+import 'package:you_app/ui/views/premium/premium_view.dart' as _i29;
+import 'package:you_app/ui/views/profile/profile_view.dart' as _i23;
+import 'package:you_app/ui/views/reset_password/reset_password_view.dart'
+    as _i8;
+import 'package:you_app/ui/views/signup/signup_view.dart' as _i7;
+import 'package:you_app/ui/views/soothing_sounds/soothing_sounds_view.dart'
+    as _i25;
+import 'package:you_app/ui/views/startup/startup_view.dart' as _i3;
+import 'package:you_app/ui/views/update_required/update_required_view.dart'
+    as _i4;
+import 'package:you_app/ui/views/user_info/user_info_view.dart' as _i9;
+import 'package:you_app/ui/views/verify_email/verify_email_view.dart' as _i31;
+import 'package:you_app/ui/views/volunteer_edit_profile/volunteer_edit_profile_view.dart'
+    as _i27;
+import 'package:you_app/ui/views/volunteer_home/volunteer_home_view.dart'
     as _i16;
-import 'package:you_app/ui/views/volunteer_signup/volunteer_otp.dart' as _i17;
+import 'package:you_app/ui/views/volunteer_pending_verification/volunteer_pending_verification_view.dart'
+    as _i22;
+import 'package:you_app/ui/views/volunteer_reset_password/volunteer_reset_password_view.dart'
+    as _i17;
+import 'package:you_app/ui/views/volunteer_signup/volunteer_otp.dart' as _i18;
 import 'package:you_app/ui/views/volunteer_signup/volunteer_signup_view.dart'
-    as _i13;
-import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_view.dart'
     as _i14;
-import 'package:you_app/ui/views/welcome/welcome_view.dart' as _i4;
+import 'package:you_app/ui/views/volunteer_signup_info/volunteer_signup_info_view.dart'
+    as _i15;
+import 'package:you_app/ui/views/welcome/welcome_view.dart' as _i5;
 
 class Routes {
   static const homeView = '/home-view';
 
   static const startupView = '/startup-view';
+
+  static const updateRequiredView = '/update-required-view';
 
   static const welcomeView = '/welcome-view';
 
@@ -116,6 +121,7 @@ class Routes {
   static const all = <String>{
     homeView,
     startupView,
+    updateRequiredView,
     welcomeView,
     loginView,
     signupView,
@@ -157,112 +163,116 @@ class StackedRouter extends _i1.RouterBase {
       page: _i3.StartupView,
     ),
     _i1.RouteDef(
+      Routes.updateRequiredView,
+      page: _i4.UpdateRequiredView,
+    ),
+    _i1.RouteDef(
       Routes.welcomeView,
-      page: _i4.WelcomeView,
+      page: _i5.WelcomeView,
     ),
     _i1.RouteDef(
       Routes.loginView,
-      page: _i5.LoginView,
+      page: _i6.LoginView,
     ),
     _i1.RouteDef(
       Routes.signupView,
-      page: _i6.SignupView,
+      page: _i7.SignupView,
     ),
     _i1.RouteDef(
       Routes.resetPasswordView,
-      page: _i7.ResetPasswordView,
+      page: _i8.ResetPasswordView,
     ),
     _i1.RouteDef(
       Routes.userInfoView,
-      page: _i8.UserInfoView,
+      page: _i9.UserInfoView,
     ),
     _i1.RouteDef(
       Routes.journalView,
-      page: _i9.JournalView,
+      page: _i10.JournalView,
     ),
     _i1.RouteDef(
       Routes.moodTrackerView,
-      page: _i10.MoodTrackerView,
+      page: _i11.MoodTrackerView,
     ),
     _i1.RouteDef(
       Routes.newJournalEntryView,
-      page: _i11.NewJournalEntryView,
+      page: _i12.NewJournalEntryView,
     ),
     _i1.RouteDef(
       Routes.chatbotView,
-      page: _i12.ChatbotView,
+      page: _i13.ChatbotView,
     ),
     _i1.RouteDef(
       Routes.volunteerSignupView,
-      page: _i13.VolunteerSignupView,
+      page: _i14.VolunteerSignupView,
     ),
     _i1.RouteDef(
       Routes.volunteerSignupInfoView,
-      page: _i14.VolunteerSignupInfoView,
+      page: _i15.VolunteerSignupInfoView,
     ),
     _i1.RouteDef(
       Routes.volunteerHomeView,
-      page: _i15.VolunteerHomeView,
+      page: _i16.VolunteerHomeView,
     ),
     _i1.RouteDef(
       Routes.volunteerResetPasswordView,
-      page: _i16.VolunteerResetPasswordView,
+      page: _i17.VolunteerResetPasswordView,
     ),
     _i1.RouteDef(
       Routes.volunteerOtpView,
-      page: _i17.VolunteerOtpView,
+      page: _i18.VolunteerOtpView,
     ),
     _i1.RouteDef(
       Routes.journalDetailsView,
-      page: _i18.JournalDetailsView,
+      page: _i19.JournalDetailsView,
     ),
     _i1.RouteDef(
       Routes.chatView,
-      page: _i19.ChatView,
+      page: _i20.ChatView,
     ),
     _i1.RouteDef(
       Routes.communityChatView,
-      page: _i20.CommunityChatView,
+      page: _i21.CommunityChatView,
     ),
     _i1.RouteDef(
       Routes.volunteerPendingVerificationView,
-      page: _i21.VolunteerPendingVerificationView,
+      page: _i22.VolunteerPendingVerificationView,
     ),
     _i1.RouteDef(
       Routes.profileView,
-      page: _i22.ProfileView,
+      page: _i23.ProfileView,
     ),
     _i1.RouteDef(
       Routes.editProfileView,
-      page: _i23.EditProfileView,
+      page: _i24.EditProfileView,
     ),
     _i1.RouteDef(
       Routes.soothingSoundsView,
-      page: _i24.SoothingSoundsView,
+      page: _i25.SoothingSoundsView,
     ),
     _i1.RouteDef(
       Routes.breatheView,
-      page: _i25.BreatheView,
+      page: _i26.BreatheView,
     ),
     _i1.RouteDef(
       Routes.volunteerEditProfileView,
-      page: _i26.VolunteerEditProfileView,
+      page: _i27.VolunteerEditProfileView,
     ),
     _i1.RouteDef(
       Routes.paywallView,
-      page: _i27.PaywallView,
+      page: _i28.PaywallView,
     ),
     _i1.RouteDef(
       Routes.premiumView,
-      page: _i28.PremiumView,
+      page: _i29.PremiumView,
     ),
     _i1.RouteDef(
       Routes.moodInsightsView,
-      page: _i29.MoodInsightsView,
+      page: _i30.MoodInsightsView,
     ),
     _i1.RouteDef(
       Routes.verifyEmailView,
-      page: _i30.VerifyEmailView,
+      page: _i31.VerifyEmailView,
     ),
   ];
 
@@ -271,7 +281,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<HomeViewArguments>(
         orElse: () => const HomeViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
+      return _i32.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i2.HomeView(key: args.key, initialIndex: args.initialIndex),
         settings: data,
@@ -281,273 +291,281 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<StartupViewArguments>(
         orElse: () => const StartupViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
+      return _i32.MaterialPageRoute<dynamic>(
         builder: (context) => _i3.StartupView(key: args.key),
         settings: data,
       );
     },
-    _i4.WelcomeView: (data) {
+    _i4.UpdateRequiredView: (data) {
+      final args = data.getArgs<UpdateRequiredViewArguments>(nullOk: false);
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i4.UpdateRequiredView(
+            key: args.key, requirement: args.requirement),
+        settings: data,
+      );
+    },
+    _i5.WelcomeView: (data) {
       final args = data.getArgs<WelcomeViewArguments>(
         orElse: () => const WelcomeViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i4.WelcomeView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i5.WelcomeView(key: args.key),
         settings: data,
       );
     },
-    _i5.LoginView: (data) {
+    _i6.LoginView: (data) {
       final args = data.getArgs<LoginViewArguments>(
         orElse: () => const LoginViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i5.LoginView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i6.LoginView(key: args.key),
         settings: data,
       );
     },
-    _i6.SignupView: (data) {
+    _i7.SignupView: (data) {
       final args = data.getArgs<SignupViewArguments>(
         orElse: () => const SignupViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i6.SignupView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i7.SignupView(key: args.key),
         settings: data,
       );
     },
-    _i7.ResetPasswordView: (data) {
+    _i8.ResetPasswordView: (data) {
       final args = data.getArgs<ResetPasswordViewArguments>(
         orElse: () => const ResetPasswordViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
+      return _i32.MaterialPageRoute<dynamic>(
         builder: (context) =>
-            _i7.ResetPasswordView(key: args.key, oobCode: args.oobCode),
+            _i8.ResetPasswordView(key: args.key, oobCode: args.oobCode),
         settings: data,
       );
     },
-    _i8.UserInfoView: (data) {
+    _i9.UserInfoView: (data) {
       final args = data.getArgs<UserInfoViewArguments>(nullOk: false);
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i8.UserInfoView(key: args.key, uid: args.uid),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i9.UserInfoView(key: args.key, uid: args.uid),
         settings: data,
       );
     },
-    _i9.JournalView: (data) {
+    _i10.JournalView: (data) {
       final args = data.getArgs<JournalViewArguments>(
         orElse: () => const JournalViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i9.JournalView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i10.JournalView(key: args.key),
         settings: data,
       );
     },
-    _i10.MoodTrackerView: (data) {
+    _i11.MoodTrackerView: (data) {
       final args = data.getArgs<MoodTrackerViewArguments>(
         orElse: () => const MoodTrackerViewArguments(),
       );
-      return _i31.PageRouteBuilder<dynamic>(
+      return _i32.PageRouteBuilder<dynamic>(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _i10.MoodTrackerView(key: args.key),
+            _i11.MoodTrackerView(key: args.key),
         settings: data,
-        transitionsBuilder: data.transition ?? _i32.scaleFadeTransition,
+        transitionsBuilder: data.transition ?? _i33.scaleFadeTransition,
       );
     },
-    _i11.NewJournalEntryView: (data) {
+    _i12.NewJournalEntryView: (data) {
       final args = data.getArgs<NewJournalEntryViewArguments>(
         orElse: () => const NewJournalEntryViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i11.NewJournalEntryView(
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i12.NewJournalEntryView(
             key: args.key, journalEntry: args.journalEntry),
         settings: data,
       );
     },
-    _i12.ChatbotView: (data) {
+    _i13.ChatbotView: (data) {
       final args = data.getArgs<ChatbotViewArguments>(
         orElse: () => const ChatbotViewArguments(),
       );
-      return _i31.PageRouteBuilder<dynamic>(
+      return _i32.PageRouteBuilder<dynamic>(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _i12.ChatbotView(key: args.key),
+            _i13.ChatbotView(key: args.key),
         settings: data,
-        transitionsBuilder: data.transition ?? _i32.slideUpTransition,
+        transitionsBuilder: data.transition ?? _i33.slideUpTransition,
       );
     },
-    _i13.VolunteerSignupView: (data) {
+    _i14.VolunteerSignupView: (data) {
       final args = data.getArgs<VolunteerSignupViewArguments>(
         orElse: () => const VolunteerSignupViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i13.VolunteerSignupView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i14.VolunteerSignupView(key: args.key),
         settings: data,
       );
     },
-    _i14.VolunteerSignupInfoView: (data) {
+    _i15.VolunteerSignupInfoView: (data) {
       final args =
           data.getArgs<VolunteerSignupInfoViewArguments>(nullOk: false);
-      return _i31.MaterialPageRoute<dynamic>(
+      return _i32.MaterialPageRoute<dynamic>(
         builder: (context) =>
-            _i14.VolunteerSignupInfoView(key: args.key, uid: args.uid),
+            _i15.VolunteerSignupInfoView(key: args.key, uid: args.uid),
         settings: data,
       );
     },
-    _i15.VolunteerHomeView: (data) {
+    _i16.VolunteerHomeView: (data) {
       final args = data.getArgs<VolunteerHomeViewArguments>(
         orElse: () => const VolunteerHomeViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i15.VolunteerHomeView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i16.VolunteerHomeView(key: args.key),
         settings: data,
       );
     },
-    _i16.VolunteerResetPasswordView: (data) {
+    _i17.VolunteerResetPasswordView: (data) {
       final args = data.getArgs<VolunteerResetPasswordViewArguments>(
         orElse: () => const VolunteerResetPasswordViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i16.VolunteerResetPasswordView(
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i17.VolunteerResetPasswordView(
             key: args.key, oobCode: args.oobCode),
         settings: data,
       );
     },
-    _i17.VolunteerOtpView: (data) {
+    _i18.VolunteerOtpView: (data) {
       final args = data.getArgs<VolunteerOtpViewArguments>(
         orElse: () => const VolunteerOtpViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i17.VolunteerOtpView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i18.VolunteerOtpView(key: args.key),
         settings: data,
       );
     },
-    _i18.JournalDetailsView: (data) {
+    _i19.JournalDetailsView: (data) {
       final args = data.getArgs<JournalDetailsViewArguments>(nullOk: false);
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i18.JournalDetailsView(
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i19.JournalDetailsView(
             key: args.key, journalEntry: args.journalEntry),
         settings: data,
       );
     },
-    _i19.ChatView: (data) {
+    _i20.ChatView: (data) {
       final args = data.getArgs<ChatViewArguments>(nullOk: false);
-      return _i31.PageRouteBuilder<dynamic>(
-        pageBuilder: (context, animation, secondaryAnimation) => _i19.ChatView(
+      return _i32.PageRouteBuilder<dynamic>(
+        pageBuilder: (context, animation, secondaryAnimation) => _i20.ChatView(
             key: args.key,
             volunteerId: args.volunteerId,
             volunteerName: args.volunteerName,
             requestId: args.requestId),
         settings: data,
-        transitionsBuilder: data.transition ?? _i32.slideUpTransition,
+        transitionsBuilder: data.transition ?? _i33.slideUpTransition,
       );
     },
-    _i20.CommunityChatView: (data) {
+    _i21.CommunityChatView: (data) {
       final args = data.getArgs<CommunityChatViewArguments>(nullOk: false);
-      return _i31.PageRouteBuilder<dynamic>(
+      return _i32.PageRouteBuilder<dynamic>(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _i20.CommunityChatView(
+            _i21.CommunityChatView(
                 key: args.key,
                 communityId: args.communityId,
                 communityName: args.communityName),
         settings: data,
-        transitionsBuilder: data.transition ?? _i32.slideUpTransition,
+        transitionsBuilder: data.transition ?? _i33.slideUpTransition,
       );
     },
-    _i21.VolunteerPendingVerificationView: (data) {
+    _i22.VolunteerPendingVerificationView: (data) {
       final args = data.getArgs<VolunteerPendingVerificationViewArguments>(
         orElse: () => const VolunteerPendingVerificationViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
+      return _i32.MaterialPageRoute<dynamic>(
         builder: (context) =>
-            _i21.VolunteerPendingVerificationView(key: args.key),
+            _i22.VolunteerPendingVerificationView(key: args.key),
         settings: data,
       );
     },
-    _i22.ProfileView: (data) {
+    _i23.ProfileView: (data) {
       final args = data.getArgs<ProfileViewArguments>(
         orElse: () => const ProfileViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i22.ProfileView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i23.ProfileView(key: args.key),
         settings: data,
       );
     },
-    _i23.EditProfileView: (data) {
+    _i24.EditProfileView: (data) {
       final args = data.getArgs<EditProfileViewArguments>(
         orElse: () => const EditProfileViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i23.EditProfileView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i24.EditProfileView(key: args.key),
         settings: data,
       );
     },
-    _i24.SoothingSoundsView: (data) {
+    _i25.SoothingSoundsView: (data) {
       final args = data.getArgs<SoothingSoundsViewArguments>(
         orElse: () => const SoothingSoundsViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i24.SoothingSoundsView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i25.SoothingSoundsView(key: args.key),
         settings: data,
       );
     },
-    _i25.BreatheView: (data) {
+    _i26.BreatheView: (data) {
       final args = data.getArgs<BreatheViewArguments>(
         orElse: () => const BreatheViewArguments(),
       );
-      return _i31.PageRouteBuilder<dynamic>(
+      return _i32.PageRouteBuilder<dynamic>(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _i25.BreatheView(key: args.key),
+            _i26.BreatheView(key: args.key),
         settings: data,
-        transitionsBuilder: data.transition ?? _i32.fadeTransition,
+        transitionsBuilder: data.transition ?? _i33.fadeTransition,
       );
     },
-    _i26.VolunteerEditProfileView: (data) {
+    _i27.VolunteerEditProfileView: (data) {
       final args = data.getArgs<VolunteerEditProfileViewArguments>(
         orElse: () => const VolunteerEditProfileViewArguments(),
       );
-      return _i31.MaterialPageRoute<dynamic>(
-        builder: (context) => _i26.VolunteerEditProfileView(key: args.key),
+      return _i32.MaterialPageRoute<dynamic>(
+        builder: (context) => _i27.VolunteerEditProfileView(key: args.key),
         settings: data,
       );
     },
-    _i27.PaywallView: (data) {
+    _i28.PaywallView: (data) {
       final args = data.getArgs<PaywallViewArguments>(
         orElse: () => const PaywallViewArguments(),
       );
-      return _i31.PageRouteBuilder<dynamic>(
+      return _i32.PageRouteBuilder<dynamic>(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _i27.PaywallView(feature: args.feature, key: args.key),
+            _i28.PaywallView(feature: args.feature, key: args.key),
         settings: data,
-        transitionsBuilder: data.transition ?? _i32.slideUpTransition,
+        transitionsBuilder: data.transition ?? _i33.slideUpTransition,
       );
     },
-    _i28.PremiumView: (data) {
+    _i29.PremiumView: (data) {
       final args = data.getArgs<PremiumViewArguments>(
         orElse: () => const PremiumViewArguments(),
       );
-      return _i31.PageRouteBuilder<dynamic>(
+      return _i32.PageRouteBuilder<dynamic>(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _i28.PremiumView(key: args.key),
+            _i29.PremiumView(key: args.key),
         settings: data,
-        transitionsBuilder: data.transition ?? _i32.slideUpTransition,
+        transitionsBuilder: data.transition ?? _i33.slideUpTransition,
       );
     },
-    _i29.MoodInsightsView: (data) {
+    _i30.MoodInsightsView: (data) {
       final args = data.getArgs<MoodInsightsViewArguments>(
         orElse: () => const MoodInsightsViewArguments(),
       );
-      return _i31.PageRouteBuilder<dynamic>(
+      return _i32.PageRouteBuilder<dynamic>(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _i29.MoodInsightsView(key: args.key),
+            _i30.MoodInsightsView(key: args.key),
         settings: data,
-        transitionsBuilder: data.transition ?? _i32.slideUpTransition,
+        transitionsBuilder: data.transition ?? _i33.slideUpTransition,
       );
     },
-    _i30.VerifyEmailView: (data) {
+    _i31.VerifyEmailView: (data) {
       final args = data.getArgs<VerifyEmailViewArguments>(
         orElse: () => const VerifyEmailViewArguments(),
       );
-      return _i31.PageRouteBuilder<dynamic>(
+      return _i32.PageRouteBuilder<dynamic>(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _i30.VerifyEmailView(key: args.key, source: args.source),
+            _i31.VerifyEmailView(key: args.key, source: args.source),
         settings: data,
-        transitionsBuilder: data.transition ?? _i32.slideUpTransition,
+        transitionsBuilder: data.transition ?? _i33.slideUpTransition,
       );
     },
   };
@@ -565,7 +583,7 @@ class HomeViewArguments {
     this.initialIndex = 1,
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   final int initialIndex;
 
@@ -589,7 +607,7 @@ class HomeViewArguments {
 class StartupViewArguments {
   const StartupViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -608,10 +626,37 @@ class StartupViewArguments {
   }
 }
 
+class UpdateRequiredViewArguments {
+  const UpdateRequiredViewArguments({
+    this.key,
+    required this.requirement,
+  });
+
+  final _i32.Key? key;
+
+  final _i34.UpdateRequirement requirement;
+
+  @override
+  String toString() {
+    return '{"key": "$key", "requirement": "$requirement"}';
+  }
+
+  @override
+  bool operator ==(covariant UpdateRequiredViewArguments other) {
+    if (identical(this, other)) return true;
+    return other.key == key && other.requirement == requirement;
+  }
+
+  @override
+  int get hashCode {
+    return key.hashCode ^ requirement.hashCode;
+  }
+}
+
 class WelcomeViewArguments {
   const WelcomeViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -633,7 +678,7 @@ class WelcomeViewArguments {
 class LoginViewArguments {
   const LoginViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -655,7 +700,7 @@ class LoginViewArguments {
 class SignupViewArguments {
   const SignupViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -680,7 +725,7 @@ class ResetPasswordViewArguments {
     this.oobCode,
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   final String? oobCode;
 
@@ -707,7 +752,7 @@ class UserInfoViewArguments {
     required this.uid,
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   final String uid;
 
@@ -731,7 +776,7 @@ class UserInfoViewArguments {
 class JournalViewArguments {
   const JournalViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -753,7 +798,7 @@ class JournalViewArguments {
 class MoodTrackerViewArguments {
   const MoodTrackerViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -778,9 +823,9 @@ class NewJournalEntryViewArguments {
     this.journalEntry,
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
-  final _i33.JournalEntry? journalEntry;
+  final _i35.JournalEntry? journalEntry;
 
   @override
   String toString() {
@@ -802,7 +847,7 @@ class NewJournalEntryViewArguments {
 class ChatbotViewArguments {
   const ChatbotViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -824,7 +869,7 @@ class ChatbotViewArguments {
 class VolunteerSignupViewArguments {
   const VolunteerSignupViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -849,7 +894,7 @@ class VolunteerSignupInfoViewArguments {
     required this.uid,
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   final String uid;
 
@@ -873,7 +918,7 @@ class VolunteerSignupInfoViewArguments {
 class VolunteerHomeViewArguments {
   const VolunteerHomeViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -898,7 +943,7 @@ class VolunteerResetPasswordViewArguments {
     this.oobCode,
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   final String? oobCode;
 
@@ -922,7 +967,7 @@ class VolunteerResetPasswordViewArguments {
 class VolunteerOtpViewArguments {
   const VolunteerOtpViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -947,9 +992,9 @@ class JournalDetailsViewArguments {
     required this.journalEntry,
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
-  final _i33.JournalEntry journalEntry;
+  final _i35.JournalEntry journalEntry;
 
   @override
   String toString() {
@@ -976,7 +1021,7 @@ class ChatViewArguments {
     required this.requestId,
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   final String volunteerId;
 
@@ -1014,7 +1059,7 @@ class CommunityChatViewArguments {
     required this.communityName,
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   final String communityId;
 
@@ -1042,7 +1087,7 @@ class CommunityChatViewArguments {
 class VolunteerPendingVerificationViewArguments {
   const VolunteerPendingVerificationViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -1064,7 +1109,7 @@ class VolunteerPendingVerificationViewArguments {
 class ProfileViewArguments {
   const ProfileViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -1086,7 +1131,7 @@ class ProfileViewArguments {
 class EditProfileViewArguments {
   const EditProfileViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -1108,7 +1153,7 @@ class EditProfileViewArguments {
 class SoothingSoundsViewArguments {
   const SoothingSoundsViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -1130,7 +1175,7 @@ class SoothingSoundsViewArguments {
 class BreatheViewArguments {
   const BreatheViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -1152,7 +1197,7 @@ class BreatheViewArguments {
 class VolunteerEditProfileViewArguments {
   const VolunteerEditProfileViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -1179,7 +1224,7 @@ class PaywallViewArguments {
 
   final String feature;
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -1201,7 +1246,7 @@ class PaywallViewArguments {
 class PremiumViewArguments {
   const PremiumViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -1223,7 +1268,7 @@ class PremiumViewArguments {
 class MoodInsightsViewArguments {
   const MoodInsightsViewArguments({this.key});
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   @override
   String toString() {
@@ -1248,7 +1293,7 @@ class VerifyEmailViewArguments {
     this.source = 'nudge',
   });
 
-  final _i31.Key? key;
+  final _i32.Key? key;
 
   final String source;
 
@@ -1269,9 +1314,9 @@ class VerifyEmailViewArguments {
   }
 }
 
-extension NavigatorStateExtension on _i34.NavigationService {
+extension NavigatorStateExtension on _i36.NavigationService {
   Future<dynamic> navigateToHomeView({
-    _i31.Key? key,
+    _i32.Key? key,
     int initialIndex = 1,
     int? routerId,
     bool preventDuplicates = true,
@@ -1288,7 +1333,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToStartupView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1303,8 +1348,26 @@ extension NavigatorStateExtension on _i34.NavigationService {
         transition: transition);
   }
 
+  Future<dynamic> navigateToUpdateRequiredView({
+    _i32.Key? key,
+    required _i34.UpdateRequirement requirement,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return navigateTo<dynamic>(Routes.updateRequiredView,
+        arguments:
+            UpdateRequiredViewArguments(key: key, requirement: requirement),
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
   Future<dynamic> navigateToWelcomeView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1320,7 +1383,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToLoginView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1336,7 +1399,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToSignupView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1352,7 +1415,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToResetPasswordView({
-    _i31.Key? key,
+    _i32.Key? key,
     String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
@@ -1369,7 +1432,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToUserInfoView({
-    _i31.Key? key,
+    _i32.Key? key,
     required String uid,
     int? routerId,
     bool preventDuplicates = true,
@@ -1386,7 +1449,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToJournalView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1402,7 +1465,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToMoodTrackerView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1418,8 +1481,8 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToNewJournalEntryView({
-    _i31.Key? key,
-    _i33.JournalEntry? journalEntry,
+    _i32.Key? key,
+    _i35.JournalEntry? journalEntry,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1436,7 +1499,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToChatbotView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1452,7 +1515,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerSignupView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1468,7 +1531,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerSignupInfoView({
-    _i31.Key? key,
+    _i32.Key? key,
     required String uid,
     int? routerId,
     bool preventDuplicates = true,
@@ -1485,7 +1548,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerHomeView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1501,7 +1564,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerResetPasswordView({
-    _i31.Key? key,
+    _i32.Key? key,
     String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
@@ -1519,7 +1582,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerOtpView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1535,8 +1598,8 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToJournalDetailsView({
-    _i31.Key? key,
-    required _i33.JournalEntry journalEntry,
+    _i32.Key? key,
+    required _i35.JournalEntry journalEntry,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1553,7 +1616,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToChatView({
-    _i31.Key? key,
+    _i32.Key? key,
     required String volunteerId,
     required String volunteerName,
     required String requestId,
@@ -1576,7 +1639,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToCommunityChatView({
-    _i31.Key? key,
+    _i32.Key? key,
     required String communityId,
     required String communityName,
     int? routerId,
@@ -1595,7 +1658,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerPendingVerificationView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1611,7 +1674,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToProfileView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1627,7 +1690,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToEditProfileView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1643,7 +1706,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToSoothingSoundsView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1659,7 +1722,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToBreatheView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1675,7 +1738,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToVolunteerEditProfileView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1692,7 +1755,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
 
   Future<dynamic> navigateToPaywallView({
     String feature = 'general',
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1708,7 +1771,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToPremiumView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1724,7 +1787,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToMoodInsightsView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1740,7 +1803,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> navigateToVerifyEmailView({
-    _i31.Key? key,
+    _i32.Key? key,
     String source = 'nudge',
     int? routerId,
     bool preventDuplicates = true,
@@ -1757,7 +1820,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithHomeView({
-    _i31.Key? key,
+    _i32.Key? key,
     int initialIndex = 1,
     int? routerId,
     bool preventDuplicates = true,
@@ -1774,7 +1837,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithStartupView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1789,8 +1852,26 @@ extension NavigatorStateExtension on _i34.NavigationService {
         transition: transition);
   }
 
+  Future<dynamic> replaceWithUpdateRequiredView({
+    _i32.Key? key,
+    required _i34.UpdateRequirement requirement,
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  }) async {
+    return replaceWith<dynamic>(Routes.updateRequiredView,
+        arguments:
+            UpdateRequiredViewArguments(key: key, requirement: requirement),
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
   Future<dynamic> replaceWithWelcomeView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1806,7 +1887,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithLoginView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1822,7 +1903,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithSignupView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1838,7 +1919,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithResetPasswordView({
-    _i31.Key? key,
+    _i32.Key? key,
     String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
@@ -1855,7 +1936,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithUserInfoView({
-    _i31.Key? key,
+    _i32.Key? key,
     required String uid,
     int? routerId,
     bool preventDuplicates = true,
@@ -1872,7 +1953,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithJournalView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1888,7 +1969,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithMoodTrackerView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1904,8 +1985,8 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithNewJournalEntryView({
-    _i31.Key? key,
-    _i33.JournalEntry? journalEntry,
+    _i32.Key? key,
+    _i35.JournalEntry? journalEntry,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1922,7 +2003,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithChatbotView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1938,7 +2019,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerSignupView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1954,7 +2035,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerSignupInfoView({
-    _i31.Key? key,
+    _i32.Key? key,
     required String uid,
     int? routerId,
     bool preventDuplicates = true,
@@ -1971,7 +2052,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerHomeView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1987,7 +2068,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerResetPasswordView({
-    _i31.Key? key,
+    _i32.Key? key,
     String? oobCode,
     int? routerId,
     bool preventDuplicates = true,
@@ -2005,7 +2086,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerOtpView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2021,8 +2102,8 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithJournalDetailsView({
-    _i31.Key? key,
-    required _i33.JournalEntry journalEntry,
+    _i32.Key? key,
+    required _i35.JournalEntry journalEntry,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2039,7 +2120,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithChatView({
-    _i31.Key? key,
+    _i32.Key? key,
     required String volunteerId,
     required String volunteerName,
     required String requestId,
@@ -2062,7 +2143,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithCommunityChatView({
-    _i31.Key? key,
+    _i32.Key? key,
     required String communityId,
     required String communityName,
     int? routerId,
@@ -2081,7 +2162,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerPendingVerificationView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2097,7 +2178,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithProfileView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2113,7 +2194,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithEditProfileView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2129,7 +2210,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithSoothingSoundsView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2145,7 +2226,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithBreatheView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2161,7 +2242,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithVolunteerEditProfileView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2178,7 +2259,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
 
   Future<dynamic> replaceWithPaywallView({
     String feature = 'general',
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2194,7 +2275,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithPremiumView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2210,7 +2291,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithMoodInsightsView({
-    _i31.Key? key,
+    _i32.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -2226,7 +2307,7 @@ extension NavigatorStateExtension on _i34.NavigationService {
   }
 
   Future<dynamic> replaceWithVerifyEmailView({
-    _i31.Key? key,
+    _i32.Key? key,
     String source = 'nudge',
     int? routerId,
     bool preventDuplicates = true,

@@ -310,3 +310,21 @@ describe('admin panel access', () => {
     await assertSucceeds(updateDoc(doc(as(ADMIN), 'volunteer_info', VERA), { status: 'verified' }));
   });
 });
+
+// ---------------------------------------------------------------------------
+describe('minimum-version gate', () => {
+  it('a signed-out device can read the version gate', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'app_settings', 'app_version'), { min_build_android: 10 });
+    });
+    await assertSucceeds(getDoc(doc(anon(), 'app_settings', 'app_version')));
+  });
+  it('only an admin can change it', async () => {
+    await assertFails(setDoc(doc(as(ALICE), 'app_settings', 'app_version'), { min_build_android: 999 }));
+    await assertFails(setDoc(doc(anon(), 'app_settings', 'app_version'), { min_build_android: 999 }));
+    await assertSucceeds(setDoc(doc(as(ADMIN), 'app_settings', 'app_version'), { min_build_android: 11 }));
+  });
+  it('global_config stays sign-in only', async () => {
+    await assertFails(getDoc(doc(anon(), 'app_settings', 'global_config')));
+  });
+});

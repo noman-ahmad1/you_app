@@ -15,6 +15,7 @@ import 'package:stacked_shared/stacked_shared.dart';
 
 import '../services/analytics_service.dart';
 import '../services/app_content_service.dart';
+import '../services/app_version_service.dart';
 import '../services/auth_service.dart';
 import '../services/billing_service.dart';
 import '../services/block_service.dart';
@@ -76,5 +77,6 @@ Future<void> setupLocator(
   locator.registerLazySingleton(() => BlockService());
   locator.registerLazySingleton(() => SecurityLogService());
   locator.registerLazySingleton(() => InAppNotificationService());
+  locator.registerLazySingleton(() => AppVersionService());
   locator.registerLazySingleton(() => VolunteerSignupViewModel());
 }

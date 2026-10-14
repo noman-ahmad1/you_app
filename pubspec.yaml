@@ -43,6 +43,7 @@ dependencies:
   stacked_services: ^1.6.0
   step_progress_indicator: ^1.0.2
   url_launcher: ^6.3.2
+  package_info_plus: ^10.2.2
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   firebase_messaging: ^16.2.2

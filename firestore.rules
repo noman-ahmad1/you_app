@@ -201,6 +201,15 @@ service cloud.firestore {
       // Admin panel toggles is_subscription_required. (Was: write denied.)
       allow write: if isAdmin();
     }
+    // Minimum supported build (see AppVersionService). Readable WITHOUT sign-in
+    // because the check runs on the splash screen, before login — a signed-out
+    // user on an outdated build must still be sent to the store. It holds only
+    // build numbers, store URLs and a message, so nothing here is sensitive.
+    match /app_settings/app_version {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Moderation keyword list — read by the app's moderation engine, edited by admins.
     match /app_settings/moderation_config {
       allow read: if isSignedIn();

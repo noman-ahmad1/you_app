@@ -19,6 +19,8 @@ import 'package:you_app/services/presence_service.dart';
 import 'package:you_app/services/push_notification_service.dart';
 import 'package:you_app/services/security_log_service.dart';
 import 'package:you_app/services/in_app_notification_service.dart';
+import 'package:you_app/services/app_version_service.dart';
+import 'package:you_app/ui/views/update_required/update_required_view.dart';
 import 'package:you_app/services/sound_service.dart';
 import 'package:you_app/services/storage_service.dart';
 import 'package:you_app/ui/bottom_sheets/notice/notice_sheet.dart';
@@ -63,6 +65,7 @@ import 'package:you_app/services/monetization_service.dart';
   routes: [
     MaterialRoute(page: HomeView),
     MaterialRoute(page: StartupView),
+    MaterialRoute(page: UpdateRequiredView),
     MaterialRoute(page: WelcomeView),
     MaterialRoute(page: LoginView),
     MaterialRoute(page: SignupView),
@@ -122,6 +125,7 @@ import 'package:you_app/services/monetization_service.dart';
     LazySingleton(classType: BlockService),
     LazySingleton(classType: SecurityLogService),
     LazySingleton(classType: InAppNotificationService),
+    LazySingleton(classType: AppVersionService),
 
     LazySingleton(classType: VolunteerSignupViewModel),
   ],

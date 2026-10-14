@@ -2,6 +2,7 @@ import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:you_app/app/app.locator.dart';
 import 'package:you_app/app/app.router.dart';
+import 'package:you_app/services/app_version_service.dart';
 import 'package:you_app/services/auth_service.dart';
 import 'package:you_app/services/base/app_log.dart';
 import 'package:you_app/services/push_notification_service.dart';
@@ -29,6 +30,10 @@ class StartupViewModel extends BaseViewModel {
 
     // --- Role-Based Navigation Logic ---
 
+    // The minimum-version check runs alongside the role lookup so it adds no
+    // splash time. It fails open (see AppVersionService).
+    final updateCheck = locator<AppVersionService>().check();
+
     // Assuming AuthenticationService provides a simple way to check the current user's role
     final userRole = await _authenticationService.getCurrentUserRole();
     AppLog.info('StartupViewModel', 'Detected user role: $userRole');
@@ -37,6 +42,17 @@ class StartupViewModel extends BaseViewModel {
     // AuthenticationService._enforceAccountStatus (which also navigates to
     // Welcome) — never route one into the app from the splash.
     if (_authenticationService.currentUser?.isBlocked == true) return;
+
+    // An install below the minimum supported build goes to the update screen
+    // and nowhere else.
+    final update = await updateCheck;
+    if (update.isRequired) {
+      await _navigationService.clearStackAndShow(
+        Routes.updateRequiredView,
+        arguments: UpdateRequiredViewArguments(requirement: update),
+      );
+      return;
+    }
 
     if (userRole == 'volunteer') {
       final currentUser = _authenticationService.currentUser;
