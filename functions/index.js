@@ -33,6 +33,19 @@ const logger = require("firebase-functions/logger");
 
 // Keyword/regex moderation engine (mirrors the Flutter ModerationService)
 const moderation = require("./moderation");
+// Pure business rules, kept free of Firebase so they port to any backend.
+const {KARACHI_OFFSET_MS, DAY_MS, pad2, pktDateKey, pktMonthKey} = require("./time");
+const {
+    defaultFreemiumLimits,
+    parseFreemiumLimits,
+    parseModerationConfig,
+} = require("./config");
+const {
+    isUserPremium,
+    classifyRevenueCatEvent,
+    entitlementFromSubscriber,
+} = require("./entitlement");
+const {extractClientIp} = require("./security");
 // Dodo (Gemini) request/response shaping — pure, unit tested in test/dodo.test.js
 const {
     DodoBlockedError,
@@ -346,12 +359,6 @@ exports.onReplyMention = onDocumentCreated("posts/{postId}/replies/{replyId}", a
 // keeps the doc-id date and day-window boundaries stable.
 // ============================================================================
 
-const KARACHI_OFFSET_MS = 5 * 60 * 60 * 1000;
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function pad2(n) {
-    return n < 10 ? `0${n}` : `${n}`;
-}
 
 /**
  * Computes the dashboard counters for the Karachi calendar day that contains
@@ -528,28 +535,7 @@ async function getModerationConfig() {
     try {
         const snap = await db.collection("app_settings")
             .doc("moderation_config").get();
-        const data = snap.exists ? snap.data() : {};
-
-        const clean = (v) => Array.isArray(v) ?
-            v.map((t) => String(t).toLowerCase().trim()).filter(Boolean) :
-            undefined;
-
-        const lists = {};
-        // New per-category shape written by the admin panel.
-        for (const key of ["hate", "violence", "sexual", "romance",
-            "offTopic", "contactIntent"]) {
-            const list = clean(data[key]);
-            if (list) lists[key] = list;
-        }
-        // Legacy explicit hard-block list → the `banned` (severe) category.
-        const banned = clean(data.bannedKeywords);
-        if (banned) lists.banned = banned;
-
-        value = {
-            // Legacy kill-switch; absent ⇒ moderation stays ON.
-            enabled: data.enabled !== false,
-            lists,
-        };
+        value = parseModerationConfig(snap.exists ? snap.data() : {});
     } catch (e) {
         // Fail-safe: keep moderating with the bundled defaults.
         logger.error("getModerationConfig failed, using defaults:", e);
@@ -684,68 +670,19 @@ exports.moderateReply = onDocumentCreated("posts/{postId}/replies/{replyId}", as
 // boundary — so they are enforced client-side).
 // ============================================================================
 
-const DODO_DAILY_CAP_DEFAULT = 10;
-const WELCOME_CHATS_DEFAULT = 3;
-const COMMUNITY_THREADS_MONTHLY_DEFAULT = 5;
-const COMMUNITY_REPLIES_MONTHLY_DEFAULT = 30;
 
 /**
- * Karachi (PKT, fixed UTC+5, no DST) calendar-day key `YYYY-MM-DD` for `instant`.
- * Used so Dodo's daily cap resets at PKT midnight regardless of device timezone.
- * @param {Date} instant The instant to derive the day key for.
- * @return {string} The PKT date key.
+ * Live free-tier limits from app_settings/global_config. Parsing and defaults
+ * live in config.js; this only does the read, failing open to the defaults.
+ * @return {Promise<Object>} See config.parseFreemiumLimits.
  */
-function pktDateKey(instant) {
-    const shifted = new Date(instant.getTime() + KARACHI_OFFSET_MS);
-    return `${shifted.getUTCFullYear()}-${pad2(shifted.getUTCMonth() + 1)}-${pad2(shifted.getUTCDate())}`;
-}
-
-/**
- * Karachi (PKT) calendar-MONTH key `YYYY-MM` for `instant`. Used so the free
- * community-thread cap resets at the start of each PKT month.
- * @param {Date} instant The instant to derive the month key for.
- * @return {string} The PKT month key.
- */
-function pktMonthKey(instant) {
-    const shifted = new Date(instant.getTime() + KARACHI_OFFSET_MS);
-    return `${shifted.getUTCFullYear()}-${pad2(shifted.getUTCMonth() + 1)}`;
-}
-
-/** @return {Promise<{dodoDailyCap:number, welcomeChats:number, communityThreadsMonthly:number}>} live limits. */
-const DODO_MODEL_DEFAULT = "gemini-2.5-flash";
-
 async function getFreemiumLimits() {
     try {
         const snap = await db.collection("app_settings").doc("global_config").get();
-        const data = snap.exists ? snap.data() : {};
-        const asPositiveInt = (v, fallback) => {
-            const n = typeof v === "number" ? Math.trunc(v) : parseInt(v, 10);
-            return Number.isFinite(n) && n > 0 ? n : fallback;
-        };
-        return {
-            // Model id is tunable from the admin panel so it can be changed
-            // without a redeploy, matching how the caps below work. Read here
-            // rather than in a second helper because this already fetches the
-            // same document.
-            dodoModel: typeof data.dodo_model === "string" && data.dodo_model.trim() ?
-                data.dodo_model.trim() :
-                DODO_MODEL_DEFAULT,
-            dodoDailyCap: asPositiveInt(data.dodo_daily_cap, DODO_DAILY_CAP_DEFAULT),
-            welcomeChats: asPositiveInt(data.welcome_chats, WELCOME_CHATS_DEFAULT),
-            communityThreadsMonthly: asPositiveInt(
-                data.community_threads_monthly, COMMUNITY_THREADS_MONTHLY_DEFAULT),
-            communityRepliesMonthly: asPositiveInt(
-                data.community_replies_monthly, COMMUNITY_REPLIES_MONTHLY_DEFAULT),
-        };
+        return parseFreemiumLimits(snap.exists ? snap.data() : {});
     } catch (e) {
         logger.error("getFreemiumLimits failed, using defaults:", e);
-        return {
-            dodoModel: DODO_MODEL_DEFAULT,
-            dodoDailyCap: DODO_DAILY_CAP_DEFAULT,
-            welcomeChats: WELCOME_CHATS_DEFAULT,
-            communityThreadsMonthly: COMMUNITY_THREADS_MONTHLY_DEFAULT,
-            communityRepliesMonthly: COMMUNITY_REPLIES_MONTHLY_DEFAULT,
-        };
+        return defaultFreemiumLimits();
     }
 }
 
@@ -771,26 +708,6 @@ async function reserveMonthlyQuota(tx, usageRef, monthKey, limit, premium) {
     tx.set(usageRef, {month: monthKey, count: count + 1});
     return false;
 }
-
-/**
- * Whether a user document represents an active premium entitlement.
- *
- * @param {Object} userData A user doc's data.
- * @return {boolean} True when the tier is premium and not past its expiry.
- */
-function isUserPremium(userData) {
-    if (!userData || userData.subscriptionTier !== "premium") return false;
-    const exp = userData.subscription_expiry;
-    if (!exp) return true; // indefinite grant
-    try {
-        return exp.toMillis() > Date.now();
-    } catch (e) {
-        return true;
-    }
-}
-
-// The RevenueCat entitlement that unlocks YOU+ (matches the app + dashboard).
-const YOU_PLUS_ENTITLEMENT = "you_plus";
 
 /**
  * Write an entitlement decision to a user doc via Admin SDK — the ONLY server
@@ -846,22 +763,17 @@ exports.revenueCatWebhook = onRequest(
             return;
         }
 
-        const uid = event.app_user_id;
-        // Skip anonymous ids (user not yet aliased to a Firebase UID via logIn).
-        if (!uid || uid.indexOf("$RCAnonymousID") === 0) {
+        // Event → grant / revoke / noop rules live in entitlement.js.
+        const {action, uid, expiryMs} = classifyRevenueCatEvent(event);
+        if (action === "skip") {
             res.status(200).json({ok: true, skipped: "anonymous"});
             return;
         }
 
-        const grant = ["INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE",
-            "UNCANCELLATION", "NON_RENEWING_PURCHASE"];
-        const revoke = ["EXPIRATION", "REFUND"];
-
         try {
-            if (grant.indexOf(event.type) !== -1) {
-                await applyEntitlement(
-                    uid, true, event.expiration_at_ms || null, "google_play");
-            } else if (revoke.indexOf(event.type) !== -1) {
+            if (action === "grant") {
+                await applyEntitlement(uid, true, expiryMs, "google_play");
+            } else if (action === "revoke") {
                 await applyEntitlement(uid, false, null, "google_play");
             } else {
                 // CANCELLATION (auto-renew off — still entitled until expiry),
@@ -904,21 +816,7 @@ exports.refreshEntitlement = onCall(
                 headers: {"Authorization": `Bearer ${key}`},
             });
             if (resp.ok) {
-                const body = await resp.json();
-                const subscriber = body && body.subscriber;
-                const entitlements = subscriber && subscriber.entitlements;
-                const ent = entitlements && entitlements[YOU_PLUS_ENTITLEMENT];
-                if (ent) {
-                    if (ent.expires_date) {
-                        const ms = Date.parse(ent.expires_date);
-                        if (!Number.isNaN(ms) && ms > Date.now()) {
-                            entitled = true;
-                            expiryMs = ms;
-                        }
-                    } else {
-                        entitled = true; // non-expiring entitlement
-                    }
-                }
+                ({entitled, expiryMs} = entitlementFromSubscriber(await resp.json()));
             } else {
                 logger.warn(`refreshEntitlement: RC REST ${resp.status} ${uid}`);
             }
@@ -1496,22 +1394,6 @@ const SECURITY_LOG_RETENTION_DAYS_DEFAULT = 90;
 const CLIENT_SECURITY_ACTIONS = [
     "signup", "signin", "message_sent", "report_filed",
 ];
-
-/**
- * The authoritative client IP for a callable/HTTPS request. Never trust a
- * client-sent IP — this reads it from the edge request metadata.
- * @param {Object} rawRequest The Express request (request.rawRequest).
- * @return {string} The source IP, or "unknown".
- */
-function extractClientIp(rawRequest) {
-    if (!rawRequest) return "unknown";
-    const fwd = rawRequest.headers && rawRequest.headers["x-forwarded-for"];
-    if (fwd && typeof fwd === "string") {
-        const first = fwd.split(",")[0].trim();
-        if (first) return first;
-    }
-    return rawRequest.ip || "unknown";
-}
 
 /**
  * The role recorded on a user's doc, defaulting to "user".
